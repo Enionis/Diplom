@@ -166,7 +166,7 @@ export default function ProfileScreen() {
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>👤</Text>
           </View>
-          <Text style={styles.userName}>Мистический странник</Text>
+          <Text style={styles.userName}>{user?.name || "Мистический странник"}</Text>
           {birthDate && (
             <View style={styles.birthDateBadge}>
               <Calendar size={14} color="#ffd700" />

@@ -21,9 +21,17 @@ export const authDatabase = {
     try {
       const db = await getDatabase();
       
-      // Дополнительная проверка на null
+      // Дополнительная проверка на null и готовность
       if (!db) {
         console.error('Database is null in registerUser - cannot proceed');
+        return false;
+      }
+
+      // Проверяем что таблица users существует
+      try {
+        await db.getFirstAsync("SELECT 1 FROM users LIMIT 1");
+      } catch (tableError) {
+        console.error('Users table not ready in registerUser:', tableError);
         return false;
       }
       
@@ -48,9 +56,17 @@ export const authDatabase = {
     try {
       const db = await getDatabase();
       
-      // Дополнительная проверка на null
+      // Дополнительная проверка на null и готовность
       if (!db) {
         console.error('Database is null in loginUser - cannot proceed');
+        return null;
+      }
+
+      // Проверяем что таблица users существует
+      try {
+        await db.getFirstAsync("SELECT 1 FROM users LIMIT 1");
+      } catch (tableError) {
+        console.error('Users table not ready in loginUser:', tableError);
         return null;
       }
       
