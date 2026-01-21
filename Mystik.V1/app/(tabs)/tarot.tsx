@@ -9,6 +9,7 @@ import {
   Alert,
   FlatList,
   useWindowDimensions,
+  type ColorValue,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Sparkles, Lock, RefreshCw, ArrowLeft } from "lucide-react-native";
@@ -169,7 +170,7 @@ export default function TarotScreen() {
                   <TouchableOpacity onPress={() => flipCard(index)} activeOpacity={0.9}>
                     <Animated.View style={[styles.card, animationStyles.front]}>
                       <LinearGradient
-                        colors={cardBackStyles[cardBack as keyof typeof cardBackStyles] || cardBackStyles.purple}
+                        colors={["#ff9800", "#ff5722"] as readonly [ColorValue, ...ColorValue[]]}
                         style={styles.cardGradient}
                       >
                         <Sparkles size={40} color="#ffd700" />

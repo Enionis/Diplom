@@ -10,12 +10,14 @@ import {
   Linking,
   TextInput,
   Modal,
+  type ColorValue,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   Crown,
   Calendar,
   LogOut,
+  LogIn,
   Bell,
   Globe,
   Info,
@@ -24,13 +26,14 @@ import {
 } from "lucide-react-native";
 import { useSubscription } from "@/providers/SubscriptionProvider";
 import { useUser } from "@/providers/UserProvider";
+import { useAuth } from "@/providers/AuthProvider";
 import { router } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useDatabase } from "@/hooks/useDatabase";
 
 export default function ProfileScreen() {
   const { isPremium, setCardBack, cancelSubscription } = useSubscription(); 
   const { birthDate, clearUserData } = useUser();
+  const { user, logout } = useAuth();
   const { logAction } = useDatabase();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [selectedCardBack, setSelectedCardBack] = useState("purple");
@@ -47,6 +50,10 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleLogin = () => {
+    router.push("/auth");
+  };
+
   const handleLogout = () => {
     Alert.alert(
       "Выход",
@@ -58,7 +65,7 @@ export default function ProfileScreen() {
           style: "destructive",
           onPress: async () => {
             logAction("logout");
-            await AsyncStorage.clear();
+            await logout();
             clearUserData();
             router.replace("/");
           },
@@ -239,7 +246,7 @@ export default function ProfileScreen() {
                   onPress={() => handleCardBackChange(back.id)}
                 >
                   <LinearGradient
-                    colors={back.colors}
+                    colors={["#4caf50", "#8bc34a"] as readonly [ColorValue, ...ColorValue[]]}
                     style={styles.cardBackPreview}
                   >
                     <Text style={styles.cardBackText}>{back.name}</Text>
@@ -291,10 +298,17 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <LogOut size={20} color="#ff4444" />
-        <Text style={styles.logoutText}>Выйти</Text>
-      </TouchableOpacity>
+      {user?.isGuest ? (
+        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+          <LogIn size={20} color="#4caf50" />
+          <Text style={styles.loginText}>Войти</Text>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <LogOut size={20} color="#ff4444" />
+          <Text style={styles.logoutText}>Выйти</Text>
+        </TouchableOpacity>
+      )}
 
       <Modal
         visible={showAdminModal}
@@ -521,6 +535,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
     color: "#ff4444",
+  },
+  loginButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    padding: 16,
+    backgroundColor: "rgba(76,175,80,0.1)",
+    borderRadius: 12,
+  },
+  loginText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#4caf50",
   },
   modalOverlay: {
     flex: 1,

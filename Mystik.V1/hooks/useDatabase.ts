@@ -24,6 +24,12 @@ export const useDatabase = () => {
     
     async function initDb() {
       try {
+        // Проверяем что база уже инициализирована
+        if (isInitialized) {
+          console.log("Database already initialized, skipping...");
+          return;
+        }
+        
         console.log("Starting database initialization...");
         
         // Сначала получаем deviceId
@@ -45,85 +51,11 @@ export const useDatabase = () => {
         console.log("Database opened successfully");
         setDb(database);
 
-        // Создание таблиц по одной с проверками
-        console.log("Creating tables...");
-        
-        try {
-          await database.execAsync(`CREATE TABLE IF NOT EXISTS tarot_clicks (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            spread_id TEXT NOT NULL,
-            timestamp TEXT NOT NULL,
-            device_id TEXT NOT NULL
-          )`);
-          console.log("tarot_clicks table ready");
-        } catch (e) {
-          console.error("Error creating tarot_clicks table:", e);
+        // Просто проверяем что база готова к использованию
+        if (db && typeof db.runAsync === 'function') {
+          console.log("Database is ready for operations");
+          return;
         }
-
-        try {
-          await database.execAsync(`CREATE TABLE IF NOT EXISTS horoscope_clicks (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            type TEXT NOT NULL,
-            timestamp TEXT NOT NULL,
-            device_id TEXT NOT NULL
-          )`);
-          console.log("horoscope_clicks table ready");
-        } catch (e) {
-          console.error("Error creating horoscope_clicks table:", e);
-        }
-
-        try {
-          await database.execAsync(`CREATE TABLE IF NOT EXISTS test_clicks (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            test_id TEXT NOT NULL,
-            timestamp TEXT NOT NULL,
-            device_id TEXT NOT NULL
-          )`);
-          console.log("test_clicks table ready");
-        } catch (e) {
-          console.error("Error creating test_clicks table:", e);
-        }
-
-        try {
-          await database.execAsync(`CREATE TABLE IF NOT EXISTS subscriptions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            amount INTEGER NOT NULL,
-            timestamp TEXT NOT NULL,
-            device_id TEXT NOT NULL
-          )`);
-          console.log("subscriptions table ready");
-        } catch (e) {
-          console.error("Error creating subscriptions table:", e);
-        }
-
-        try {
-          await database.execAsync(`CREATE TABLE IF NOT EXISTS section_clicks (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            section TEXT NOT NULL,
-            timestamp TEXT NOT NULL,
-            device_id TEXT NOT NULL
-          )`);
-          console.log("section_clicks table ready");
-        } catch (e) {
-          console.error("Error creating section_clicks table:", e);
-        }
-
-        try {
-          await database.execAsync(`CREATE TABLE IF NOT EXISTS actions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            action TEXT NOT NULL,
-            timestamp TEXT NOT NULL,
-            device_id TEXT NOT NULL
-          )`);
-          console.log("actions table ready");
-        } catch (e) {
-          console.error("Error creating actions table:", e);
-        }
-
-        if (!isMounted) return;
-        
-        setIsInitialized(true);
-        console.log("Database initialization completed successfully");
       } catch (error) {
         console.error("Error initializing database:", error);
         // Не устанавливаем состояние в случае ошибки
@@ -135,7 +67,7 @@ export const useDatabase = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [isInitialized]);
 
   const logTarotClick = async (spreadId: string) => {
     if (!isInitialized || !db || !deviceId) {

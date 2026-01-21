@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  type ColorValue
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Sparkles, Star, Grid3x3, BookCheck, Crown } from "lucide-react-native";
@@ -13,8 +14,6 @@ import { router } from "expo-router";
 import { useSubscription } from "@/providers/SubscriptionProvider";
 import { useDailyCard } from "@/hooks/useDailyCard";
 import { useDatabase } from "@/hooks/useDatabase"; 
-
-const { width } = Dimensions.get("window");
 
 export default function HomeScreen() {
   const { isPremium } = useSubscription();
@@ -43,7 +42,7 @@ export default function HomeScreen() {
       title: "Матрица судьбы",
       description: "Расшифруй свой код",
       route: "/horoscope?tab=matrix",
-      gradient: ["#4caf50", "#8bc34a"],
+      gradient: ["#4caf50", "#8bc34a"] as readonly [ColorValue, ...ColorValue[]],
       logAction: () => logHoroscopeClick("matrix"), 
     },
     {
