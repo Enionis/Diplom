@@ -27,7 +27,6 @@ export default function TabsLayout() {
       }}
       screenListeners={{
         tabPress: (e) => {
-          // Используем tabPress вместо focus для более надежного логирования
           const routeName = e.target?.split("-")[0] || "unknown";
           if (deviceId) {
             logTabClick(routeName);

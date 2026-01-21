@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Alert, Dimensions } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Calendar, Gem, Heart, Crown, Sparkles } from "lucide-react-native";
 import { useUser } from "@/providers/UserProvider";
 import { useSubscription } from "@/providers/SubscriptionProvider";
 import { ZODIAC_SIGNS, getZodiacSign } from "@/constants/zodiac";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import Svg, { Circle, Line, Text as SvgText } from "react-native-svg";
 import { useDatabase } from "@/hooks/useDatabase";
 
@@ -23,9 +23,17 @@ export default function HoroscopeScreen() {
   const { birthDate, setBirthDate } = useUser();
   const { isPremium } = useSubscription();
   const { logHoroscopeClick } = useDatabase();
+  const { tab } = useLocalSearchParams<{ tab?: string }>();
   const [dateInput, setDateInput] = useState(birthDate || "");
   const [selectedPeriod, setSelectedPeriod] = useState<"today" | "week" | "month">("today");
-  const [activeTab, setActiveTab] = useState<"horoscope" | "matrix">("horoscope");
+  const [activeTab, setActiveTab] = useState<"horoscope" | "matrix">(tab === "matrix" ? "matrix" : "horoscope");
+
+  useEffect(() => {
+    if (tab === "matrix") {
+      setActiveTab("matrix");
+      logHoroscopeClick("matrix");
+    }
+  }, [tab, logHoroscopeClick]);
 
   const formatDateInput = (text: string) => {
     const digits = text.replace(/\D/g, "");
@@ -226,6 +234,9 @@ export default function HoroscopeScreen() {
               onPress={() => {
                 logHoroscopeClick("horoscope");
                 setActiveTab("horoscope");
+                if (tab === "matrix") {
+                  router.replace("/horoscope");
+                }
               }}
             >
               <LinearGradient

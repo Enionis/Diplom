@@ -12,14 +12,14 @@ import { Sparkles, Star, Grid3x3, BookCheck, Crown } from "lucide-react-native";
 import { router } from "expo-router";
 import { useSubscription } from "@/providers/SubscriptionProvider";
 import { useDailyCard } from "@/hooks/useDailyCard";
-import { useDatabase } from "@/hooks/useDatabase"; // Новый импорт
+import { useDatabase } from "@/hooks/useDatabase"; 
 
 const { width } = Dimensions.get("window");
 
 export default function HomeScreen() {
   const { isPremium } = useSubscription();
   const { card } = useDailyCard();
-  const { logHoroscopeClick, logTestClick, logTarotClick } = useDatabase(); // Добавляем хук
+  const { logHoroscopeClick, logTestClick, logTarotClick } = useDatabase(); 
 
   const features = [
     {
@@ -28,7 +28,7 @@ export default function HomeScreen() {
       description: card ? `Сегодня: ${card.name}` : "Узнай свою карту",
       route: "/tarot",
       gradient: ["#9c27b0", "#673ab7"],
-      logAction: () => logTarotClick("daily"), // Логируем клик по карте дня
+      logAction: () => logTarotClick("daily"), 
     },
     {
       icon: Star,
@@ -36,15 +36,15 @@ export default function HomeScreen() {
       description: "Персональный прогноз",
       route: "/horoscope",
       gradient: ["#2196f3", "#3f51b5"],
-      logAction: () => logHoroscopeClick("horoscope"), // Логируем гороскоп
+      logAction: () => logHoroscopeClick("horoscope"),
     },
     {
       icon: Grid3x3,
       title: "Матрица судьбы",
       description: "Расшифруй свой код",
-      route: "/matrix",
+      route: "/horoscope?tab=matrix",
       gradient: ["#4caf50", "#8bc34a"],
-      logAction: () => logHoroscopeClick("matrix"), // Логируем матрицу как эзотерику
+      logAction: () => logHoroscopeClick("matrix"), 
     },
     {
       icon: BookCheck,
@@ -52,7 +52,7 @@ export default function HomeScreen() {
       description: "Узнай больше о себе",
       route: "/tests",
       gradient: ["#ff9800", "#ff5722"],
-      logAction: () => logTestClick("general"), // Общий клик по тестам
+      logAction: () => logTestClick("general"), 
     },
   ];
 
@@ -87,7 +87,7 @@ export default function HomeScreen() {
             key={index}
             style={styles.featureCard}
             onPress={() => {
-              feature.logAction(); // Вызываем логирование перед переходом
+              feature.logAction();
               router.push(feature.route as any);
             }}
             activeOpacity={0.8}

@@ -11,11 +11,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Check, Crown, Sparkles, Infinity } from "lucide-react-native";
 import { router } from "expo-router";
 import { useSubscription } from "@/providers/SubscriptionProvider";
-import { useDatabase } from "@/hooks/useDatabase"; // Новый импорт
+import { useDatabase } from "@/hooks/useDatabase"; 
 
 export default function SubscriptionScreen() {
   const { activateSubscription } = useSubscription();
-  const { logSubscription } = useDatabase(); // Добавляем хук
+  const { logSubscription } = useDatabase(); 
 
   const features = [
     { icon: Infinity, text: "Безлимитные гадания на Таро" },
@@ -35,7 +35,7 @@ export default function SubscriptionScreen() {
           text: "Оформить",
           onPress: () => {
             activateSubscription();
-            logSubscription(990); // Логируем покупку подписки
+            logSubscription(990); 
             Alert.alert("Успешно!", "Премиум подписка активирована");
             router.back();
           },

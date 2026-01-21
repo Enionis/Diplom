@@ -18,7 +18,7 @@ import { useTarotReadings } from "@/hooks/useTarotReading";
 import { router } from "expo-router";
 import { TAROT_CARDS, TAROT_SPREADS, TarotCard, TarotSpread } from "@/constants/tarot";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useDatabase } from "@/hooks/useDatabase"; // Новый импорт
+import { useDatabase } from "@/hooks/useDatabase"; 
 
 interface ReadingResult {
   spread: TarotSpread;
@@ -29,7 +29,7 @@ export default function TarotScreen() {
   const { isPremium, cardBack } = useSubscription();
   const { card: dailyCard, isNewDay, drawDailyCard } = useDailyCard();
   const { readingsToday, canRead, performReading } = useTarotReadings();
-  const { logTarotClick } = useDatabase(); // Добавляем хук
+  const { logTarotClick } = useDatabase(); 
   const [currentView, setCurrentView] = useState<'spreads' | 'reading'>('spreads');
   const [currentReading, setCurrentReading] = useState<ReadingResult | null>(null);
   const [flippedCards, setFlippedCards] = useState<boolean[]>([]);
@@ -45,7 +45,7 @@ export default function TarotScreen() {
   };
 
   const startReading = (spread: TarotSpread) => {
-    logTarotClick(spread.id); // Логируем клик по раскладу
+    logTarotClick(spread.id); 
     if (spread.isPremium && !isPremium) {
       Alert.alert(
         "Премиум функция",

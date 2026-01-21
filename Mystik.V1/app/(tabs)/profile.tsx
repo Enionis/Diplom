@@ -29,7 +29,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useDatabase } from "@/hooks/useDatabase";
 
 export default function ProfileScreen() {
-  const { isPremium, setCardBack, cancelSubscription } = useSubscription(); // Обязательно добавляем cancelSubscription
+  const { isPremium, setCardBack, cancelSubscription } = useSubscription(); 
   const { birthDate, clearUserData } = useUser();
   const { logAction } = useDatabase();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);

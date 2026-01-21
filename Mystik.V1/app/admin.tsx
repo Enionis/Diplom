@@ -55,7 +55,7 @@ export default function AdminPanel() {
     return () => {
       isMounted = false;
     };
-  }, [isInitialized]); // Убрали getStats из зависимостей
+  }, [isInitialized]); 
 
   if (loading || !stats) {
     return (
