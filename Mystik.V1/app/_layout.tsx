@@ -36,13 +36,6 @@ function RootLayoutNav() {
           title: "Тест",
         }}
       />
-      <Stack.Screen
-        name="admin"
-        options={{
-          title: "Админ",
-          presentation: "modal",
-        }}
-      />
     </Stack>
   );
 }

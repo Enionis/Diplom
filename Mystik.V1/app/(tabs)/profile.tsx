@@ -8,8 +8,6 @@ import {
   Alert,
   Switch,
   Linking,
-  TextInput,
-  Modal,
   type ColorValue,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -37,18 +35,6 @@ export default function ProfileScreen() {
   const { logAction } = useDatabase();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [selectedCardBack, setSelectedCardBack] = useState("purple");
-  const [showAdminModal, setShowAdminModal] = useState(false);
-  const [adminPassword, setAdminPassword] = useState("");
-
-  const handleAdminLogin = () => {
-    if (adminPassword === "admin123") {
-      setShowAdminModal(false);
-      setAdminPassword("");
-      router.push("/admin");
-    } else {
-      Alert.alert("Ошибка", "Неверный пароль");
-    }
-  };
 
   const handleLogin = () => {
     router.push("/auth");
@@ -68,13 +54,6 @@ export default function ProfileScreen() {
             await logout();
             clearUserData();
             router.replace("/");
-          },
-        },
-        {
-          text: "Админ-панель",
-          onPress: () => {
-            logAction("admin_panel_access");
-            setShowAdminModal(true);
           },
         },
       ]
@@ -309,45 +288,6 @@ export default function ProfileScreen() {
           <Text style={styles.logoutText}>Выйти</Text>
         </TouchableOpacity>
       )}
-
-      <Modal
-        visible={showAdminModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowAdminModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Вход в админ-панель</Text>
-            <Text style={styles.modalSubtitle}>Введите пароль</Text>
-            <TextInput
-              style={styles.passwordInput}
-              value={adminPassword}
-              onChangeText={setAdminPassword}
-              placeholder="Пароль"
-              secureTextEntry
-              placeholderTextColor="#666"
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.modalCancelButton]}
-                onPress={() => {
-                  setShowAdminModal(false);
-                  setAdminPassword("");
-                }}
-              >
-                <Text style={styles.cancelButtonText}>Отмена</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.modalConfirmButton]}
-                onPress={handleAdminLogin}
-              >
-                <Text style={styles.confirmButtonText}>Подтвердить</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </ScrollView>
   );
 }
@@ -549,67 +489,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
     color: "#4caf50",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContent: {
-    backgroundColor: "#1a1a2e",
-    borderRadius: 16,
-    padding: 24,
-    width: "80%",
-    maxWidth: 300,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#fff",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  modalSubtitle: {
-    fontSize: 14,
-    color: "#b8b8d0",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  passwordInput: {
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    borderRadius: 8,
-    padding: 12,
-    color: "#fff",
-    fontSize: 16,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
-  },
-  modalButtons: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  modalButton: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  modalCancelButton: {
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-  },
-  modalConfirmButton: {
-    backgroundColor: "#ffd700",
-  },
-  cancelButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  confirmButtonText: {
-    color: "#1a1a2e",
-    fontSize: 16,
-    fontWeight: "600",
   },
 });
