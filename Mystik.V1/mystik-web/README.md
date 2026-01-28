@@ -11,17 +11,31 @@
 - **Профиль** — вход/регистрация, подписка, настройки, поддержка
 - **Подписка** — премиум 990₽/мес (локальная активация для демо)
 
-Данные хранятся в `localStorage` (пользователи, подписка, дата рождения, карта дня, результаты тестов).
+Данные: подписка, дата рождения, карта дня, тесты — в `localStorage`. Пользователи — в БД (файл `server/data/mystic.db`) при запущенном сервере, иначе в `localStorage`.
 
 ## Запуск
 
+**Только фронт (localStorage):**
 ```bash
 cd mystik-web
 npm install
 npm run dev
 ```
+Откройте: http://localhost:5173
 
-Откройте в браузере: http://localhost:5173
+**Фронт + сервер с файлом БД (защита bcrypt):**
+```bash
+# Терминал 1 — сервер (создаёт server/data/mystic.db)
+cd mystik-web/server
+npm install
+npm run dev
+
+# Терминал 2 — фронт с указанием API
+cd mystik-web
+echo "VITE_API_URL=http://localhost:3001" > .env
+npm run dev
+```
+Регистрация и вход будут сохраняться в файл `server/data/mystic.db` с хешированием паролей (bcrypt).
 
 ## Сборка
 
@@ -34,11 +48,9 @@ npm run preview
 
 ## Стек
 
-- React 18, TypeScript
-- Vite
-- React Router 6
-- Lucide React (иконки)
-- Локальное хранилище (localStorage) вместо SQLite
+- React 18, TypeScript, Vite, React Router 6, Lucide React
+- **Сервер (опционально):** Express, better-sqlite3, bcryptjs — файл БД `server/data/mystic.db`, защита паролей (bcrypt), валидация, prepared statements
+- Без сервера: пользователи в `localStorage`; с сервером — в SQLite-файле
 
 ## Отличия от мобильной версии
 

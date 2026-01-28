@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -10,12 +10,20 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { Check, Crown, Sparkles, Infinity } from "lucide-react-native";
 import { router } from "expo-router";
+import { useAuth } from "@/providers/AuthProvider";
 import { useSubscription } from "@/providers/SubscriptionProvider";
 import { useDatabase } from "@/hooks/useDatabase"; 
 
 export default function SubscriptionScreen() {
+  const { user, isLoading } = useAuth();
   const { activateSubscription } = useSubscription();
-  const { logSubscription } = useDatabase(); 
+  const { logSubscription } = useDatabase();
+
+  useEffect(() => {
+    if (!isLoading && user?.isGuest) {
+      router.replace("/auth");
+    }
+  }, [isLoading, user?.isGuest]); 
 
   const features = [
     { icon: Infinity, text: "Безлимитные гадания на Таро" },
@@ -43,6 +51,10 @@ export default function SubscriptionScreen() {
       ]
     );
   };
+
+  if (!isLoading && user?.isGuest) {
+    return null;
+  }
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>

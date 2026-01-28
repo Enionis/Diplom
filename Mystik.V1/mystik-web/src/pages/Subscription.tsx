@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Check, Crown, Infinity, ArrowLeft } from 'lucide-react';
+import { useAuth } from '@/providers/AuthProvider';
 import { useSubscription } from '@/providers/SubscriptionProvider';
 
 const features = [
@@ -12,7 +14,14 @@ const features = [
 
 export default function Subscription() {
   const navigate = useNavigate();
+  const { user, isLoading } = useAuth();
   const { activateSubscription } = useSubscription();
+
+  useEffect(() => {
+    if (!isLoading && user?.isGuest) {
+      navigate('/auth', { replace: true });
+    }
+  }, [isLoading, user?.isGuest, navigate]);
 
   const handleSubscribe = () => {
     if (window.confirm('Премиум подписка за 990₽ в месяц. Оформить?')) {
@@ -21,6 +30,10 @@ export default function Subscription() {
       navigate(-1);
     }
   };
+
+  if (!isLoading && user?.isGuest) {
+    return null;
+  }
 
   return (
     <div style={{ minHeight: '100vh', paddingBottom: 40 }}>

@@ -1,4 +1,10 @@
-interface User {
+/**
+ * База пользователей веб-версии.
+ * Хранится в localStorage (ключ mystic_web_db).
+ * Зарегистрированные пользователи сохраняются между сессиями и могут входить по email и паролю.
+ */
+
+export interface StoredUser {
   id: string;
   email: string;
   name: string;
@@ -9,7 +15,7 @@ interface User {
 }
 
 interface DatabaseData {
-  users: User[];
+  users: StoredUser[];
 }
 
 const DB_KEY = 'mystic_web_db';
@@ -24,55 +30,67 @@ const hashPassword = (password: string): string => {
   return Math.abs(hash).toString(16) + 'mystic_salt';
 };
 
-const initDatabase = (): DatabaseData => {
+function getDatabase(): DatabaseData {
   if (typeof window === 'undefined') return { users: [] };
   try {
     const stored = localStorage.getItem(DB_KEY);
     if (stored) return JSON.parse(stored);
   } catch (_) {}
   return { users: [] };
-};
+}
 
-const saveDatabase = (data: DatabaseData): void => {
+function saveDatabase(data: DatabaseData): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(DB_KEY, JSON.stringify(data));
   } catch (_) {}
-};
-
-const getDatabase = (): DatabaseData => initDatabase();
+}
 
 export const authDatabase = {
-  async registerUser(email: string, password: string, name: string): Promise<boolean> {
+  /** Регистрация: добавляет пользователя в БД. Возвращает данные пользователя или null при ошибке (например, email уже занят). */
+  async registerUser(
+    email: string,
+    password: string,
+    name: string
+  ): Promise<{ id: string; email: string; name: string } | null> {
     try {
       const db = getDatabase();
-      const existingUser = db.users.find(u => u.email === email && u.is_guest === 0);
-      if (existingUser) return false;
+      const existingUser = db.users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.is_guest === 0);
+      if (existingUser) return null;
+
       const passwordHash = hashPassword(password);
       const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const now = new Date().toISOString();
-      db.users.push({
+      const newUser: StoredUser = {
         id: userId,
-        email,
-        name,
+        email: email.trim(),
+        name: name.trim(),
         password_hash: passwordHash,
         is_guest: 0,
         created_at: now,
         last_login: now,
-      });
+      };
+      db.users.push(newUser);
       saveDatabase(db);
-      return true;
+      return { id: newUser.id, email: newUser.email, name: newUser.name };
     } catch (_) {
-      return false;
+      return null;
     }
   },
 
-  async loginUser(email: string, password: string): Promise<{ id: string; email: string; name: string } | null> {
+  /** Вход: проверяет email и пароль по БД, возвращает данные пользователя или null. */
+  async loginUser(
+    email: string,
+    password: string
+  ): Promise<{ id: string; email: string; name: string } | null> {
     try {
       const db = getDatabase();
       const passwordHash = hashPassword(password);
       const user = db.users.find(
-        u => u.email === email && u.password_hash === passwordHash && u.is_guest === 0
+        u =>
+          u.email.toLowerCase() === email.toLowerCase() &&
+          u.password_hash === passwordHash &&
+          u.is_guest === 0
       );
       if (user) {
         user.last_login = new Date().toISOString();
@@ -83,5 +101,12 @@ export const authDatabase = {
     } catch (_) {
       return null;
     }
+  },
+
+  /** Проверить, есть ли сохранённый пользователь с таким id (для валидации сессии). */
+  getUserById(id: string): { id: string; email: string; name: string } | null {
+    const db = getDatabase();
+    const user = db.users.find(u => u.id === id && u.is_guest === 0);
+    return user ? { id: user.id, email: user.email, name: user.name } : null;
   },
 };

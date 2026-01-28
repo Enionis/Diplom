@@ -1,7 +1,22 @@
 import * as SQLite from 'expo-sqlite';
 
+const DB_NAME = 'mystic.db';
+
+async function ensureUsersTable(db: SQLite.SQLiteDatabase): Promise<void> {
+  await db.runAsync(
+    'CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, email TEXT NOT NULL, name TEXT NOT NULL, password_hash TEXT NOT NULL, is_guest INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL, last_login TEXT NOT NULL)'
+  );
+  try {
+    await db.runAsync('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)');
+  } catch (_) {
+    // индекс уже может существовать
+  }
+}
+
 const getDatabase = async (): Promise<SQLite.SQLiteDatabase> => {
-  return await SQLite.openDatabaseAsync('mystic.db');
+  const db = await SQLite.openDatabaseAsync(DB_NAME);
+  await ensureUsersTable(db);
+  return db;
 };
 
 const hashPassword = (password: string): string => {
@@ -35,6 +50,15 @@ export const authDatabase = {
         return false;
       }
       
+      const emailNorm = email.trim().toLowerCase();
+      const existing = await db.getFirstAsync<{ id: string }>(
+        'SELECT id FROM users WHERE email = ? AND is_guest = 0',
+        [emailNorm]
+      );
+      if (existing) {
+        return false;
+      }
+
       const passwordHash = hashPassword(password);
       const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const now = new Date().toISOString();
@@ -42,11 +66,15 @@ export const authDatabase = {
       await db.runAsync(
         `INSERT INTO users (id, email, name, password_hash, is_guest, created_at, last_login)
          VALUES (?, ?, ?, ?, 0, ?, ?)`,
-        [userId, email, name, passwordHash, now, now]
+        [userId, emailNorm, name.trim(), passwordHash, now, now]
       );
 
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.includes('UNIQUE') || msg.includes('constraint')) {
+        return false;
+      }
       console.error('Error registering user:', error);
       return false;
     }

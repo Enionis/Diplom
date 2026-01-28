@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authDatabase } from '@/utils/authDatabase';
+import { apiLogin, apiRegister, apiGetUser, isApiEnabled } from '@/utils/apiAuth';
 
 interface User {
   id: string;
@@ -37,7 +38,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
-        setUser(JSON.parse(saved));
+        const parsed = JSON.parse(saved) as User;
+        if (parsed.isGuest) {
+          setUser(parsed);
+        } else {
+          const checkUser = async () => {
+            if (isApiEnabled()) {
+              const u = await apiGetUser(parsed.id);
+              if (u) {
+                setUser({ ...parsed, email: u.email, name: u.name });
+                return;
+              }
+            } else {
+              const inDb = authDatabase.getUserById(parsed.id);
+              if (inDb) {
+                setUser({ ...parsed, email: inDb.email, name: inDb.name });
+                return;
+              }
+            }
+            setUser(GUEST_USER);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(GUEST_USER));
+          };
+          checkUser().finally(() => setIsLoading(false));
+          return;
+        }
       } catch {
         setUser(GUEST_USER);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(GUEST_USER));
@@ -50,6 +74,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
+    if (isApiEnabled()) {
+      const result = await apiLogin(email, password);
+      if (result.ok && result.user) {
+        const loggedInUser: User = {
+          id: result.user.id,
+          email: result.user.email,
+          name: result.user.name,
+          isGuest: false,
+          createdAt: new Date().toISOString(),
+        };
+        setUser(loggedInUser);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(loggedInUser));
+        return true;
+      }
+    }
     const userData = await authDatabase.loginUser(email, password);
     if (userData) {
       const loggedInUser: User = {
@@ -67,12 +106,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const register = async (email: string, password: string, name: string): Promise<boolean> => {
-    const success = await authDatabase.registerUser(email, password, name);
-    if (success) {
+    if (isApiEnabled()) {
+      const result = await apiRegister(email, password, name);
+      if (result.ok && result.user) {
+        const registeredUser: User = {
+          id: result.user.id,
+          email: result.user.email,
+          name: result.user.name,
+          isGuest: false,
+          createdAt: new Date().toISOString(),
+        };
+        setUser(registeredUser);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(registeredUser));
+        return true;
+      }
+    }
+    const userData = await authDatabase.registerUser(email, password, name);
+    if (userData) {
       const registeredUser: User = {
-        id: `user_${Date.now()}`,
-        email,
-        name,
+        id: userData.id,
+        email: userData.email,
+        name: userData.name,
         isGuest: false,
         createdAt: new Date().toISOString(),
       };
