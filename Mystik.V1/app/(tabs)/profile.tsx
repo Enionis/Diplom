@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -29,12 +29,16 @@ import { router } from "expo-router";
 import { useDatabase } from "@/hooks/useDatabase";
 
 export default function ProfileScreen() {
-  const { isPremium, setCardBack, cancelSubscription } = useSubscription(); 
+  const { isPremium, cardBack, setCardBack, cancelSubscription } = useSubscription(); 
   const { birthDate, clearUserData } = useUser();
   const { user, logout } = useAuth();
   const { logAction } = useDatabase();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [selectedCardBack, setSelectedCardBack] = useState("purple");
+  const [selectedCardBack, setSelectedCardBack] = useState(cardBack);
+
+  useEffect(() => {
+    setSelectedCardBack(cardBack);
+  }, [cardBack]);
 
   const handleLogin = () => {
     router.push("/auth");
@@ -128,9 +132,9 @@ export default function ProfileScreen() {
     }
   };
 
-  const cardBacks = [
+  const cardBacks: { id: string; name: string; colors: readonly [ColorValue, ...ColorValue[]]; textColor?: string }[] = [
     { id: "purple", name: "Фиолетовый", colors: ["#4a148c", "#7b1fa2", "#9c27b0"] },
-    { id: "gold", name: "Золотистый", colors: ["#ffd700", "#ffed4e"] },
+    { id: "gold", name: "Золотистый", colors: ["#ffd700", "#ffed4e"], textColor: "#1a1a2e" },
     { id: "black", name: "Черный", colors: ["#1a1a2e", "#333"] },
     { id: "red", name: "Красный", colors: ["#d32f2f", "#f44336"] },
   ];
@@ -225,10 +229,10 @@ export default function ProfileScreen() {
                   onPress={() => handleCardBackChange(back.id)}
                 >
                   <LinearGradient
-                    colors={["#4caf50", "#8bc34a"] as readonly [ColorValue, ...ColorValue[]]}
+                    colors={back.colors}
                     style={styles.cardBackPreview}
                   >
-                    <Text style={styles.cardBackText}>{back.name}</Text>
+                    <Text style={[styles.cardBackText, back.textColor ? { color: back.textColor } : undefined]}>{back.name}</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               ))}

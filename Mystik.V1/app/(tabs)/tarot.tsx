@@ -38,12 +38,27 @@ export default function TarotScreen() {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
-  const cardBackStyles = {
+  const cardBackStyles: Record<string, readonly [ColorValue, ...ColorValue[]]> = {
     purple: ["#4a148c", "#7b1fa2", "#9c27b0"],
     gold: ["#ffd700", "#ffed4e"],
     black: ["#1a1a2e", "#333"],
     red: ["#d32f2f", "#f44336"],
   };
+  const cardBackIconColor: Record<string, string> = {
+    purple: "#ffd700",
+    gold: "#1a1a2e",
+    black: "#ffd700",
+    red: "#fff",
+  };
+  const cardBackTextColor: Record<string, string> = {
+    purple: "#fff",
+    gold: "#1a1a2e",
+    black: "#fff",
+    red: "#fff",
+  };
+  const backColors = cardBackStyles[cardBack] ?? cardBackStyles.purple;
+  const backIconColor = cardBackIconColor[cardBack] ?? "#ffd700";
+  const backTextColor = cardBackTextColor[cardBack] ?? "#fff";
 
   const startReading = (spread: TarotSpread) => {
     logTarotClick(spread.id); 
@@ -170,11 +185,11 @@ export default function TarotScreen() {
                   <TouchableOpacity onPress={() => flipCard(index)} activeOpacity={0.9}>
                     <Animated.View style={[styles.card, animationStyles.front]}>
                       <LinearGradient
-                        colors={["#ff9800", "#ff5722"] as readonly [ColorValue, ...ColorValue[]]}
+                        colors={backColors}
                         style={styles.cardGradient}
                       >
-                        <Sparkles size={40} color="#ffd700" />
-                        <Text style={styles.cardBackTextSmall}>Нажмите</Text>
+                        <Sparkles size={40} color={backIconColor} />
+                        <Text style={[styles.cardBackTextSmall, { color: backTextColor }]}>Нажмите</Text>
                       </LinearGradient>
                     </Animated.View>
                     

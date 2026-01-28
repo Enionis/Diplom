@@ -1,0 +1,22 @@
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import App from './App';
+import { AuthProvider } from './providers/AuthProvider';
+import { UserProvider } from './providers/UserProvider';
+import { SubscriptionProvider } from './providers/SubscriptionProvider';
+import './index.css';
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <AuthProvider>
+        <UserProvider>
+          <SubscriptionProvider>
+            <App />
+          </SubscriptionProvider>
+        </UserProvider>
+      </AuthProvider>
+    </BrowserRouter>
+  </React.StrictMode>
+);
