@@ -8,6 +8,8 @@ import { ZODIAC_SIGNS, getZodiacSign } from '@/constants/zodiac';
 import { PERSONALITY_TRAITS } from '@/constants/personality';
 import { TALENTS } from '@/constants/talents';
 import { PAST_LIVES } from '@/constants/pastLives';
+import { CHAKRA_HEALTH, HEALTH_RECOMMENDATIONS } from '@/constants/health';
+import { PURPOSE_20_40, PURPOSE_40_60, PURPOSE_GENERAL } from '@/constants/purpose';
 import MatrixSVG from '@/components/MatrixSVG';
 
 interface HoroscopeProps {
@@ -256,6 +258,16 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
     talentFather: boolean;
     talentMother: boolean;
     pastLife: boolean;
+    healthSah: boolean;
+    healthAj: boolean;
+    healthVish: boolean;
+    healthAnah: boolean;
+    healthMan: boolean;
+    healthSvad: boolean;
+    healthMul: boolean;
+    purpose2040: boolean;
+    purpose4060: boolean;
+    purposeGeneral: boolean;
   }>({
     positive: false,
     negative: false,
@@ -264,7 +276,17 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
     talentGod: false,
     talentFather: false,
     talentMother: false,
-    pastLife: false
+    pastLife: false,
+    healthSah: false,
+    healthAj: false,
+    healthVish: false,
+    healthAnah: false,
+    healthMan: false,
+    healthSvad: false,
+    healthMul: false,
+    purpose2040: false,
+    purpose4060: false,
+    purposeGeneral: false
   });
 
   const toggleSection = (section: keyof typeof expandedSections) => {
@@ -388,6 +410,37 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
     }
     
     return null;
+  }, [matrixData]);
+
+  // Вычисляем рекомендации по здоровью для всех чакр
+  const healthRecommendations = useMemo(() => {
+    if (!matrixData) return null;
+    
+    const recommendations: { [key: string]: Array<{ number: number; description: string }> } = {};
+    const usedNumbers = new Set<number>(); // Глобальный набор использованных чисел
+    
+    // Порядок чакр как они отображаются на странице
+    const chakraOrder = ['sah', 'aj', 'vish', 'anah', 'man', 'svad', 'mul'];
+    
+    chakraOrder.forEach((chakraKey) => {
+      const chakraData = matrixData.chakras[chakraKey];
+      if (!chakraData) return;
+      
+      const numbers = [chakraData.physics, chakraData.energy, chakraData.emotions];
+      const uniqueNumbers = Array.from(new Set(numbers)).sort((a, b) => a - b);
+      
+      recommendations[chakraKey] = uniqueNumbers
+        .filter(num => num <= 22 && !usedNumbers.has(num)) // Фильтруем уже использованные числа
+        .map(num => {
+          usedNumbers.add(num); // Добавляем число в использованные
+          return {
+            number: num,
+            description: HEALTH_RECOMMENDATIONS[num]?.description || 'Описание отсутствует'
+          };
+        });
+    });
+    
+    return recommendations;
   }, [matrixData]);
 
   const zodiacSign = birthDate ? getZodiacSign(birthDate) : null;
@@ -666,7 +719,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                           height: 28,
                           borderRadius: '50%',
                           background: 'var(--accent)',
-                          color: '#fff',
+                          color: '#1a1a2e',
                           fontSize: 14,
                           fontWeight: 700
                         }}>
@@ -689,7 +742,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                             height: 28,
                             borderRadius: '50%',
                             background: 'var(--accent)',
-                            color: '#fff',
+                            color: '#1a1a2e',
                             fontSize: 14,
                             fontWeight: 700
                           }}>
@@ -1110,6 +1163,292 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                           whiteSpace: 'pre-line' 
                         }}>
                           {pastLife.description}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Здоровье */}
+              {matrixData && healthRecommendations && (
+                <div style={{ marginTop: 24 }}>
+                  <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
+                    Здоровье
+                  </div>
+
+                  {Object.entries(matrixData.chakras).map(([chakraKey, chakraData]) => {
+                    const healthData = CHAKRA_HEALTH[chakraKey];
+                    const recommendations = healthRecommendations[chakraKey];
+                    const sectionKey = `health${chakraKey.charAt(0).toUpperCase() + chakraKey.slice(1)}` as keyof typeof expandedSections;
+
+                    return (
+                      <div key={chakraKey} style={{ marginBottom: 8, background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden' }}>
+                        <button
+                          type="button"
+                          onClick={() => toggleSection(sectionKey)}
+                          style={{
+                            width: '100%',
+                            padding: 16,
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            background: 'transparent',
+                            border: 'none',
+                            color: 'inherit',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <div style={{ textAlign: 'left' }}>
+                            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>
+                              {healthData.organs}
+                            </div>
+                            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                              {healthData.name} - {healthData.description}
+                            </div>
+                          </div>
+                          {expandedSections[sectionKey] ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                        </button>
+                        {expandedSections[sectionKey] && (
+                          <div style={{ padding: '0 16px 16px' }}>
+                            <div style={{ marginBottom: 16 }}>
+                              <div style={{ fontSize: 15, fontWeight: 600, color: '#e91e63', marginBottom: 8 }}>
+                                Проблемы со здоровьем:
+                              </div>
+                              <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
+                                {healthData.problems}
+                              </p>
+                            </div>
+
+                            <div style={{ marginBottom: 16 }}>
+                              <div style={{ fontSize: 15, fontWeight: 600, color: '#ff9800', marginBottom: 8 }}>
+                                Причины:
+                              </div>
+                              <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
+                                {healthData.causes}
+                              </p>
+                            </div>
+
+                            <div style={{ marginBottom: 16 }}>
+                              <div style={{ fontSize: 15, fontWeight: 600, color: '#4caf50', marginBottom: 8 }}>
+                                Решение проблемы:
+                              </div>
+                              <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
+                                {healthData.solution}
+                              </p>
+                            </div>
+
+                            {recommendations && recommendations.length > 0 && (
+                              <div>
+                                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
+                                  Рекомендации по числам:
+                                </div>
+                                {recommendations.map((rec, index) => (
+                                  <div 
+                                    key={rec.number} 
+                                    style={{ 
+                                      marginBottom: index < recommendations.length - 1 ? 16 : 0,
+                                      paddingBottom: index < recommendations.length - 1 ? 16 : 0,
+                                      borderBottom: index < recommendations.length - 1 ? '1px solid rgba(255,255,255,0.1)' : 'none'
+                                    }}
+                                  >
+                                    <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                                      <span style={{ 
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        width: 28,
+                                        height: 28,
+                                        minWidth: 28,
+                                        borderRadius: '50%',
+                                        background: 'var(--accent)',
+                                        color: '#1a1a2e',
+                                        fontSize: 14,
+                                        fontWeight: 700,
+                                        flexShrink: 0
+                                      }}>
+                                        {rec.number}
+                                      </span>
+                                      <span style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                                        {rec.description}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Предназначение (новая секция) */}
+              {matrixData && (
+                <div style={{ marginTop: 24 }}>
+                  <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
+                    Предназначение
+                  </div>
+
+                  {/* Предназначение 20-40 лет */}
+                  <div style={{ marginBottom: 8, background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden' }}>
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('purpose2040')}
+                      style={{
+                        width: '100%',
+                        padding: 16,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'inherit',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: 16, fontWeight: 600 }}>
+                          Предназначение (20-40 лет)
+                        </div>
+                        <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
+                          Число: {matrixData.purposes.perspurpose}
+                        </div>
+                      </div>
+                      {expandedSections.purpose2040 ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    </button>
+                    {expandedSections.purpose2040 && (
+                      <div style={{ padding: '0 16px 16px' }}>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                          <span style={{ 
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 32,
+                            height: 32,
+                            minWidth: 32,
+                            borderRadius: '50%',
+                            background: '#9c27b0',
+                            color: '#fff',
+                            fontSize: 16,
+                            fontWeight: 700,
+                            flexShrink: 0
+                          }}>
+                            {matrixData.purposes.perspurpose}
+                          </span>
+                        </div>
+                        <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
+                          {PURPOSE_20_40[matrixData.purposes.perspurpose]?.description || 'Описание отсутствует'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Предназначение 40-60 лет */}
+                  <div style={{ marginBottom: 8, background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden' }}>
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('purpose4060')}
+                      style={{
+                        width: '100%',
+                        padding: 16,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'inherit',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: 16, fontWeight: 600 }}>
+                          Предназначение (40-60 лет)
+                        </div>
+                        <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
+                          Число: {matrixData.purposes.socialpurpose}
+                        </div>
+                      </div>
+                      {expandedSections.purpose4060 ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    </button>
+                    {expandedSections.purpose4060 && (
+                      <div style={{ padding: '0 16px 16px' }}>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                          <span style={{ 
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 32,
+                            height: 32,
+                            minWidth: 32,
+                            borderRadius: '50%',
+                            background: '#9c27b0',
+                            color: '#fff',
+                            fontSize: 16,
+                            fontWeight: 700,
+                            flexShrink: 0
+                          }}>
+                            {matrixData.purposes.socialpurpose}
+                          </span>
+                        </div>
+                        <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
+                          {PURPOSE_40_60[matrixData.purposes.socialpurpose]?.description || 'Описание отсутствует'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Общее предназначение */}
+                  <div style={{ marginBottom: 8, background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden' }}>
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('purposeGeneral')}
+                      style={{
+                        width: '100%',
+                        padding: 16,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'inherit',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: 16, fontWeight: 600 }}>
+                          Предназначение (общее)
+                        </div>
+                        <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
+                          Число: {matrixData.purposes.generalpurpose}
+                        </div>
+                      </div>
+                      {expandedSections.purposeGeneral ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    </button>
+                    {expandedSections.purposeGeneral && (
+                      <div style={{ padding: '0 16px 16px' }}>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                          <span style={{ 
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 32,
+                            height: 32,
+                            minWidth: 32,
+                            borderRadius: '50%',
+                            background: '#9c27b0',
+                            color: '#fff',
+                            fontSize: 16,
+                            fontWeight: 700,
+                            flexShrink: 0
+                          }}>
+                            {matrixData.purposes.generalpurpose}
+                          </span>
+                        </div>
+                        <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
+                          {PURPOSE_GENERAL[matrixData.purposes.generalpurpose]?.description || 'Описание отсутствует'}
                         </p>
                       </div>
                     )}
