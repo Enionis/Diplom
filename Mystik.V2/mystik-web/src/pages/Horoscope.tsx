@@ -10,6 +10,8 @@ import { TALENTS } from '@/constants/talents';
 import { PAST_LIVES } from '@/constants/pastLives';
 import { CHAKRA_HEALTH, HEALTH_RECOMMENDATIONS } from '@/constants/health';
 import { PURPOSE_20_40, PURPOSE_40_60, PURPOSE_GENERAL } from '@/constants/purpose';
+import { CHALLENGES } from '@/constants/challenges';
+import { RELATIONSHIPS_WOMEN, RELATIONSHIPS_MEN, CHARACTER, EXIT_REASONS } from '@/constants/relationships';
 import MatrixSVG from '@/components/MatrixSVG';
 
 interface HoroscopeProps {
@@ -268,6 +270,11 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
     purpose2040: boolean;
     purpose4060: boolean;
     purposeGeneral: boolean;
+    challenges: boolean;
+    relationshipsWomen: boolean;
+    relationshipsMen: boolean;
+    relationshipsExit: boolean;
+    relationshipsCharacter: boolean;
   }>({
     positive: false,
     negative: false,
@@ -286,7 +293,12 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
     healthMul: false,
     purpose2040: false,
     purpose4060: false,
-    purposeGeneral: false
+    purposeGeneral: false,
+    challenges: false,
+    relationshipsWomen: false,
+    relationshipsMen: false,
+    relationshipsExit: false,
+    relationshipsCharacter: false
   });
 
   const toggleSection = (section: keyof typeof expandedSections) => {
@@ -1450,6 +1462,362 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                         <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
                           {PURPOSE_GENERAL[matrixData.purposes.generalpurpose]?.description || 'Описание отсутствует'}
                         </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Испытания */}
+              {matrixData && (
+                <div style={{ marginTop: 24 }}>
+                  <div style={{ fontSize: 20, fontWeight: 600, color: '#ffd700', marginBottom: 12 }}>
+                    Испытания
+                  </div>
+
+                  <div style={{ marginBottom: 8, background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden' }}>
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('challenges')}
+                      style={{
+                        width: '100%',
+                        padding: 16,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'inherit',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: 16, fontWeight: 600 }}>
+                          Число: {matrixData.matrix[0].value}
+                        </div>
+                      </div>
+                      {expandedSections.challenges ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    </button>
+                    {expandedSections.challenges && (
+                      <div style={{ padding: '0 16px 16px' }}>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                          <span style={{ 
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 32,
+                            height: 32,
+                            minWidth: 32,
+                            borderRadius: '50%',
+                            background: '#ffd700',
+                            color: '#1a1a2e',
+                            fontSize: 16,
+                            fontWeight: 700,
+                            flexShrink: 0
+                          }}>
+                            {matrixData.matrix[0].value}
+                          </span>
+                        </div>
+                        <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
+                          {CHALLENGES[matrixData.matrix[0].value]?.description || 'Описание отсутствует'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Отношения */}
+              {matrixData && (
+                <div style={{ marginTop: 24 }}>
+                  <div style={{ fontSize: 20, fontWeight: 600, color: '#ffd700', marginBottom: 12 }}>
+                    Отношения
+                  </div>
+
+                  {/* Отношения для женщин */}
+                  <div style={{ marginBottom: 8, background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden' }}>
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('relationshipsWomen')}
+                      style={{
+                        width: '100%',
+                        padding: 16,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'inherit',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: 16, fontWeight: 600 }}>
+                          Отношения для женщин
+                        </div>
+                      </div>
+                      {expandedSections.relationshipsWomen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    </button>
+                    {expandedSections.relationshipsWomen && (
+                      <div style={{ padding: '0 16px 16px' }}>
+                        {(() => {
+                          const shownNumbers = new Set<number>();
+                          const numbers = [
+                            { value: matrixData.matrix[12].value, index: 12 },
+                            { value: matrixData.matrix[16].value, index: 16 }
+                          ];
+                          
+                          return numbers.map((num, idx) => {
+                            if (shownNumbers.has(num.value)) {
+                              return null;
+                            }
+                            shownNumbers.add(num.value);
+                            
+                            const isLast = idx === numbers.length - 1 || numbers.slice(idx + 1).every(n => shownNumbers.has(n.value));
+                            
+                            return (
+                              <div 
+                                key={num.index}
+                                style={{ 
+                                  marginBottom: !isLast ? 16 : 0, 
+                                  paddingBottom: !isLast ? 16 : 0, 
+                                  borderBottom: !isLast ? '1px solid rgba(255,255,255,0.1)' : 'none' 
+                                }}
+                              >
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                                  <span style={{ 
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: 32,
+                                    height: 32,
+                                    minWidth: 32,
+                                    borderRadius: '50%',
+                                    background: '#ffd700',
+                                    color: '#1a1a2e',
+                                    fontSize: 16,
+                                    fontWeight: 700,
+                                    flexShrink: 0
+                                  }}>
+                                    {num.value}
+                                  </span>
+                                </div>
+                                <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
+                                  {RELATIONSHIPS_WOMEN[num.value] || 'Описание отсутствует'}
+                                </p>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Отношения для мужчин */}
+                  <div style={{ marginBottom: 8, background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden' }}>
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('relationshipsMen')}
+                      style={{
+                        width: '100%',
+                        padding: 16,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'inherit',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: 16, fontWeight: 600 }}>
+                          Отношения для мужчин
+                        </div>
+                      </div>
+                      {expandedSections.relationshipsMen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    </button>
+                    {expandedSections.relationshipsMen && (
+                      <div style={{ padding: '0 16px 16px' }}>
+                        {(() => {
+                          const shownNumbers = new Set<number>();
+                          const numbers = [
+                            { value: matrixData.matrix[12].value, index: 12 },
+                            { value: matrixData.matrix[16].value, index: 16 }
+                          ];
+                          
+                          return numbers.map((num, idx) => {
+                            if (shownNumbers.has(num.value)) {
+                              return null;
+                            }
+                            shownNumbers.add(num.value);
+                            
+                            const isLast = idx === numbers.length - 1 || numbers.slice(idx + 1).every(n => shownNumbers.has(n.value));
+                            
+                            return (
+                              <div 
+                                key={num.index}
+                                style={{ 
+                                  marginBottom: !isLast ? 16 : 0, 
+                                  paddingBottom: !isLast ? 16 : 0, 
+                                  borderBottom: !isLast ? '1px solid rgba(255,255,255,0.1)' : 'none' 
+                                }}
+                              >
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                                  <span style={{ 
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: 32,
+                                    height: 32,
+                                    minWidth: 32,
+                                    borderRadius: '50%',
+                                    background: '#ffd700',
+                                    color: '#1a1a2e',
+                                    fontSize: 16,
+                                    fontWeight: 700,
+                                    flexShrink: 0
+                                  }}>
+                                    {num.value}
+                                  </span>
+                                </div>
+                                <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
+                                  {RELATIONSHIPS_MEN[num.value] || 'Описание отсутствует'}
+                                </p>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* На выходе */}
+                  <div style={{ marginBottom: 8, background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden' }}>
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('relationshipsExit')}
+                      style={{
+                        width: '100%',
+                        padding: 16,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'inherit',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: 16, fontWeight: 600 }}>
+                          На выходе
+                        </div>
+                      </div>
+                      {expandedSections.relationshipsExit ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    </button>
+                    {expandedSections.relationshipsExit && (
+                      <div style={{ padding: '0 16px 16px' }}>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                          <span style={{ 
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 32,
+                            height: 32,
+                            minWidth: 32,
+                            borderRadius: '50%',
+                            background: '#ffd700',
+                            color: '#1a1a2e',
+                            fontSize: 16,
+                            fontWeight: 700,
+                            flexShrink: 0
+                          }}>
+                            {matrixData.matrix[15].value}
+                          </span>
+                        </div>
+                        <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
+                          {EXIT_REASONS[matrixData.matrix[15].value] || 'Описание отсутствует'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Характер партнера */}
+                  <div style={{ marginBottom: 8, background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden' }}>
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('relationshipsCharacter')}
+                      style={{
+                        width: '100%',
+                        padding: 16,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'inherit',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: 16, fontWeight: 600 }}>
+                          Характер партнера
+                        </div>
+                      </div>
+                      {expandedSections.relationshipsCharacter ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    </button>
+                    {expandedSections.relationshipsCharacter && (
+                      <div style={{ padding: '0 16px 16px' }}>
+                        {(() => {
+                          const shownNumbers = new Set<number>();
+                          const numbers = [
+                            { value: matrixData.matrix[12].value, index: 12 },
+                            { value: matrixData.matrix[16].value, index: 16 }
+                          ];
+                          
+                          return numbers.map((num, idx) => {
+                            if (shownNumbers.has(num.value)) {
+                              return null;
+                            }
+                            shownNumbers.add(num.value);
+                            
+                            const isLast = idx === numbers.length - 1 || numbers.slice(idx + 1).every(n => shownNumbers.has(n.value));
+                            
+                            return (
+                              <div 
+                                key={num.index}
+                                style={{ 
+                                  marginBottom: !isLast ? 16 : 0, 
+                                  paddingBottom: !isLast ? 16 : 0, 
+                                  borderBottom: !isLast ? '1px solid rgba(255,255,255,0.1)' : 'none' 
+                                }}
+                              >
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                                  <span style={{ 
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: 32,
+                                    height: 32,
+                                    minWidth: 32,
+                                    borderRadius: '50%',
+                                    background: '#ffd700',
+                                    color: '#1a1a2e',
+                                    fontSize: 16,
+                                    fontWeight: 700,
+                                    flexShrink: 0
+                                  }}>
+                                    {num.value}
+                                  </span>
+                                </div>
+                                <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
+                                  {CHARACTER[num.value] || 'Описание отсутствует'}
+                                </p>
+                              </div>
+                            );
+                          });
+                        })()}
                       </div>
                     )}
                   </div>
