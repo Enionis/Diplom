@@ -12,6 +12,7 @@ import { CHAKRA_HEALTH, HEALTH_RECOMMENDATIONS } from '@/constants/health';
 import { PURPOSE_20_40, PURPOSE_40_60, PURPOSE_GENERAL } from '@/constants/purpose';
 import { CHALLENGES } from '@/constants/challenges';
 import { RELATIONSHIPS_WOMEN, RELATIONSHIPS_MEN, CHARACTER, EXIT_REASONS } from '@/constants/relationships';
+import { MONEY_DIRECTION, MONEY_SUCCESS, MONEY_FLOW } from '@/constants/money';
 import MatrixSVG from '@/components/MatrixSVG';
 
 interface HoroscopeProps {
@@ -275,6 +276,9 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
     relationshipsMen: boolean;
     relationshipsExit: boolean;
     relationshipsCharacter: boolean;
+    moneyDirection: boolean;
+    moneySuccess: boolean;
+    moneyFlow: boolean;
   }>({
     positive: false,
     negative: false,
@@ -298,7 +302,10 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
     relationshipsWomen: false,
     relationshipsMen: false,
     relationshipsExit: false,
-    relationshipsCharacter: false
+    relationshipsCharacter: false,
+    moneyDirection: false,
+    moneySuccess: false,
+    moneyFlow: false
   });
 
   const toggleSection = (section: keyof typeof expandedSections) => {
@@ -1813,6 +1820,224 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                                 </div>
                                 <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
                                   {CHARACTER[num.value] || 'Описание отсутствует'}
+                                </p>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Деньги */}
+              {matrixData && (
+                <div style={{ marginTop: 24 }}>
+                  <div style={{ fontSize: 20, fontWeight: 600, color: '#ffd700', marginBottom: 12 }}>
+                    Деньги
+                  </div>
+
+                  {/* Направление деятельности */}
+                  <div style={{ marginBottom: 8, background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden' }}>
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('moneyDirection')}
+                      style={{
+                        width: '100%',
+                        padding: 16,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'inherit',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: 16, fontWeight: 600 }}>
+                          Направление деятельности
+                        </div>
+                      </div>
+                      {expandedSections.moneyDirection ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    </button>
+                    {expandedSections.moneyDirection && (
+                      <div style={{ padding: '0 16px 16px' }}>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                          <span style={{ 
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 32,
+                            height: 32,
+                            minWidth: 32,
+                            borderRadius: '50%',
+                            background: '#ffd700',
+                            color: '#1a1a2e',
+                            fontSize: 16,
+                            fontWeight: 700,
+                            flexShrink: 0
+                          }}>
+                            {matrixData.matrix[15].value}
+                          </span>
+                        </div>
+                        <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
+                          {MONEY_DIRECTION[matrixData.matrix[15].value]?.description || 'Описание отсутствует'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Для достижения успеха важно */}
+                  <div style={{ marginBottom: 8, background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden' }}>
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('moneySuccess')}
+                      style={{
+                        width: '100%',
+                        padding: 16,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'inherit',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: 16, fontWeight: 600 }}>
+                          Для достижения успеха важно
+                        </div>
+                      </div>
+                      {expandedSections.moneySuccess ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    </button>
+                    {expandedSections.moneySuccess && (
+                      <div style={{ padding: '0 16px 16px' }}>
+                        {(() => {
+                          const shownNumbers = new Set<number>();
+                          const numbers = [
+                            { value: matrixData.matrix[25].value, index: 25 },
+                            { value: matrixData.matrix[11].value, index: 11 }
+                          ];
+                          
+                          return numbers.map((num, idx) => {
+                            if (shownNumbers.has(num.value)) {
+                              return null;
+                            }
+                            shownNumbers.add(num.value);
+                            
+                            const isLast = idx === numbers.length - 1 || numbers.slice(idx + 1).every(n => shownNumbers.has(n.value));
+                            
+                            return (
+                              <div 
+                                key={num.index}
+                                style={{ 
+                                  marginBottom: !isLast ? 16 : 0, 
+                                  paddingBottom: !isLast ? 16 : 0, 
+                                  borderBottom: !isLast ? '1px solid rgba(255,255,255,0.1)' : 'none' 
+                                }}
+                              >
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                                  <span style={{ 
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: 32,
+                                    height: 32,
+                                    minWidth: 32,
+                                    borderRadius: '50%',
+                                    background: '#ffd700',
+                                    color: '#1a1a2e',
+                                    fontSize: 16,
+                                    fontWeight: 700,
+                                    flexShrink: 0
+                                  }}>
+                                    {num.value}
+                                  </span>
+                                </div>
+                                <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
+                                  {MONEY_SUCCESS[num.value]?.description || 'Описание отсутствует'}
+                                </p>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Как раскрыть денежный поток */}
+                  <div style={{ marginBottom: 8, background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden' }}>
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('moneyFlow')}
+                      style={{
+                        width: '100%',
+                        padding: 16,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'inherit',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: 16, fontWeight: 600 }}>
+                          Как раскрыть денежный поток
+                        </div>
+                      </div>
+                      {expandedSections.moneyFlow ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    </button>
+                    {expandedSections.moneyFlow && (
+                      <div style={{ padding: '0 16px 16px' }}>
+                        {(() => {
+                          const shownNumbers = new Set<number>();
+                          const numbers = [
+                            { value: matrixData.matrix[19].value, index: 19 },
+                            { value: matrixData.matrix[3].value, index: 3 }
+                          ];
+                          
+                          return numbers.map((num, idx) => {
+                            if (shownNumbers.has(num.value)) {
+                              return null;
+                            }
+                            shownNumbers.add(num.value);
+                            
+                            const isLast = idx === numbers.length - 1 || numbers.slice(idx + 1).every(n => shownNumbers.has(n.value));
+                            
+                            return (
+                              <div 
+                                key={num.index}
+                                style={{ 
+                                  marginBottom: !isLast ? 16 : 0, 
+                                  paddingBottom: !isLast ? 16 : 0, 
+                                  borderBottom: !isLast ? '1px solid rgba(255,255,255,0.1)' : 'none' 
+                                }}
+                              >
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                                  <span style={{ 
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: 32,
+                                    height: 32,
+                                    minWidth: 32,
+                                    borderRadius: '50%',
+                                    background: '#ffd700',
+                                    color: '#1a1a2e',
+                                    fontSize: 16,
+                                    fontWeight: 700,
+                                    flexShrink: 0
+                                  }}>
+                                    {num.value}
+                                  </span>
+                                </div>
+                                <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
+                                  {MONEY_FLOW[num.value]?.description || 'Описание отсутствует'}
                                 </p>
                               </div>
                             );
