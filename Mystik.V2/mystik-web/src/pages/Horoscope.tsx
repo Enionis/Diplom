@@ -10,9 +10,13 @@ import { TALENTS } from '@/constants/talents';
 import { PAST_LIVES } from '@/constants/pastLives';
 import { CHAKRA_HEALTH, HEALTH_RECOMMENDATIONS } from '@/constants/health';
 import { PURPOSE_20_40, PURPOSE_40_60, PURPOSE_GENERAL } from '@/constants/purpose';
+import { YEAR_FORECAST } from '@/constants/yearForecast';
 import { CHALLENGES } from '@/constants/challenges';
 import { RELATIONSHIPS_WOMEN, RELATIONSHIPS_MEN, CHARACTER, EXIT_REASONS } from '@/constants/relationships';
 import { MONEY_DIRECTION, MONEY_SUCCESS, MONEY_FLOW } from '@/constants/money';
+import { CHILDREN_MISTAKES } from '@/constants/children';
+import { MANAGEMENT_GUIDANCE } from '@/constants/management';
+import { PARENTS_MALE_LINE, PARENTS_FEMALE_LINE, PARENTS_RESENTMENTS } from '@/constants/parents';
 import MatrixSVG from '@/components/MatrixSVG';
 
 interface HoroscopeProps {
@@ -271,6 +275,8 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
     purpose2040: boolean;
     purpose4060: boolean;
     purposeGeneral: boolean;
+    yearForecastEssence: boolean;
+    yearForecastReasons: boolean;
     challenges: boolean;
     relationshipsWomen: boolean;
     relationshipsMen: boolean;
@@ -279,6 +285,11 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
     moneyDirection: boolean;
     moneySuccess: boolean;
     moneyFlow: boolean;
+    parentsMaleLine: boolean;
+    parentsFemaleLine: boolean;
+    parentsResentments: boolean;
+    children: boolean;
+    management: boolean;
   }>({
     positive: false,
     negative: false,
@@ -298,6 +309,8 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
     purpose2040: false,
     purpose4060: false,
     purposeGeneral: false,
+    yearForecastEssence: false,
+    yearForecastReasons: false,
     challenges: false,
     relationshipsWomen: false,
     relationshipsMen: false,
@@ -305,7 +318,12 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
     relationshipsCharacter: false,
     moneyDirection: false,
     moneySuccess: false,
-    moneyFlow: false
+    moneyFlow: false,
+    parentsMaleLine: false,
+    parentsFemaleLine: false,
+    parentsResentments: false,
+    children: false,
+    management: false
   });
 
   const toggleSection = (section: keyof typeof expandedSections) => {
@@ -461,6 +479,135 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
     
     return recommendations;
   }, [matrixData]);
+
+  // Вычисляем прогноз на год
+  const yearForecast = useMemo(() => {
+    if (!birthDate || !matrixData) return null;
+    
+    // Вычисляем текущий возраст
+    const [day, month, year] = birthDate.split('.').map(Number);
+    const birthDateObj = new Date(year, month - 1, day);
+    const today = new Date();
+    let age = today.getFullYear() - birthDateObj.getFullYear();
+    const monthDiff = today.getMonth() - birthDateObj.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDateObj.getDate())) {
+      age--;
+    }
+
+    // Если возраст 80+, начинаем цикл заново (80 -> 1, 81 -> 2, и т.д.)
+    const effectiveAge = age >= 80 ? ((age - 80) % 79) + 1 : age;
+
+    // Используем единый прогноз для всех
+    const forecastData = YEAR_FORECAST;
+
+    // Получаем базовые точки из матрицы
+    const A = matrixData.matrix[1].value;  // День
+    const B = matrixData.matrix[2].value;  // Месяц
+    const C = matrixData.matrix[3].value;  // Год
+    const D = matrixData.matrix[4].value;
+    const E = matrixData.matrix[0].value;  // Центр
+    const F = matrixData.matrix[5].value;
+    const G = matrixData.matrix[6].value;
+    const H = matrixData.matrix[7].value;
+
+    // Вычисляем все промежуточные значения для прогноза
+    const AE = reduceNumber(A + E);
+    const AE1 = reduceNumber(A + AE);
+    const AE2 = reduceNumber(E + AE);
+    const AE3 = reduceNumber(A + AE1);
+    const AE4 = reduceNumber(AE + AE1);
+    const AE5 = reduceNumber(AE + AE2);
+    const AE6 = reduceNumber(E + AE2);
+
+    const EB = reduceNumber(E + B);
+    const EB1 = reduceNumber(E + EB);
+    const EB2 = reduceNumber(B + EB);
+    const EB3 = reduceNumber(E + EB1);
+    const EB4 = reduceNumber(EB + EB1);
+    const EB5 = reduceNumber(EB + EB2);
+    const EB6 = reduceNumber(B + EB2);
+
+    const BF = reduceNumber(B + F);
+    const BF1 = reduceNumber(B + BF);
+    const BF2 = reduceNumber(F + BF);
+    const BF3 = reduceNumber(B + BF1);
+    const BF4 = reduceNumber(BF + BF1);
+    const BF5 = reduceNumber(BF1 + BF2);
+    const BF6 = reduceNumber(F + BF2);
+
+    const FC = reduceNumber(F + C);
+    const FC1 = reduceNumber(F + FC);
+    const FC2 = reduceNumber(C + FC);
+    const FC3 = reduceNumber(F + FC1);
+    const FC4 = reduceNumber(FC + FC1);
+    const FC5 = reduceNumber(FC + FC2);
+    const FC6 = reduceNumber(C + FC2);
+
+    const CG = reduceNumber(C + G);
+    const CG1 = reduceNumber(C + CG);
+    const CG2 = reduceNumber(G + CG);
+    const CG3 = reduceNumber(C + CG1);
+    const CG4 = reduceNumber(CG + CG1);
+    const CG5 = reduceNumber(CG + CG2);
+    const CG6 = reduceNumber(C + CG2);
+
+    const GD = reduceNumber(G + D);
+    const GD1 = reduceNumber(G + GD);
+    const GD2 = reduceNumber(D + GD);
+    const GD3 = reduceNumber(G + GD1);
+    const GD4 = reduceNumber(GD + GD1);
+    const GD5 = reduceNumber(GD + GD2);
+    const GD6 = reduceNumber(G + GD2);
+
+    const DH = reduceNumber(D + H);
+    const DH1 = reduceNumber(D + DH);
+    const DH2 = reduceNumber(H + DH);
+    const DH3 = reduceNumber(D + DH1);
+    const DH4 = reduceNumber(DH + DH1);
+    const DH5 = reduceNumber(DH + DH2);
+    const DH6 = reduceNumber(D + DH2);
+
+    const HA = reduceNumber(H + A);
+    const HA1 = reduceNumber(H + HA);
+    const HA2 = reduceNumber(A + HA);
+    const HA3 = reduceNumber(H + HA1);
+    const HA4 = reduceNumber(HA + HA1);
+    const HA5 = reduceNumber(HA + HA2);
+    const HA6 = reduceNumber(A + HA2);
+
+    // Функция для определения числа по возрасту
+    const getNumberByAge = (ageValue: number): number => {
+      // Если возраст больше 79, начинаем цикл заново
+      const normalizedAge = ageValue > 79 ? ((ageValue - 1) % 79) + 1 : ageValue;
+      
+      const ageMap: { [key: number]: number } = {
+        1: AE3, 2: AE3, 3: AE4, 4: AE4, 5: AE, 6: AE5, 7: AE5, 8: AE2, 9: AE6, 10: E,
+        11: EB3, 12: EB3, 13: EB1, 14: EB4, 15: EB, 16: EB5, 17: EB5, 18: EB2, 19: EB6, 20: B,
+        21: BF3, 22: BF3, 23: BF1, 24: BF4, 25: BF, 26: BF5, 27: BF5, 28: BF2, 29: BF6, 30: F,
+        31: FC3, 32: FC3, 33: FC1, 34: FC4, 35: FC, 36: FC5, 37: FC5, 38: FC2, 39: FC6, 40: C,
+        41: CG3, 42: CG3, 43: CG1, 44: CG4, 45: CG, 46: CG5, 47: CG5, 48: CG2, 49: CG6, 50: G,
+        51: GD3, 52: GD3, 53: GD1, 54: GD4, 55: GD, 56: GD5, 57: GD5, 58: GD2, 59: GD6, 60: D,
+        61: DH3, 62: DH3, 63: DH1, 64: DH4, 65: DH, 66: DH5, 67: DH5, 68: DH2, 69: DH6, 70: H,
+        71: HA3, 72: HA3, 73: HA1, 74: HA4, 75: HA, 76: HA5, 77: HA5, 78: HA2, 79: HA6
+      };
+      return ageMap[normalizedAge] || E;
+    };
+
+    // Первое число - суть года (текущий возраст)
+    const essenceNumber = getNumberByAge(effectiveAge);
+
+    // Второе число - причины событий (возраст ±40)
+    const adjustedAge = effectiveAge <= 40 ? effectiveAge + 40 : effectiveAge - 40;
+    const reasonsNumber = getNumberByAge(adjustedAge);
+
+    return {
+      age,
+      effectiveAge,
+      essenceNumber,
+      reasonsNumber,
+      forecastData
+    };
+  }, [birthDate, matrixData]);
 
   const zodiacSign = birthDate ? getZodiacSign(birthDate) : null;
   const zodiacData = zodiacSign ? ZODIAC_SIGNS[zodiacSign] : null;
@@ -1475,6 +1622,113 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                 </div>
               )}
 
+              {/* Прогноз на год */}
+              {yearForecast && (
+                <div style={{ marginTop: 24 }}>
+                  <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
+                    Прогноз на год
+                  </div>
+
+                  {/* Суть года, основной мотив */}
+                  <div style={{ marginBottom: 8, background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden' }}>
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('yearForecastEssence')}
+                      style={{
+                        width: '100%',
+                        padding: 16,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'inherit',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: 16, fontWeight: 600 }}>
+                          Суть года, основной мотив
+                        </div>
+                        <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
+                          Возраст: {yearForecast.age} {yearForecast.age >= 80 && `(цикл: ${yearForecast.effectiveAge})`} лет | Число: {yearForecast.essenceNumber}
+                        </div>
+                      </div>
+                      {expandedSections.yearForecastEssence ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    </button>
+                    {expandedSections.yearForecastEssence && (
+                      <div style={{ padding: '0 16px 16px' }}>
+                        <div style={{ marginBottom: 16 }}>
+                          <div style={{ fontSize: 15, fontWeight: 600, color: '#4caf50', marginBottom: 8 }}>
+                            В плюсе:
+                          </div>
+                          <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
+                            {yearForecast.forecastData[yearForecast.essenceNumber]?.positive || 'Описание отсутствует'}
+                          </p>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 15, fontWeight: 600, color: '#e91e63', marginBottom: 8 }}>
+                            В минусе:
+                          </div>
+                          <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
+                            {yearForecast.forecastData[yearForecast.essenceNumber]?.negative || 'Описание отсутствует'}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Причины событий */}
+                  <div style={{ marginBottom: 8, background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden' }}>
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('yearForecastReasons')}
+                      style={{
+                        width: '100%',
+                        padding: 16,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'inherit',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: 16, fontWeight: 600 }}>
+                          Причины событий
+                        </div>
+                        <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
+                          Число: {yearForecast.reasonsNumber}
+                        </div>
+                      </div>
+                      {expandedSections.yearForecastReasons ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    </button>
+                    {expandedSections.yearForecastReasons && (
+                      <div style={{ padding: '0 16px 16px' }}>
+                        <div style={{ marginBottom: 16 }}>
+                          <div style={{ fontSize: 15, fontWeight: 600, color: '#4caf50', marginBottom: 8 }}>
+                            В плюсе:
+                          </div>
+                          <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
+                            {yearForecast.forecastData[yearForecast.reasonsNumber]?.positive || 'Описание отсутствует'}
+                          </p>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 15, fontWeight: 600, color: '#e91e63', marginBottom: 8 }}>
+                            В минусе:
+                          </div>
+                          <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
+                            {yearForecast.forecastData[yearForecast.reasonsNumber]?.negative || 'Описание отсутствует'}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Испытания */}
               {matrixData && (
                 <div style={{ marginTop: 24 }}>
@@ -2038,6 +2292,437 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                                 </div>
                                 <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
                                   {MONEY_FLOW[num.value]?.description || 'Описание отсутствует'}
+                                </p>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Родители */}
+              {matrixData && (
+                <div style={{ marginTop: 24 }}>
+                  <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
+                    Родители
+                  </div>
+
+                  {/* Родовые программы по мужской линии */}
+                  <div style={{ marginBottom: 8, background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden' }}>
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('parentsMaleLine')}
+                      style={{
+                        width: '100%',
+                        padding: 16,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'inherit',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: 16, fontWeight: 600 }}>
+                          Родовые программы по мужской линии
+                        </div>
+                      </div>
+                      {expandedSections.parentsMaleLine ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    </button>
+                    {expandedSections.parentsMaleLine && (
+                      <div style={{ padding: '0 16px 16px' }}>
+                        {(() => {
+                          const shownNumbers = new Set<number>();
+                          const numbers = [
+                            { value: matrixData.matrix[5].value, index: 5 },
+                            { value: matrixData.matrix[27].value, index: 27 },
+                            { value: matrixData.matrix[26].value, index: 26 },
+                            { value: matrixData.matrix[30].value, index: 30 },
+                            { value: matrixData.matrix[31].value, index: 31 },
+                            { value: matrixData.matrix[7].value, index: 7 }
+                          ];
+                          
+                          return numbers.map((num, idx) => {
+                            if (shownNumbers.has(num.value)) {
+                              return null;
+                            }
+                            shownNumbers.add(num.value);
+                            
+                            const isLast = idx === numbers.length - 1 || numbers.slice(idx + 1).every(n => shownNumbers.has(n.value));
+                            
+                            return (
+                              <div 
+                                key={num.index}
+                                style={{ 
+                                  marginBottom: !isLast ? 16 : 0, 
+                                  paddingBottom: !isLast ? 16 : 0, 
+                                  borderBottom: !isLast ? '1px solid rgba(255,255,255,0.1)' : 'none' 
+                                }}
+                              >
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                                  <span style={{ 
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: 32,
+                                    height: 32,
+                                    minWidth: 32,
+                                    borderRadius: '50%',
+                                    background: '#2196f3',
+                                    color: '#fff',
+                                    fontSize: 16,
+                                    fontWeight: 700,
+                                    flexShrink: 0
+                                  }}>
+                                    {num.value}
+                                  </span>
+                                </div>
+                                <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
+                                  {PARENTS_MALE_LINE[num.value] || 'Описание отсутствует'}
+                                </p>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Родовые программы по женской линии */}
+                  <div style={{ marginBottom: 8, background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden' }}>
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('parentsFemaleLine')}
+                      style={{
+                        width: '100%',
+                        padding: 16,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'inherit',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: 16, fontWeight: 600 }}>
+                          Родовые программы по женской линии
+                        </div>
+                      </div>
+                      {expandedSections.parentsFemaleLine ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    </button>
+                    {expandedSections.parentsFemaleLine && (
+                      <div style={{ padding: '0 16px 16px' }}>
+                        {(() => {
+                          const shownNumbers = new Set<number>();
+                          const numbers = [
+                            { value: matrixData.matrix[6].value, index: 6 },
+                            { value: matrixData.matrix[29].value, index: 29 },
+                            { value: matrixData.matrix[28].value, index: 28 },
+                            { value: matrixData.matrix[32].value, index: 32 },
+                            { value: matrixData.matrix[33].value, index: 33 },
+                            { value: matrixData.matrix[8].value, index: 8 }
+                          ];
+                          
+                          return numbers.map((num, idx) => {
+                            if (shownNumbers.has(num.value)) {
+                              return null;
+                            }
+                            shownNumbers.add(num.value);
+                            
+                            const isLast = idx === numbers.length - 1 || numbers.slice(idx + 1).every(n => shownNumbers.has(n.value));
+                            
+                            return (
+                              <div 
+                                key={num.index}
+                                style={{ 
+                                  marginBottom: !isLast ? 16 : 0, 
+                                  paddingBottom: !isLast ? 16 : 0, 
+                                  borderBottom: !isLast ? '1px solid rgba(255,255,255,0.1)' : 'none' 
+                                }}
+                              >
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                                  <span style={{ 
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: 32,
+                                    height: 32,
+                                    minWidth: 32,
+                                    borderRadius: '50%',
+                                    background: '#e91e63',
+                                    color: '#fff',
+                                    fontSize: 16,
+                                    fontWeight: 700,
+                                    flexShrink: 0
+                                  }}>
+                                    {num.value}
+                                  </span>
+                                </div>
+                                <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
+                                  {PARENTS_FEMALE_LINE[num.value] || 'Описание отсутствует'}
+                                </p>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Обиды на родителей */}
+                  <div style={{ marginBottom: 8, background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden' }}>
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('parentsResentments')}
+                      style={{
+                        width: '100%',
+                        padding: 16,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'inherit',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: 16, fontWeight: 600 }}>
+                          Обиды на родителей
+                        </div>
+                      </div>
+                      {expandedSections.parentsResentments ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    </button>
+                    {expandedSections.parentsResentments && (
+                      <div style={{ padding: '0 16px 16px' }}>
+                        {(() => {
+                          const shownNumbers = new Set<number>();
+                          const numbers = [
+                            { value: matrixData.matrix[9].value, index: 9 },
+                            { value: matrixData.matrix[17].value, index: 17 },
+                            { value: matrixData.matrix[1].value, index: 1 }
+                          ];
+                          
+                          return numbers.map((num, idx) => {
+                            if (shownNumbers.has(num.value)) {
+                              return null;
+                            }
+                            shownNumbers.add(num.value);
+                            
+                            const isLast = idx === numbers.length - 1 || numbers.slice(idx + 1).every(n => shownNumbers.has(n.value));
+                            
+                            return (
+                              <div 
+                                key={num.index}
+                                style={{ 
+                                  marginBottom: !isLast ? 16 : 0, 
+                                  paddingBottom: !isLast ? 16 : 0, 
+                                  borderBottom: !isLast ? '1px solid rgba(255,255,255,0.1)' : 'none' 
+                                }}
+                              >
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                                  <span style={{ 
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: 32,
+                                    height: 32,
+                                    minWidth: 32,
+                                    borderRadius: '50%',
+                                    background: '#ff9800',
+                                    color: '#fff',
+                                    fontSize: 16,
+                                    fontWeight: 700,
+                                    flexShrink: 0
+                                  }}>
+                                    {num.value}
+                                  </span>
+                                </div>
+                                <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
+                                  {PARENTS_RESENTMENTS[num.value] || 'Описание отсутствует'}
+                                </p>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Дети */}
+              {matrixData && (
+                <div style={{ marginTop: 24 }}>
+                  <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
+                    Дети
+                  </div>
+
+                  <div style={{ marginBottom: 8, background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden' }}>
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('children')}
+                      style={{
+                        width: '100%',
+                        padding: 16,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'inherit',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: 16, fontWeight: 600 }}>
+                          Ошибки по отношению к детям
+                        </div>
+                      </div>
+                      {expandedSections.children ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    </button>
+                    {expandedSections.children && (
+                      <div style={{ padding: '0 16px 16px' }}>
+                        {(() => {
+                          const shownNumbers = new Set<number>();
+                          const numbers = [
+                            { value: matrixData.matrix[9].value, index: 9 },
+                            { value: matrixData.matrix[17].value, index: 17 },
+                            { value: matrixData.matrix[1].value, index: 1 }
+                          ];
+                          
+                          return numbers.map((num, idx) => {
+                            if (shownNumbers.has(num.value)) {
+                              return null;
+                            }
+                            shownNumbers.add(num.value);
+                            
+                            const isLast = idx === numbers.length - 1 || numbers.slice(idx + 1).every(n => shownNumbers.has(n.value));
+                            
+                            return (
+                              <div 
+                                key={num.index}
+                                style={{ 
+                                  marginBottom: !isLast ? 16 : 0, 
+                                  paddingBottom: !isLast ? 16 : 0, 
+                                  borderBottom: !isLast ? '1px solid rgba(255,255,255,0.1)' : 'none' 
+                                }}
+                              >
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                                  <span style={{ 
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: 32,
+                                    height: 32,
+                                    minWidth: 32,
+                                    borderRadius: '50%',
+                                    background: '#4caf50',
+                                    color: '#fff',
+                                    fontSize: 16,
+                                    fontWeight: 700,
+                                    flexShrink: 0
+                                  }}>
+                                    {num.value}
+                                  </span>
+                                </div>
+                                <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
+                                  {CHILDREN_MISTAKES[num.value] || 'Описание отсутствует'}
+                                </p>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Руководство */}
+              {matrixData && (
+                <div style={{ marginTop: 24 }}>
+                  <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
+                    Руководство
+                  </div>
+
+                  <div style={{ marginBottom: 8, background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden' }}>
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('management')}
+                      style={{
+                        width: '100%',
+                        padding: 16,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'inherit',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: 16, fontWeight: 600 }}>
+                          Рекомендации по управлению
+                        </div>
+                      </div>
+                      {expandedSections.management ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    </button>
+                    {expandedSections.management && (
+                      <div style={{ padding: '0 16px 16px' }}>
+                        {(() => {
+                          const shownNumbers = new Set<number>();
+                          const numbers = [
+                            { value: matrixData.matrix[1].value, index: 1 },
+                            { value: matrixData.matrix[2].value, index: 2 },
+                            { value: matrixData.matrix[0].value, index: 0 }
+                          ];
+                          
+                          return numbers.map((num, idx) => {
+                            if (shownNumbers.has(num.value)) {
+                              return null;
+                            }
+                            shownNumbers.add(num.value);
+                            
+                            const isLast = idx === numbers.length - 1 || numbers.slice(idx + 1).every(n => shownNumbers.has(n.value));
+                            
+                            return (
+                              <div 
+                                key={num.index}
+                                style={{ 
+                                  marginBottom: !isLast ? 16 : 0, 
+                                  paddingBottom: !isLast ? 16 : 0, 
+                                  borderBottom: !isLast ? '1px solid rgba(255,255,255,0.1)' : 'none' 
+                                }}
+                              >
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                                  <span style={{ 
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: 32,
+                                    height: 32,
+                                    minWidth: 32,
+                                    borderRadius: '50%',
+                                    background: '#9c27b0',
+                                    color: '#fff',
+                                    fontSize: 16,
+                                    fontWeight: 700,
+                                    flexShrink: 0
+                                  }}>
+                                    {num.value}
+                                  </span>
+                                </div>
+                                <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
+                                  {MANAGEMENT_GUIDANCE[num.value] || 'Описание отсутствует'}
                                 </p>
                               </div>
                             );
