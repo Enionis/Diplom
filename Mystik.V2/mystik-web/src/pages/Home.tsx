@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Sparkles, Star, Grid3X3, BookCheck, Crown } from 'lucide-react';
 import { useSubscription } from '@/providers/SubscriptionProvider';
 import { useDailyCard } from '@/hooks/useDailyCard';
+import { getDailyAdvice } from '@/constants/dailyAdvice';
 
 const features = [
   {
@@ -38,6 +39,7 @@ const features = [
 export default function Home() {
   const { isPremium } = useSubscription();
   const { card } = useDailyCard();
+  const dailyAdvice = getDailyAdvice();
 
   return (
     <div style={{ paddingBottom: 24 }}>
@@ -117,7 +119,12 @@ export default function Home() {
           💫 Совет дня
         </div>
         <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.4, margin: 0 }}>
-          Доверьтесь интуиции — она ваш лучший проводник в мире неизведанного
+          {dailyAdvice.text}
+          {dailyAdvice.author && (
+            <span style={{ fontStyle: 'italic', opacity: 0.8 }}>
+              {' — '}{dailyAdvice.author}
+            </span>
+          )}
         </p>
       </div>
     </div>

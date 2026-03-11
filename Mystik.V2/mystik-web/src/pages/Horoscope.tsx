@@ -10,7 +10,7 @@ import { TALENTS } from '@/constants/talents';
 import { PAST_LIVES } from '@/constants/pastLives';
 import { CHAKRA_HEALTH, HEALTH_RECOMMENDATIONS } from '@/constants/health';
 import { PURPOSE_20_40, PURPOSE_40_60, PURPOSE_GENERAL } from '@/constants/purpose';
-import { YEAR_FORECAST } from '@/constants/yearForecast';
+import { YEAR_ESSENCE, YEAR_REASONS } from '@/constants/yearForecast';
 import { CHALLENGES } from '@/constants/challenges';
 import { RELATIONSHIPS_WOMEN, RELATIONSHIPS_MEN, CHARACTER, EXIT_REASONS } from '@/constants/relationships';
 import { MONEY_DIRECTION, MONEY_SUCCESS, MONEY_FLOW } from '@/constants/money';
@@ -497,9 +497,6 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
     // Если возраст 80+, начинаем цикл заново (80 -> 1, 81 -> 2, и т.д.)
     const effectiveAge = age >= 80 ? ((age - 80) % 79) + 1 : age;
 
-    // Используем единый прогноз для всех
-    const forecastData = YEAR_FORECAST;
-
     // Получаем базовые точки из матрицы
     const A = matrixData.matrix[1].value;  // День
     const B = matrixData.matrix[2].value;  // Месяц
@@ -604,8 +601,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
       age,
       effectiveAge,
       essenceNumber,
-      reasonsNumber,
-      forecastData
+      reasonsNumber
     };
   }, [birthDate, matrixData]);
 
@@ -1487,7 +1483,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                     </button>
                     {expandedSections.purpose2040 && (
                       <div style={{ padding: '0 16px 16px' }}>
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                           <span style={{ 
                             display: 'flex',
                             alignItems: 'center',
@@ -1504,10 +1500,10 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                           }}>
                             {matrixData.purposes.perspurpose}
                           </span>
+                          <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, flex: 1 }}>
+                            {PURPOSE_20_40[matrixData.purposes.perspurpose]?.description || 'Описание отсутствует'}
+                          </p>
                         </div>
-                        <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
-                          {PURPOSE_20_40[matrixData.purposes.perspurpose]?.description || 'Описание отсутствует'}
-                        </p>
                       </div>
                     )}
                   </div>
@@ -1541,7 +1537,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                     </button>
                     {expandedSections.purpose4060 && (
                       <div style={{ padding: '0 16px 16px' }}>
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                           <span style={{ 
                             display: 'flex',
                             alignItems: 'center',
@@ -1558,10 +1554,10 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                           }}>
                             {matrixData.purposes.socialpurpose}
                           </span>
+                          <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, flex: 1 }}>
+                            {PURPOSE_40_60[matrixData.purposes.socialpurpose]?.description || 'Описание отсутствует'}
+                          </p>
                         </div>
-                        <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
-                          {PURPOSE_40_60[matrixData.purposes.socialpurpose]?.description || 'Описание отсутствует'}
-                        </p>
                       </div>
                     )}
                   </div>
@@ -1595,7 +1591,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                     </button>
                     {expandedSections.purposeGeneral && (
                       <div style={{ padding: '0 16px 16px' }}>
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                           <span style={{ 
                             display: 'flex',
                             alignItems: 'center',
@@ -1612,10 +1608,10 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                           }}>
                             {matrixData.purposes.generalpurpose}
                           </span>
+                          <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, flex: 1 }}>
+                            {PURPOSE_GENERAL[matrixData.purposes.generalpurpose]?.description || 'Описание отсутствует'}
+                          </p>
                         </div>
-                        <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
-                          {PURPOSE_GENERAL[matrixData.purposes.generalpurpose]?.description || 'Описание отсутствует'}
-                        </p>
                       </div>
                     )}
                   </div>
@@ -1663,7 +1659,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                             В плюсе:
                           </div>
                           <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
-                            {yearForecast.forecastData[yearForecast.essenceNumber]?.positive || 'Описание отсутствует'}
+                            {YEAR_ESSENCE[yearForecast.essenceNumber]?.positive || 'Описание отсутствует'}
                           </p>
                         </div>
                         <div>
@@ -1671,7 +1667,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                             В минусе:
                           </div>
                           <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
-                            {yearForecast.forecastData[yearForecast.essenceNumber]?.negative || 'Описание отсутствует'}
+                            {YEAR_ESSENCE[yearForecast.essenceNumber]?.negative || 'Описание отсутствует'}
                           </p>
                         </div>
                       </div>
@@ -1712,7 +1708,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                             В плюсе:
                           </div>
                           <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
-                            {yearForecast.forecastData[yearForecast.reasonsNumber]?.positive || 'Описание отсутствует'}
+                            {YEAR_REASONS[yearForecast.reasonsNumber]?.positive || 'Описание отсутствует'}
                           </p>
                         </div>
                         <div>
@@ -1720,7 +1716,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                             В минусе:
                           </div>
                           <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
-                            {yearForecast.forecastData[yearForecast.reasonsNumber]?.negative || 'Описание отсутствует'}
+                            {YEAR_REASONS[yearForecast.reasonsNumber]?.negative || 'Описание отсутствует'}
                           </p>
                         </div>
                       </div>
@@ -1761,7 +1757,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                     </button>
                     {expandedSections.challenges && (
                       <div style={{ padding: '0 16px 16px' }}>
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                           <span style={{ 
                             display: 'flex',
                             alignItems: 'center',
@@ -1778,10 +1774,10 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                           }}>
                             {matrixData.matrix[0].value}
                           </span>
+                          <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line', flex: 1 }}>
+                            {CHALLENGES[matrixData.matrix[0].value]?.description || 'Описание отсутствует'}
+                          </p>
                         </div>
-                        <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
-                          {CHALLENGES[matrixData.matrix[0].value]?.description || 'Описание отсутствует'}
-                        </p>
                       </div>
                     )}
                   </div>
@@ -1845,7 +1841,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                                   borderBottom: !isLast ? '1px solid rgba(255,255,255,0.1)' : 'none' 
                                 }}
                               >
-                                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                                   <span style={{ 
                                     display: 'flex',
                                     alignItems: 'center',
@@ -1862,10 +1858,10 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                                   }}>
                                     {num.value}
                                   </span>
+                                  <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line', flex: 1 }}>
+                                    {RELATIONSHIPS_WOMEN[num.value] || 'Описание отсутствует'}
+                                  </p>
                                 </div>
-                                <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
-                                  {RELATIONSHIPS_WOMEN[num.value] || 'Описание отсутствует'}
-                                </p>
                               </div>
                             );
                           });
@@ -1924,7 +1920,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                                   borderBottom: !isLast ? '1px solid rgba(255,255,255,0.1)' : 'none' 
                                 }}
                               >
-                                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                                   <span style={{ 
                                     display: 'flex',
                                     alignItems: 'center',
@@ -1941,10 +1937,10 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                                   }}>
                                     {num.value}
                                   </span>
+                                  <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line', flex: 1 }}>
+                                    {RELATIONSHIPS_MEN[num.value] || 'Описание отсутствует'}
+                                  </p>
                                 </div>
-                                <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
-                                  {RELATIONSHIPS_MEN[num.value] || 'Описание отсутствует'}
-                                </p>
                               </div>
                             );
                           });
@@ -1979,7 +1975,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                     </button>
                     {expandedSections.relationshipsExit && (
                       <div style={{ padding: '0 16px 16px' }}>
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                           <span style={{ 
                             display: 'flex',
                             alignItems: 'center',
@@ -1996,10 +1992,10 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                           }}>
                             {matrixData.matrix[15].value}
                           </span>
+                          <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line', flex: 1 }}>
+                            {EXIT_REASONS[matrixData.matrix[15].value] || 'Описание отсутствует'}
+                          </p>
                         </div>
-                        <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
-                          {EXIT_REASONS[matrixData.matrix[15].value] || 'Описание отсутствует'}
-                        </p>
                       </div>
                     )}
                   </div>
@@ -2054,7 +2050,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                                   borderBottom: !isLast ? '1px solid rgba(255,255,255,0.1)' : 'none' 
                                 }}
                               >
-                                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                                   <span style={{ 
                                     display: 'flex',
                                     alignItems: 'center',
@@ -2071,10 +2067,10 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                                   }}>
                                     {num.value}
                                   </span>
+                                  <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line', flex: 1 }}>
+                                    {CHARACTER[num.value] || 'Описание отсутствует'}
+                                  </p>
                                 </div>
-                                <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
-                                  {CHARACTER[num.value] || 'Описание отсутствует'}
-                                </p>
                               </div>
                             );
                           });
@@ -2118,7 +2114,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                     </button>
                     {expandedSections.moneyDirection && (
                       <div style={{ padding: '0 16px 16px' }}>
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                           <span style={{ 
                             display: 'flex',
                             alignItems: 'center',
@@ -2135,10 +2131,10 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                           }}>
                             {matrixData.matrix[15].value}
                           </span>
+                          <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line', flex: 1 }}>
+                            {MONEY_DIRECTION[matrixData.matrix[15].value]?.description || 'Описание отсутствует'}
+                          </p>
                         </div>
-                        <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
-                          {MONEY_DIRECTION[matrixData.matrix[15].value]?.description || 'Описание отсутствует'}
-                        </p>
                       </div>
                     )}
                   </div>
@@ -2193,7 +2189,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                                   borderBottom: !isLast ? '1px solid rgba(255,255,255,0.1)' : 'none' 
                                 }}
                               >
-                                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                                   <span style={{ 
                                     display: 'flex',
                                     alignItems: 'center',
@@ -2210,10 +2206,10 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                                   }}>
                                     {num.value}
                                   </span>
+                                  <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line', flex: 1 }}>
+                                    {MONEY_SUCCESS[num.value]?.description || 'Описание отсутствует'}
+                                  </p>
                                 </div>
-                                <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
-                                  {MONEY_SUCCESS[num.value]?.description || 'Описание отсутствует'}
-                                </p>
                               </div>
                             );
                           });
@@ -2272,7 +2268,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                                   borderBottom: !isLast ? '1px solid rgba(255,255,255,0.1)' : 'none' 
                                 }}
                               >
-                                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                                   <span style={{ 
                                     display: 'flex',
                                     alignItems: 'center',
@@ -2289,10 +2285,10 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                                   }}>
                                     {num.value}
                                   </span>
+                                  <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line', flex: 1 }}>
+                                    {MONEY_FLOW[num.value]?.description || 'Описание отсутствует'}
+                                  </p>
                                 </div>
-                                <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
-                                  {MONEY_FLOW[num.value]?.description || 'Описание отсутствует'}
-                                </p>
                               </div>
                             );
                           });
@@ -2364,7 +2360,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                                   borderBottom: !isLast ? '1px solid rgba(255,255,255,0.1)' : 'none' 
                                 }}
                               >
-                                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                                   <span style={{ 
                                     display: 'flex',
                                     alignItems: 'center',
@@ -2381,10 +2377,10 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                                   }}>
                                     {num.value}
                                   </span>
+                                  <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line', flex: 1 }}>
+                                    {PARENTS_MALE_LINE[num.value] || 'Описание отсутствует'}
+                                  </p>
                                 </div>
-                                <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
-                                  {PARENTS_MALE_LINE[num.value] || 'Описание отсутствует'}
-                                </p>
                               </div>
                             );
                           });
@@ -2447,7 +2443,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                                   borderBottom: !isLast ? '1px solid rgba(255,255,255,0.1)' : 'none' 
                                 }}
                               >
-                                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                                   <span style={{ 
                                     display: 'flex',
                                     alignItems: 'center',
@@ -2464,10 +2460,10 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                                   }}>
                                     {num.value}
                                   </span>
+                                  <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line', flex: 1 }}>
+                                    {PARENTS_FEMALE_LINE[num.value] || 'Описание отсутствует'}
+                                  </p>
                                 </div>
-                                <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
-                                  {PARENTS_FEMALE_LINE[num.value] || 'Описание отсутствует'}
-                                </p>
                               </div>
                             );
                           });
@@ -2527,7 +2523,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                                   borderBottom: !isLast ? '1px solid rgba(255,255,255,0.1)' : 'none' 
                                 }}
                               >
-                                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                                   <span style={{ 
                                     display: 'flex',
                                     alignItems: 'center',
@@ -2544,10 +2540,10 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                                   }}>
                                     {num.value}
                                   </span>
+                                  <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line', flex: 1 }}>
+                                    {PARENTS_RESENTMENTS[num.value] || 'Описание отсутствует'}
+                                  </p>
                                 </div>
-                                <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
-                                  {PARENTS_RESENTMENTS[num.value] || 'Описание отсутствует'}
-                                </p>
                               </div>
                             );
                           });
@@ -2615,7 +2611,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                                   borderBottom: !isLast ? '1px solid rgba(255,255,255,0.1)' : 'none' 
                                 }}
                               >
-                                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                                   <span style={{ 
                                     display: 'flex',
                                     alignItems: 'center',
@@ -2632,10 +2628,10 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                                   }}>
                                     {num.value}
                                   </span>
+                                  <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line', flex: 1 }}>
+                                    {CHILDREN_MISTAKES[num.value] || 'Описание отсутствует'}
+                                  </p>
                                 </div>
-                                <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
-                                  {CHILDREN_MISTAKES[num.value] || 'Описание отсутствует'}
-                                </p>
                               </div>
                             );
                           });
@@ -2703,7 +2699,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                                   borderBottom: !isLast ? '1px solid rgba(255,255,255,0.1)' : 'none' 
                                 }}
                               >
-                                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
+                                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                                   <span style={{ 
                                     display: 'flex',
                                     alignItems: 'center',
@@ -2720,10 +2716,10 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                                   }}>
                                     {num.value}
                                   </span>
+                                  <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line', flex: 1 }}>
+                                    {MANAGEMENT_GUIDANCE[num.value] || 'Описание отсутствует'}
+                                  </p>
                                 </div>
-                                <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
-                                  {MANAGEMENT_GUIDANCE[num.value] || 'Описание отсутствует'}
-                                </p>
                               </div>
                             );
                           });
