@@ -124,10 +124,28 @@ export default function Quiz() {
 
         {quiz.id === 'paei' && (
           <>
-            <h2 style={{ fontSize: 22, fontWeight: 600, color: 'var(--accent)', margin: '20px 0' }}>
-              Ваш тип личности
-            </h2>
-            <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 10 }}>{result.code}</div>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 16, 
+              marginBottom: 20,
+              flexWrap: 'wrap'
+            }}>
+              <h2 style={{ fontSize: 22, fontWeight: 600, color: 'var(--accent)', margin: 0 }}>
+                Ваш тип личности:
+              </h2>
+              <div style={{
+                padding: '8px 16px',
+                background: 'rgba(255,215,0,0.1)',
+                border: '2px solid var(--accent)',
+                borderRadius: 12,
+                fontSize: 18,
+                fontWeight: 700,
+                color: 'var(--accent)'
+              }}>
+                {result.code}
+              </div>
+            </div>
             <p style={{ fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.5 }}>
               <strong>Описание:</strong>{' '}
               {result.interpretation?.map((i: any) => `${i.letter} - ${i.description}`).join('\n')}
@@ -140,10 +158,28 @@ export default function Quiz() {
 
         {quiz.id === 'attachment' && (
           <>
-            <h2 style={{ fontSize: 22, fontWeight: 600, color: 'var(--accent)', margin: '20px 0' }}>
-              Ваш тип привязанности
-            </h2>
-            <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 10 }}>{result.type}</div>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 16, 
+              marginBottom: 20,
+              flexWrap: 'wrap'
+            }}>
+              <h2 style={{ fontSize: 22, fontWeight: 600, color: 'var(--accent)', margin: 0 }}>
+                Ваш тип привязанности:
+              </h2>
+              <div style={{
+                padding: '8px 16px',
+                background: 'rgba(255,215,0,0.1)',
+                border: '2px solid var(--accent)',
+                borderRadius: 12,
+                fontSize: 18,
+                fontWeight: 700,
+                color: 'var(--accent)'
+              }}>
+                {result.type}
+              </div>
+            </div>
             <p style={{ fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.5 }}>{result.description}</p>
             <p style={{ fontSize: 16, fontWeight: 600, marginTop: 12 }}>Советы:</p>
             {result.tips?.map((tip: string, idx: number) => (
@@ -156,10 +192,28 @@ export default function Quiz() {
 
         {quiz.id === 'archetype' && (
           <>
-            <h2 style={{ fontSize: 22, fontWeight: 600, color: 'var(--accent)', margin: '20px 0' }}>
-              Ваш архетип личности
-            </h2>
-            <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 10 }}>{result.archetype}</div>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 16, 
+              marginBottom: 20,
+              flexWrap: 'wrap'
+            }}>
+              <h2 style={{ fontSize: 22, fontWeight: 600, color: 'var(--accent)', margin: 0 }}>
+                Ваш архетип личности:
+              </h2>
+              <div style={{
+                padding: '8px 16px',
+                background: 'rgba(255,215,0,0.1)',
+                border: '2px solid var(--accent)',
+                borderRadius: 12,
+                fontSize: 18,
+                fontWeight: 700,
+                color: 'var(--accent)'
+              }}>
+                {result.archetype}
+              </div>
+            </div>
             <p style={{ fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.5 }}>{result.description}</p>
             <p style={{ fontSize: 16, fontWeight: 600, marginTop: 12 }}>Рекомендации:</p>
             {result.recommendations?.map((rec: string, idx: number) => (

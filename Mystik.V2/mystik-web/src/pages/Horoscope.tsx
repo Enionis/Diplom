@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Calendar, Crown, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import { Crown, Sparkles, ChevronDown, ChevronUp, Gem, Heart } from 'lucide-react';
 import { useUser } from '@/providers/UserProvider';
 import { useSubscription } from '@/providers/SubscriptionProvider';
 import { useAuth } from '@/providers/AuthProvider';
@@ -334,15 +334,13 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
   };
 
   useEffect(() => {
-    if (user?.birthDate && !birthDate) {
+    if (user?.birthDate) {
       const [year, month, day] = user.birthDate.split('-');
       const formattedDate = `${day}.${month}.${year}`;
       setBirthDate(formattedDate);
       setDateInput(formattedDate);
-    } else if (birthDate) {
-      setDateInput(birthDate);
     }
-  }, [user, birthDate, setBirthDate]);
+  }, [user?.birthDate, setBirthDate]);
 
   useEffect(() => {
     if (initialTab === 'matrix' || searchParams.get('tab') === 'matrix') setActiveTab('matrix');
@@ -728,6 +726,89 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                   </div>
                 )}
               </div>
+
+              {/* Камни и тотемное животное */}
+              {isPremium ? (
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: '1fr 1fr', 
+                  gap: 16, 
+                  padding: '0 20px' 
+                }}>
+                  <div style={{
+                    background: 'var(--card-bg)',
+                    borderRadius: 16,
+                    padding: 20,
+                    border: '1px solid var(--border)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    textAlign: 'center',
+                    gap: 12
+                  }}>
+                    <Gem size={24} color="var(--accent)" />
+                    <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)' }}>
+                      Камни-талисманы
+                    </div>
+                    <div style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                      {zodiacData.stones.join(', ')}
+                    </div>
+                  </div>
+
+                  <div style={{
+                    background: 'var(--card-bg)',
+                    borderRadius: 16,
+                    padding: 20,
+                    border: '1px solid var(--border)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    textAlign: 'center',
+                    gap: 12
+                  }}>
+                    <Heart size={24} color="#ff69b4" />
+                    <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)' }}>
+                      Тотемное животное
+                    </div>
+                    <div style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                      {zodiacData.totem}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  margin: '0 20px',
+                  padding: 20,
+                  background: 'rgba(255,215,0,0.1)',
+                  borderRadius: 16,
+                  border: '1px solid rgba(255,215,0,0.2)',
+                  textAlign: 'center'
+                }}>
+                  <Crown size={28} color="var(--accent)" style={{ marginBottom: 12 }} />
+                  <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>
+                    Камни и тотемное животное
+                  </div>
+                  <div style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 16 }}>
+                    Доступно только для премиум пользователей
+                  </div>
+                  <button
+                    onClick={() => navigate('/subscription')}
+                    style={{
+                      background: 'linear-gradient(135deg, var(--accent) 0%, #ffed4e 100%)',
+                      color: '#1a1a2e',
+                      border: 'none',
+                      borderRadius: 20,
+                      padding: '12px 24px',
+                      fontSize: 14,
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Открыть доступ
+                  </button>
+                </div>
+              )}
+
               <div style={{ margin: 20, padding: 20, background: 'var(--card-bg)', borderRadius: 16 }}>
                 <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--accent)', marginBottom: 16 }}>
                   Совместимость
@@ -2746,30 +2827,6 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
               )}
             </div>
           )}
-
-          <button
-            type="button"
-            onClick={() => {
-              setBirthDate('');
-              setDateInput('');
-            }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
-              margin: 20,
-              padding: 12,
-              background: 'rgba(255,215,0,0.2)',
-              borderRadius: 12,
-              color: 'var(--accent)',
-              fontSize: 14,
-              fontWeight: 500,
-            }}
-          >
-            <Calendar size={20} />
-            Изменить дату рождения
-          </button>
         </>
       )}
     </div>
