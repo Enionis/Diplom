@@ -267,6 +267,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
   // Хук для получения гороскопа через API
   const { horoscope: dailyHoroscope, loading: horoscopeLoading } = useHoroscope(zodiacSignName || '', 'today');
   const { horoscope: weeklyHoroscope, loading: weeklyLoading } = useHoroscope(zodiacSignName || '', 'week');
+  const { horoscope: monthlyHoroscope, loading: monthlyLoading } = useHoroscope(zodiacSignName || '', 'month');
   
   const [expandedSections, setExpandedSections] = useState<{
     positive: boolean;
@@ -770,6 +771,31 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                             }}>
                               {weeklyHoroscope.weekRange || new Date(weeklyHoroscope.date).toLocaleDateString('ru-RU', {
                                 day: 'numeric',
+                                month: 'long',
+                                year: 'numeric'
+                              })} • Источник: Рамблер
+                            </div>
+                          )}
+                        </>
+                      ) : selectedPeriod === 'month' && monthlyHoroscope ? (
+                        <>
+                          {monthlyLoading ? 'Загрузка месячного гороскопа...' : 
+                            monthlyHoroscope.text.split('\n\n').map((paragraph, index) => (
+                              <p key={index} style={{ margin: index === 0 ? 0 : '16px 0 0 0' }}>
+                                {paragraph}
+                              </p>
+                            ))
+                          }
+                          {!monthlyLoading && monthlyHoroscope && (
+                            <div style={{ 
+                              marginTop: 16, 
+                              paddingTop: 12, 
+                              borderTop: '1px solid rgba(255,255,255,0.1)', 
+                              fontSize: 12, 
+                              color: 'var(--text-muted)', 
+                              opacity: 0.7 
+                            }}>
+                              {monthlyHoroscope.monthRange || new Date(monthlyHoroscope.date).toLocaleDateString('ru-RU', {
                                 month: 'long',
                                 year: 'numeric'
                               })} • Источник: Рамблер

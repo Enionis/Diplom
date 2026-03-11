@@ -44,8 +44,9 @@ export function useHoroscope(zodiacSign: string, period: 'today' | 'week' | 'mon
         let apiUrl = `http://localhost:3001/api/horoscope/${englishSign}`;
         if (period === 'week') {
           apiUrl += '/weekly';
+        } else if (period === 'month') {
+          apiUrl += '/monthly';
         }
-        // Для месячного пока оставляем как есть, можно добавить позже
         
         // Добавляем timestamp чтобы избежать кеширования
         const timestamp = new Date().getTime();

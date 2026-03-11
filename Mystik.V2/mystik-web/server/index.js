@@ -1147,6 +1147,255 @@ app.get('/api/horoscope/:sign/weekly', async (req, res) => {
   }
 });
 
+// API для получения месячного гороскопа
+app.get('/api/horoscope/:sign/monthly', async (req, res) => {
+  try {
+    const { sign } = req.params;
+    const validSigns = ['aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo', 'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces'];
+    
+    if (!validSigns.includes(sign)) {
+      return res.status(400).json({ ok: false, error: 'Неверный знак зодиака' });
+    }
+
+    // Функция для получения месячного гороскопа с сайта
+    async function fetchMonthlyHoroscope(url) {
+      try {
+        console.log('Fetching monthly horoscope from:', url);
+        const response = await fetch(url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          }
+        });
+        
+        if (!response.ok) {
+          console.log('Response not ok:', response.status);
+          return null;
+        }
+        
+        const html = await response.text();
+        const $ = cheerio.load(html);
+        
+        // Ищем текст гороскопа - для месячного гороскопа нужно собрать все абзацы до "Прогноз предоставлен Astrostar.ru"
+        let horoscopeText = null;
+        
+        // Сначала попробуем найти контейнер с гороскопом
+        const containerSelectors = [
+          '.horoscope-content',
+          '.horoscope__content',
+          '.content',
+          'article',
+          '.forecast-content',
+          '.text-content'
+        ];
+        
+        for (const containerSelector of containerSelectors) {
+          const container = $(containerSelector).first();
+          if (container.length > 0) {
+            // Собираем все параграфы из контейнера до стоп-фразы
+            const paragraphs = [];
+            container.find('p').each((i, elem) => {
+              const text = $(elem).text().trim();
+              
+              // Останавливаемся если встретили стоп-фразу
+              if (text.includes('Прогноз предоставлен Astrostar.ru')) {
+                return false; // break
+              }
+              
+              if (text.length > 20 && !text.includes('Реклама') && !text.includes('©')) {
+                paragraphs.push(text);
+              }
+            });
+            
+            if (paragraphs.length > 0) {
+              horoscopeText = paragraphs.join('\n\n');
+              console.log('Found monthly horoscope in container:', containerSelector, 'paragraphs:', paragraphs.length);
+              break;
+            }
+          }
+        }
+        
+        // Если не нашли в контейнере, попробуем собрать все подходящие параграфы
+        if (!horoscopeText) {
+          const paragraphs = [];
+          let foundStart = false;
+          
+          $('p').each((i, elem) => {
+            const text = $(elem).text().trim();
+            
+            // Останавливаемся если встретили стоп-фразу
+            if (text.includes('Прогноз предоставлен Astrostar.ru')) {
+              return false; // break
+            }
+            
+            // Ищем начало гороскопа
+            if (!foundStart && (text.includes('Гороскоп на') || text.includes('В этом месяце') || 
+                text.length > 100)) {
+              foundStart = true;
+            }
+            
+            // Если нашли начало, собираем все подходящие параграфы
+            if (foundStart && text.length > 20 && !text.includes('Реклама') && 
+                !text.includes('©') && !text.includes('Подписывайтесь') && 
+                !text.includes('Читайте также')) {
+              paragraphs.push(text);
+            }
+          });
+          
+          if (paragraphs.length > 0) {
+            horoscopeText = paragraphs.join('\n\n');
+            console.log('Found monthly horoscope by paragraph collection, paragraphs:', paragraphs.length);
+          }
+        }
+        
+        return horoscopeText;
+      } catch (error) {
+        console.error('Error fetching monthly horoscope:', error);
+        return null;
+      }
+    }
+
+    // Функция для определения правильного месячного гороскопа
+    async function determineMonthlyHoroscopeSource(sign) {
+      try {
+        const today = new Date();
+        const currentMonth = today.getMonth(); // 0-11
+        const currentDay = today.getDate();
+        
+        // Названия месяцев для URL
+        const monthNames = [
+          'january', 'february', 'march', 'april', 'may', 'june',
+          'july', 'august', 'september', 'october', 'november', 'december'
+        ];
+        
+        console.log(`Current date for monthly: ${currentDay}.${currentMonth + 1}.${today.getFullYear()}`);
+        
+        // Если уже конец месяца (после 25 числа), проверяем следующий месяц
+        let targetMonth = currentMonth;
+        if (currentDay >= 25) {
+          // Проверяем, есть ли уже гороскоп на следующий месяц
+          const nextMonth = (currentMonth + 1) % 12;
+          const nextMonthUrl = `https://horoscopes.rambler.ru/${sign}/${monthNames[nextMonth]}/`;
+          
+          try {
+            const response = await fetch(nextMonthUrl, {
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+              }
+            });
+            
+            if (response.ok) {
+              console.log('Found next month horoscope, using next month');
+              return { url: nextMonthUrl, isNextMonth: true, monthName: monthNames[nextMonth] };
+            }
+          } catch (error) {
+            console.log('Next month horoscope not available, using current month');
+          }
+        }
+        
+        // Используем текущий месяц
+        const monthlyUrl = `https://horoscopes.rambler.ru/${sign}/monthly/`;
+        console.log('Using current month horoscope');
+        return { url: monthlyUrl, isNextMonth: false, monthName: monthNames[currentMonth] };
+        
+      } catch (error) {
+        console.error('Error determining monthly horoscope source:', error);
+        return { url: `https://horoscopes.rambler.ru/${sign}/monthly/`, isNextMonth: false, monthName: 'march' };
+      }
+    }
+
+    // Получаем текущую локальную дату (не UTC)
+    const today = new Date();
+    const localDate = new Date(today.getTime() - (today.getTimezoneOffset() * 60000));
+    let actualDate = localDate;
+    let monthRange = null;
+    let horoscopeText = null;
+    
+    try {
+      // Определяем какой URL использовать для месячного гороскопа
+      const { url, isNextMonth, monthName } = await determineMonthlyHoroscopeSource(sign);
+      console.log(`Using monthly URL: ${url} (isNextMonth: ${isNextMonth})`);
+      
+      // Определяем название месяца для отображения
+      const monthNames = {
+        'january': 'Январь',
+        'february': 'Февраль', 
+        'march': 'Март',
+        'april': 'Апрель',
+        'may': 'Май',
+        'june': 'Июнь',
+        'july': 'Июль',
+        'august': 'Август',
+        'september': 'Сентябрь',
+        'october': 'Октябрь',
+        'november': 'Ноябрь',
+        'december': 'Декабрь'
+      };
+      
+      monthRange = `${monthNames[monthName]} ${localDate.getFullYear()}`;
+      
+      // Получаем месячный гороскоп
+      horoscopeText = await fetchMonthlyHoroscope(url);
+      
+      // Если не получилось с основного URL, пробуем альтернативный
+      if (!horoscopeText || horoscopeText.length < 50) {
+        console.log('Trying alternative monthly URL');
+        const alternativeUrl = `https://horoscopes.rambler.ru/${sign}/${monthName}/`;
+        horoscopeText = await fetchMonthlyHoroscope(alternativeUrl);
+      }
+      
+      // Очищаем текст от лишних символов, но сохраняем переносы строк
+      if (horoscopeText) {
+        horoscopeText = horoscopeText
+          .replace(/[ \t]+/g, ' ')  // Заменяем множественные пробелы и табы на одиночные пробелы
+          .replace(/^\s*Гороскоп на месяц — \w+\s*/, '')
+          .replace(/^\s*В этом месяце\s+/, 'В этом месяце ')
+          .trim();
+      }
+      
+    } catch (error) {
+      console.error('Ошибка при получении месячного гороскопа:', error);
+    }
+
+    // Если не удалось получить с сайта, возвращаем заглушку
+    if (!horoscopeText || horoscopeText.length < 50) {
+      console.log('Using fallback monthly text for', sign);
+      const fallbackTexts = {
+        aries: 'В этом месяце Овнам рекомендуется сосредоточиться на долгосрочных целях и планах. Звезды благоприятствуют новым начинаниям и активным действиям.',
+        taurus: 'Тельцам стоит уделить внимание финансовым вопросам и стабильности. Месяц благоприятен для практических решений.',
+        gemini: 'Близнецы могут рассчитывать на активное общение и новые знакомства. Хорошее время для обучения и развития.',
+        cancer: 'Ракам рекомендуется сосредоточиться на семейных делах и домашнем уюте. Интуиция будет особенно сильной.',
+        leo: 'Львы будут в центре внимания в этом месяце. Используйте харизму для достижения амбициозных целей.',
+        virgo: 'Девам стоит заняться систематизацией и планированием. Внимание к деталям принесет отличные результаты.',
+        libra: 'Весы найдут гармонию в отношениях и творчестве. Месяц благоприятен для эстетических проектов.',
+        scorpio: 'Скорпионам рекомендуется довериться интуиции и заняться глубоким самоанализом.',
+        sagittarius: 'Стрельцы могут планировать дальние поездки и расширение горизонтов. Месяц открытий и возможностей.',
+        capricorn: 'Козерогам стоит сосредоточиться на карьерных достижениях. Упорство приведет к значительному успеху.',
+        aquarius: 'Водолеи могут рассчитывать на поддержку друзей и единомышленников. Время для реализации оригинальных идей.',
+        pisces: 'Рыбам рекомендуется прислушаться к внутреннему голосу. Творческий подход поможет в решении задач.'
+      };
+      horoscopeText = fallbackTexts[sign] || 'В этом месяце звезды благосклонны к вам. Следуйте своей интуиции и действуйте решительно.';
+    }
+
+    console.log('Final monthly horoscope text:', horoscopeText.substring(0, 100) + '...');
+    console.log('Month range determined:', monthRange);
+
+    res.json({
+      ok: true,
+      horoscope: {
+        sign,
+        text: horoscopeText,
+        period: 'month',
+        date: actualDate.toISOString().split('T')[0],
+        monthRange: monthRange // Добавляем название месяца
+      }
+    });
+
+  } catch (error) {
+    console.error('Ошибка API месячного гороскопа:', error);
+    res.status(500).json({ ok: false, error: 'Внутренняя ошибка сервера' });
+  }
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
