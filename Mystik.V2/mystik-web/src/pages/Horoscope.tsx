@@ -1504,6 +1504,9 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                             {PURPOSE_20_40[matrixData.purposes.perspurpose]?.description || 'Описание отсутствует'}
                           </p>
                         </div>
+                        <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
+                          {PURPOSE_20_40[matrixData.purposes.perspurpose]?.description || 'Описание отсутствует'}
+                        </p>
                       </div>
                     )}
                   </div>
