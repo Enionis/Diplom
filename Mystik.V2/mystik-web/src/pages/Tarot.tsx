@@ -1,19 +1,30 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, Lock, RefreshCw, ArrowLeft } from 'lucide-react';
 import { useSubscription } from '@/providers/SubscriptionProvider';
 import { useDailyCard } from '@/hooks/useDailyCard';
 import { useTarotReadings } from '@/hooks/useTarotReading';
-import { TAROT_CARDS, TAROT_SPREADS, TarotCard, TarotSpread } from '@/constants/tarot';
+import { useTarotSpreads, useTarotCards, useTarotReading, TarotCard, TarotSpread, TarotReading } from '@/hooks/useTarotAPI';
+import { TAROT_CARDS } from '@/constants/tarot'; // Оставляем для карты дня
 
 interface ReadingResult {
   spread: TarotSpread;
   cards: TarotCard[];
+  interpretations?: {
+    position: string;
+    card: TarotCard;
+    interpretation: string;
+  }[];
 }
 
-function getRandomCards(count: number): TarotCard[] {
-  const shuffled = [...TAROT_CARDS].sort(() => Math.random() - 0.5);
+function getRandomCards(count: number, availableCards: TarotCard[]): TarotCard[] {
+  const shuffled = [...availableCards].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, count);
+}
+
+function getRandomCardIds(count: number, availableCards: TarotCard[]): string[] {
+  const shuffled = [...availableCards].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count).map(card => card.id);
 }
 
 const CARD_BACK_STYLES: Record<string, { gradient: string; iconColor: string; textColor: string }> = {
@@ -45,11 +56,17 @@ export default function Tarot() {
   const backStyle = CARD_BACK_STYLES[cardBack] || CARD_BACK_STYLES.purple;
   const { card: dailyCard, isNewDay, drawDailyCard } = useDailyCard();
   const { readingsToday, canRead, performReading } = useTarotReadings();
+  
+  // API хуки
+  const { spreads, loading: spreadsLoading } = useTarotSpreads();
+  const { cards, loading: cardsLoading } = useTarotCards();
+  const { createReading, loading: readingLoading } = useTarotReading();
+  
   const [currentView, setCurrentView] = useState<'spreads' | 'reading'>('spreads');
   const [currentReading, setCurrentReading] = useState<ReadingResult | null>(null);
   const [flippedCards, setFlippedCards] = useState<boolean[]>([]);
 
-  const startReading = (spread: TarotSpread) => {
+  const startReading = async (spread: TarotSpread) => {
     if (spread.isPremium && !isPremium) {
       if (window.confirm('Этот расклад доступен только по подписке. Перейти к подписке?')) {
         navigate('/subscription');
@@ -68,16 +85,37 @@ export default function Tarot() {
     }
 
     if (spread.id === 'daily') {
+      // Карта дня остается локальной
       let card = dailyCard;
       if (isNewDay || !card) card = drawDailyCard();
       if (card) {
-        setCurrentReading({ spread, cards: [card] });
+        setCurrentReading({ 
+          spread, 
+          cards: [card],
+          interpretations: [{
+            position: spread.positions[0],
+            card: card,
+            interpretation: card.interpretation
+          }]
+        });
         setFlippedCards([true]);
       }
     } else {
+      // Остальные гадания через API
+      if (cards.length === 0) return;
+      
       performReading();
-      setCurrentReading({ spread, cards: getRandomCards(spread.cardCount) });
-      setFlippedCards(new Array(spread.cardCount).fill(false));
+      const cardIds = getRandomCardIds(spread.cardCount, cards);
+      const reading = await createReading(spread.id, cardIds);
+      
+      if (reading) {
+        setCurrentReading({
+          spread: reading.spread,
+          cards: reading.cards,
+          interpretations: reading.interpretations
+        });
+        setFlippedCards(new Array(spread.cardCount).fill(false));
+      }
     }
     setCurrentView('reading');
   };
@@ -128,21 +166,49 @@ export default function Tarot() {
             display: 'flex',
             flexWrap: 'wrap',
             justifyContent: 'center',
-            gap: 16,
+            alignItems: 'flex-start',
+            gap: 20,
             padding: '0 20px',
+            maxWidth: currentReading.spread.cardCount <= 3 ? '850px' : '900px',
+            margin: '0 auto',
           }}
         >
           {currentReading.cards.map((card, index) => (
-            <div key={index} style={{ textAlign: 'center', marginBottom: 20 }}>
+            <div key={index} style={{ 
+              textAlign: 'center', 
+              marginBottom: 20,
+              flex: '0 0 auto',
+              width: '250px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              alignSelf: 'flex-start'
+            }}>
               <div
                 style={{
-                  fontSize: 12,
+                  fontSize: 11,
                   color: 'var(--accent)',
                   marginBottom: 8,
                   fontWeight: 600,
+                  minHeight: '40px',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  justifyContent: 'center',
+                  textAlign: 'center',
+                  lineHeight: 1.3,
+                  whiteSpace: 'pre-line',
                 }}
               >
-                {currentReading.spread.positions[index]}
+                {(() => {
+                  const position = currentReading.spread.positions[index];
+                  // Исправляем заглавные буквы и переносы для расклада "Три карты"
+                  if (currentReading.spread.id === 'three') {
+                    if (index === 0) return 'Прошлое, влияющее на вопрос или ситуацию';
+                    if (index === 1) return 'Настоящее, влияющее на вопрос или ситуацию';
+                    if (index === 2) return 'Будущее, вероятный итог развития\nсобытий исходя из поставленного вопроса';
+                  }
+                  return position;
+                })()}
               </div>
               <button
                 type="button"
@@ -204,25 +270,49 @@ export default function Tarot() {
           <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
             Толкование
           </div>
-          {currentReading.cards.map(
-            (card, index) =>
-              flippedCards[index] && (
-                <div key={index} style={{ marginBottom: 16 }}>
-                  <div
-                    style={{
-                      fontSize: 16,
-                      fontWeight: 600,
-                      color: 'var(--accent)',
-                      marginBottom: 8,
-                    }}
-                  >
-                    {currentReading.spread.positions[index]}: {card.name}
+          {currentReading.interpretations ? (
+            currentReading.interpretations.map(
+              (interp, index) =>
+                flippedCards[index] && (
+                  <div key={index} style={{ marginBottom: 16 }}>
+                    <div
+                      style={{
+                        fontSize: 16,
+                        fontWeight: 600,
+                        color: 'var(--accent)',
+                        marginBottom: 8,
+                      }}
+                    >
+                      {interp.position}: {interp.card.name}
+                    </div>
+                    <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 }}>
+                      {interp.interpretation}
+                    </p>
                   </div>
-                  <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 }}>
-                    {card.interpretation}
-                  </p>
-                </div>
-              )
+                )
+            )
+          ) : (
+            // Fallback для старых гаданий без interpretations
+            currentReading.cards.map(
+              (card, index) =>
+                flippedCards[index] && (
+                  <div key={index} style={{ marginBottom: 16 }}>
+                    <div
+                      style={{
+                        fontSize: 16,
+                        fontWeight: 600,
+                        color: 'var(--accent)',
+                        marginBottom: 8,
+                      }}
+                    >
+                      {currentReading.spread.positions[index]}: {card.name}
+                    </div>
+                    <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 }}>
+                      {(card as any).interpretation || card.meaning}
+                    </p>
+                  </div>
+                )
+            )
           )}
           {!flippedCards.some(Boolean) && (
             <p style={{ fontSize: 14, color: 'var(--text-muted)' }}>
@@ -253,6 +343,19 @@ export default function Tarot() {
             Новый расклад
           </button>
         </div>
+      </div>
+    );
+  }
+
+  if (spreadsLoading || cardsLoading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '200px' 
+      }}>
+        <div style={{ color: 'var(--text-muted)' }}>Загрузка...</div>
       </div>
     );
   }
@@ -294,7 +397,7 @@ export default function Tarot() {
           padding: '0 20px',
         }}
       >
-        {TAROT_SPREADS.map(spread => (
+        {spreads.map(spread => (
           <button
             key={spread.id}
             type="button"
@@ -324,7 +427,9 @@ export default function Tarot() {
             )}
             <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>{spread.name}</div>
             <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 8 }}>
-              {spread.cardCount} карт
+              {spread.cardCount === 1 ? '1 карта' : 
+               spread.cardCount < 5 ? `${spread.cardCount} карты` : 
+               `${spread.cardCount} карт`}
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.4 }}>
               {spread.description}

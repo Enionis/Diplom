@@ -416,6 +416,172 @@ app.post('/api/user/:id/change-password', (req, res) => {
   }
 });
 
+/** GET /api/tarot/spreads — получение всех раскладов таро */
+app.get('/api/tarot/spreads', (req, res) => {
+  try {
+    const db = getDatabase();
+    const spreads = db.prepare('SELECT * FROM tarot_spreads ORDER BY card_count ASC').all();
+    
+    const formattedSpreads = spreads.map(spread => ({
+      id: spread.id,
+      name: spread.name,
+      description: spread.description,
+      cardCount: spread.card_count,
+      positions: JSON.parse(spread.positions),
+      isPremium: spread.is_premium === 1
+    }));
+    
+    res.json({ ok: true, spreads: formattedSpreads });
+  } catch (err) {
+    console.error('Get tarot spreads error:', err);
+    res.status(500).json({ ok: false, error: 'Ошибка сервера' });
+  }
+});
+
+/** GET /api/tarot/cards — получение всех карт таро */
+app.get('/api/tarot/cards', (req, res) => {
+  try {
+    const db = getDatabase();
+    const cards = db.prepare('SELECT * FROM tarot_cards ORDER BY id ASC').all();
+    
+    res.json({ ok: true, cards });
+  } catch (err) {
+    console.error('Get tarot cards error:', err);
+    res.status(500).json({ ok: false, error: 'Ошибка сервера' });
+  }
+});
+
+/** POST /api/tarot/reading — создание нового гадания */
+app.post('/api/tarot/reading', (req, res) => {
+  try {
+    const { userId, spreadId, cardIds } = req.body || {};
+    
+    if (!userId || !spreadId || !cardIds || !Array.isArray(cardIds)) {
+      return res.status(400).json({ ok: false, error: 'Неверные параметры' });
+    }
+    
+    const db = getDatabase();
+    
+    // Проверяем существование пользователя
+    const user = db.prepare('SELECT id FROM users WHERE id = ?').get(userId);
+    if (!user) {
+      return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
+    }
+    
+    // Проверяем существование расклада
+    const spread = db.prepare('SELECT * FROM tarot_spreads WHERE id = ?').get(spreadId);
+    if (!spread) {
+      return res.status(404).json({ ok: false, error: 'Расклад не найден' });
+    }
+    
+    // Получаем карты
+    const cards = [];
+    const interpretations = [];
+    
+    for (let i = 0; i < cardIds.length; i++) {
+      const cardId = cardIds[i];
+      const card = db.prepare('SELECT * FROM tarot_cards WHERE id = ?').get(cardId);
+      if (!card) {
+        return res.status(404).json({ ok: false, error: `Карта ${cardId} не найдена` });
+      }
+      
+      // Получаем толкование для этой карты в этом раскладе на этой позиции
+      const interpretation = db.prepare(`
+        SELECT interpretation FROM tarot_interpretations 
+        WHERE card_id = ? AND spread_id = ? AND position_index = ?
+      `).get(cardId, spreadId, i);
+      
+      cards.push({
+        ...card,
+        position: JSON.parse(spread.positions)[i] || `Позиция ${i + 1}`
+      });
+      
+      interpretations.push({
+        position: JSON.parse(spread.positions)[i] || `Позиция ${i + 1}`,
+        card: card,
+        interpretation: interpretation ? interpretation.interpretation : 'Толкование не найдено'
+      });
+    }
+    
+    // Сохраняем гадание
+    const readingId = `reading_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+    const now = new Date().toISOString();
+    
+    db.prepare(`
+      INSERT INTO tarot_readings (id, user_id, spread_id, cards, created_at)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(readingId, userId, spreadId, JSON.stringify(cardIds), now);
+    
+    res.json({
+      ok: true,
+      reading: {
+        id: readingId,
+        spread: {
+          id: spread.id,
+          name: spread.name,
+          description: spread.description,
+          cardCount: spread.card_count,
+          positions: JSON.parse(spread.positions)
+        },
+        cards,
+        interpretations,
+        createdAt: now
+      }
+    });
+    
+  } catch (err) {
+    console.error('Create tarot reading error:', err);
+    res.status(500).json({ ok: false, error: 'Ошибка сервера' });
+  }
+});
+
+/** GET /api/user/:userId/tarot/readings — получение гаданий пользователя */
+app.get('/api/user/:userId/tarot/readings', (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { date } = req.query;
+    
+    if (!userId) {
+      return res.status(400).json({ ok: false, error: 'Нет userId' });
+    }
+    
+    const db = getDatabase();
+    
+    let query = `
+      SELECT tr.*, ts.name as spread_name, ts.description as spread_description 
+      FROM tarot_readings tr
+      JOIN tarot_spreads ts ON tr.spread_id = ts.id
+      WHERE tr.user_id = ?
+    `;
+    const params = [userId];
+    
+    if (date) {
+      query += ` AND DATE(tr.created_at) = ?`;
+      params.push(date);
+    }
+    
+    query += ` ORDER BY tr.created_at DESC`;
+    
+    const readings = db.prepare(query).all(...params);
+    
+    res.json({ 
+      ok: true, 
+      readings: readings.map(reading => ({
+        id: reading.id,
+        spreadId: reading.spread_id,
+        spreadName: reading.spread_name,
+        spreadDescription: reading.spread_description,
+        cards: JSON.parse(reading.cards),
+        createdAt: reading.created_at
+      }))
+    });
+    
+  } catch (err) {
+    console.error('Get user tarot readings error:', err);
+    res.status(500).json({ ok: false, error: 'Ошибка сервера' });
+  }
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
