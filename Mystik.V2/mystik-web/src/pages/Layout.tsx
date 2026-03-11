@@ -1,5 +1,6 @@
 import { Outlet, NavLink } from 'react-router-dom';
 import { Home, Star, User, Sparkles, BookOpen } from 'lucide-react';
+import { useSettings } from '@/providers/SettingsProvider';
 
 const navItems = [
   { to: '/', icon: Home, label: 'Главная' },
@@ -14,23 +15,44 @@ function TarotIcon() {
 }
 
 export default function Layout() {
+  const { menuPosition } = useSettings();
+
   return (
-    <div className="app-layout">
-      <main className="app-content">
+    <div className={`app-layout ${menuPosition === 'side' ? 'layout-side' : 'layout-bottom'}`}>
+      {menuPosition === 'side' && (
+        <nav className="nav-side">
+          {navItems.map(({ to, icon: Icon, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              title={label}
+            >
+              <Icon size={24} />
+              <span className="nav-label">{label}</span>
+            </NavLink>
+          ))}
+        </nav>
+      )}
+      
+      <main className={`app-content ${menuPosition === 'side' ? 'content-with-sidebar' : ''}`}>
         <Outlet />
       </main>
-      <nav className="nav-bottom">
-        {navItems.map(({ to, icon: Icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-          >
-            <Icon size={24} />
-            <span>{label}</span>
-          </NavLink>
-        ))}
-      </nav>
+      
+      {menuPosition === 'bottom' && (
+        <nav className="nav-bottom">
+          {navItems.map(({ to, icon: Icon, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+            >
+              <Icon size={24} />
+              <span>{label}</span>
+            </NavLink>
+          ))}
+        </nav>
+      )}
     </div>
   );
 }

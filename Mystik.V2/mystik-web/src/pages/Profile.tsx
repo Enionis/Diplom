@@ -12,10 +12,12 @@ import {
   Sparkles,
   Edit,
   Key,
+  Menu,
 } from 'lucide-react';
 import { useSubscription } from '@/providers/SubscriptionProvider';
 import { useUser } from '@/providers/UserProvider';
 import { useAuth } from '@/providers/AuthProvider';
+import { useSettings } from '@/providers/SettingsProvider';
 
 const supportContacts = [
   { name: 'Ангелина Дмитриева', phone: '+7 (902) 851-01-87', email: 'ychebka337@mail.ru' },
@@ -35,6 +37,7 @@ export default function Profile() {
   const { isPremium, cardBack, setCardBack, cancelSubscription } = useSubscription();
   const { birthDate, clearUserData } = useUser();
   const { user, logout, updateProfile, changePassword } = useAuth();
+  const { menuPosition, setMenuPosition } = useSettings();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [selectedCardBack, setSelectedCardBack] = useState(cardBack);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -303,6 +306,55 @@ export default function Profile() {
             </div>
           </div>
         )}
+
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: 16,
+            background: 'var(--card-bg)',
+            borderRadius: 12,
+            marginBottom: 10,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <Menu size={20} color="var(--accent)" />
+            <span>Положение меню</span>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              type="button"
+              onClick={() => setMenuPosition('bottom')}
+              style={{
+                padding: '6px 12px',
+                borderRadius: 8,
+                background: menuPosition === 'bottom' ? 'var(--accent)' : 'transparent',
+                color: menuPosition === 'bottom' ? '#1a1a2e' : 'var(--text-muted)',
+                fontSize: 12,
+                fontWeight: 500,
+                border: `1px solid ${menuPosition === 'bottom' ? 'var(--accent)' : '#666'}`,
+              }}
+            >
+              Снизу
+            </button>
+            <button
+              type="button"
+              onClick={() => setMenuPosition('side')}
+              style={{
+                padding: '6px 12px',
+                borderRadius: 8,
+                background: menuPosition === 'side' ? 'var(--accent)' : 'transparent',
+                color: menuPosition === 'side' ? '#1a1a2e' : 'var(--text-muted)',
+                fontSize: 12,
+                fontWeight: 500,
+                border: `1px solid ${menuPosition === 'side' ? 'var(--accent)' : '#666'}`,
+              }}
+            >
+              Сбоку
+            </button>
+          </div>
+        </div>
 
         <div
           style={{

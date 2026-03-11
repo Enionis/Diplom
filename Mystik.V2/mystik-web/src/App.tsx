@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './providers/AuthProvider';
+import { SettingsProvider } from './providers/SettingsProvider';
 import Layout from './pages/Layout';
 import Home from './pages/Home';
 import Tarot from './pages/Tarot';
@@ -32,19 +33,21 @@ export default function App() {
   }
 
   return (
-    <Routes>
-      <Route path="/auth" element={user && !user.isGuest ? <Navigate to="/" replace /> : <Auth />} />
-      <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-        <Route index element={<Home />} />
-        <Route path="tarot" element={<Tarot />} />
-        <Route path="horoscope" element={<Horoscope />} />
-        <Route path="horoscope/matrix" element={<Horoscope tab="matrix" />} />
-        <Route path="tests" element={<Tests />} />
-        <Route path="profile" element={<Profile />} />
-      </Route>
-      <Route path="/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />
-      <Route path="/quiz/:id" element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <SettingsProvider>
+      <Routes>
+        <Route path="/auth" element={user && !user.isGuest ? <Navigate to="/" replace /> : <Auth />} />
+        <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+          <Route index element={<Home />} />
+          <Route path="tarot" element={<Tarot />} />
+          <Route path="horoscope" element={<Horoscope />} />
+          <Route path="horoscope/matrix" element={<Horoscope tab="matrix" />} />
+          <Route path="tests" element={<Tests />} />
+          <Route path="profile" element={<Profile />} />
+        </Route>
+        <Route path="/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />
+        <Route path="/quiz/:id" element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </SettingsProvider>
   );
 }
