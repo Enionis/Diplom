@@ -5,7 +5,6 @@ interface MatrixPoint {
 
 interface MatrixSVGProps {
   matrix: MatrixPoint[];
-  isPremium: boolean;
 }
 
 export default function MatrixSVG({ matrix }: MatrixSVGProps) {
@@ -71,156 +70,156 @@ export default function MatrixSVG({ matrix }: MatrixSVGProps) {
         <text x="334" y="302" fontSize="20" fontWeight="bold" fill="#ffd700" textAnchor="middle">{matrix[0].value}</text>
         
         {/* F */}
-        <circle fill="#2a2a3e" stroke="#9c27b0" strokeWidth="2" cx="151" cy="114.22" r="33.5" opacity={matrix[5].locked ? 0.4 : 1} />
-        <text x="151" y="119" fontSize="16" fontWeight="bold" fill={matrix[5].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[5].locked ? '?' : matrix[5].value}
+        <circle fill="#2a2a3e" stroke="#9c27b0" strokeWidth="2" cx="151" cy="114.22" r="33.5" />
+        <text x="151" y="119" fontSize="16" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[5].value}
         </text>
         
         {/* G */}
-        <circle fill="#2a2a3e" stroke="#9c27b0" strokeWidth="2" cx="515.1" cy="114.22" r="33.5" opacity={matrix[6].locked ? 0.4 : 1} />
-        <text x="515.1" y="119" fontSize="16" fontWeight="bold" fill={matrix[6].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[6].locked ? '?' : matrix[6].value}
+        <circle fill="#2a2a3e" stroke="#9c27b0" strokeWidth="2" cx="515.1" cy="114.22" r="33.5" />
+        <text x="515.1" y="119" fontSize="16" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[6].value}
         </text>
         
         {/* I */}
-        <circle fill="#2a2a3e" stroke="#9c27b0" strokeWidth="2" cx="514.1" cy="479.62" r="33.5" opacity={matrix[7].locked ? 0.4 : 1} />
-        <text x="514.1" y="484" fontSize="16" fontWeight="bold" fill={matrix[7].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[7].locked ? '?' : matrix[7].value}
+        <circle fill="#2a2a3e" stroke="#9c27b0" strokeWidth="2" cx="514.1" cy="479.62" r="33.5" />
+        <text x="514.1" y="484" fontSize="16" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[7].value}
         </text>
         
         {/* H */}
-        <circle fill="#2a2a3e" stroke="#9c27b0" strokeWidth="2" cx="153" cy="479.62" r="33.5" opacity={matrix[8].locked ? 0.4 : 1} />
-        <text x="153" y="484" fontSize="16" fontWeight="bold" fill={matrix[8].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[8].locked ? '?' : matrix[8].value}
+        <circle fill="#2a2a3e" stroke="#9c27b0" strokeWidth="2" cx="153" cy="479.62" r="33.5" />
+        <text x="153" y="484" fontSize="16" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[8].value}
         </text>
         
         {/* J */}
-        <circle fill="#2a2a3e" stroke="#e91e63" strokeWidth="2" cx="332.59" cy="466" r="21" opacity={matrix[12].locked ? 0.4 : 1} />
-        <text x="332.59" y="470" fontSize="14" fontWeight="bold" fill={matrix[12].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[12].locked ? '?' : matrix[12].value}
+        <circle fill="#2a2a3e" stroke="#e91e63" strokeWidth="2" cx="332.59" cy="466" r="21" />
+        <text x="332.59" y="470" fontSize="14" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[12].value}
         </text>
         
         {/* N */}
-        <circle fill="#2a2a3e" stroke="#e91e63" strokeWidth="2" cx="500" cy="297" r="21" opacity={matrix[11].locked ? 0.4 : 1} />
-        <text x="500" y="301" fontSize="14" fontWeight="bold" fill={matrix[11].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[11].locked ? '?' : matrix[11].value}
+        <circle fill="#2a2a3e" stroke="#e91e63" strokeWidth="2" cx="500" cy="297" r="21" />
+        <text x="500" y="301" fontSize="14" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[11].value}
         </text>
         
         {/* L */}
-        <circle fill="#2a2a3e" stroke="#03a9f4" strokeWidth="2" cx="418.18" cy="380.69" r="21" opacity={matrix[15].locked ? 0.4 : 1} />
-        <text x="418.18" y="385" fontSize="14" fontWeight="bold" fill={matrix[15].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[15].locked ? '?' : matrix[15].value}
+        <circle fill="#2a2a3e" stroke="#03a9f4" strokeWidth="2" cx="418.18" cy="380.69" r="21" />
+        <text x="418.18" y="385" fontSize="14" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[15].value}
         </text>
         
         {/* K */}
-        <circle fill="#2a2a3e" stroke="#03a9f4" strokeWidth="2" cx="375" cy="424" r="21" opacity={matrix[16].locked ? 0.4 : 1} />
-        <text x="375" y="429" fontSize="14" fontWeight="bold" fill={matrix[16].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[16].locked ? '?' : matrix[16].value}
+        <circle fill="#2a2a3e" stroke="#03a9f4" strokeWidth="2" cx="375" cy="424" r="21" />
+        <text x="375" y="429" fontSize="14" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[16].value}
         </text>
         
         {/* M */}
-        <circle fill="#2a2a3e" stroke="#03a9f4" strokeWidth="2" cx="461" cy="338" r="21" opacity={matrix[25].locked ? 0.4 : 1} />
-        <text x="461" y="343" fontSize="14" fontWeight="bold" fill={matrix[25].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[25].locked ? '?' : matrix[25].value}
+        <circle fill="#2a2a3e" stroke="#03a9f4" strokeWidth="2" cx="461" cy="338" r="21" />
+        <text x="461" y="343" fontSize="14" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[25].value}
         </text>
         
         {/* S */}
-        <circle fill="#2a2a3e" stroke="#03a9f4" strokeWidth="2" cx="165.61" cy="297" r="21" opacity={matrix[9].locked ? 0.4 : 1} />
-        <text x="165.61" y="301" fontSize="14" fontWeight="bold" fill={matrix[9].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[9].locked ? '?' : matrix[9].value}
+        <circle fill="#2a2a3e" stroke="#03a9f4" strokeWidth="2" cx="165.61" cy="297" r="21" />
+        <text x="165.61" y="301" fontSize="14" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[9].value}
         </text>
         
         {/* T */}
-        <circle fill="#2a2a3e" stroke="#03a9f4" strokeWidth="2" cx="333.7" cy="129" r="21" opacity={matrix[10].locked ? 0.4 : 1} />
-        <text x="333.7" y="133" fontSize="14" fontWeight="bold" fill={matrix[10].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[10].locked ? '?' : matrix[10].value}
+        <circle fill="#2a2a3e" stroke="#03a9f4" strokeWidth="2" cx="333.7" cy="129" r="21" />
+        <text x="333.7" y="133" fontSize="14" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[10].value}
         </text>
         
         {/* O, P, Q, R */}
-        <circle fill="#2a2a3e" stroke="#00bcd4" strokeWidth="2" cx="127.11" cy="297" r="24" opacity={matrix[17].locked ? 0.4 : 1} />
-        <text x="127.11" y="302" fontSize="14" fontWeight="bold" fill={matrix[17].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[17].locked ? '?' : matrix[17].value}
+        <circle fill="#2a2a3e" stroke="#00bcd4" strokeWidth="2" cx="127.11" cy="297" r="24" />
+        <text x="127.11" y="302" fontSize="14" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[17].value}
         </text>
         
-        <circle fill="#2a2a3e" stroke="#00bcd4" strokeWidth="2" cx="333.7" cy="90.62" r="24" opacity={matrix[18].locked ? 0.4 : 1} />
-        <text x="333.7" y="95" fontSize="14" fontWeight="bold" fill={matrix[18].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[18].locked ? '?' : matrix[18].value}
+        <circle fill="#2a2a3e" stroke="#00bcd4" strokeWidth="2" cx="333.7" cy="90.62" r="24" />
+        <text x="333.7" y="95" fontSize="14" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[18].value}
         </text>
         
-        <circle fill="#2a2a3e" stroke="#ff5722" strokeWidth="2" cx="538.5" cy="297" r="24" opacity={matrix[19].locked ? 0.4 : 1} />
-        <text x="538.5" y="302" fontSize="14" fontWeight="bold" fill={matrix[19].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[19].locked ? '?' : matrix[19].value}
+        <circle fill="#2a2a3e" stroke="#ff5722" strokeWidth="2" cx="538.5" cy="297" r="24" />
+        <text x="538.5" y="302" fontSize="14" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[19].value}
         </text>
         
-        <circle fill="#2a2a3e" stroke="#ff5722" strokeWidth="2" cx="333" cy="505" r="24" opacity={matrix[20].locked ? 0.4 : 1} />
-        <text x="333" y="510" fontSize="14" fontWeight="bold" fill={matrix[20].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[20].locked ? '?' : matrix[20].value}
+        <circle fill="#2a2a3e" stroke="#ff5722" strokeWidth="2" cx="333" cy="505" r="24" />
+        <text x="333" y="510" fontSize="14" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[20].value}
         </text>
         
         {/* W, X */}
-        <circle fill="#2a2a3e" stroke="#9c27b0" strokeWidth="2" cx="245.26" cy="297" r="21" opacity={matrix[13].locked ? 0.4 : 1} />
-        <text x="245.26" y="301" fontSize="14" fontWeight="bold" fill={matrix[13].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[13].locked ? '?' : matrix[13].value}
+        <circle fill="#2a2a3e" stroke="#9c27b0" strokeWidth="2" cx="245.26" cy="297" r="21" />
+        <text x="245.26" y="301" fontSize="14" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[13].value}
         </text>
         
-        <circle fill="#2a2a3e" stroke="#9c27b0" strokeWidth="2" cx="333.7" cy="203" r="21" opacity={matrix[14].locked ? 0.4 : 1} />
-        <text x="333.7" y="207" fontSize="14" fontWeight="bold" fill={matrix[14].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[14].locked ? '?' : matrix[14].value}
+        <circle fill="#2a2a3e" stroke="#9c27b0" strokeWidth="2" cx="333.7" cy="203" r="21" />
+        <text x="333.7" y="207" fontSize="14" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[14].value}
         </text>
         
         {/* F1, F2 */}
-        <circle fill="#2a2a3e" stroke="#03a9f4" strokeWidth="2" cx="212" cy="175.93" r="21" opacity={matrix[26].locked ? 0.4 : 1} />
-        <text x="212" y="179" fontSize="14" fontWeight="bold" fill={matrix[26].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[26].locked ? '?' : matrix[26].value}
+        <circle fill="#2a2a3e" stroke="#03a9f4" strokeWidth="2" cx="212" cy="175.93" r="21" />
+        <text x="212" y="179" fontSize="14" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[26].value}
         </text>
         
-        <circle fill="#2a2a3e" stroke="#ff5722" strokeWidth="2" cx="184.71" cy="149.53" r="24" opacity={matrix[27].locked ? 0.4 : 1} />
-        <text x="184.71" y="153" fontSize="14" fontWeight="bold" fill={matrix[27].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[27].locked ? '?' : matrix[27].value}
+        <circle fill="#2a2a3e" stroke="#ff5722" strokeWidth="2" cx="184.71" cy="149.53" r="24" />
+        <text x="184.71" y="153" fontSize="14" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[27].value}
         </text>
         
         {/* G1, G2 */}
-        <circle fill="#2a2a3e" stroke="#03a9f4" strokeWidth="2" cx="455.4" cy="177.53" r="21" opacity={matrix[28].locked ? 0.4 : 1} />
-        <text x="455.4" y="181" fontSize="14" fontWeight="bold" fill={matrix[28].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[28].locked ? '?' : matrix[28].value}
+        <circle fill="#2a2a3e" stroke="#03a9f4" strokeWidth="2" cx="455.4" cy="177.53" r="21" />
+        <text x="455.4" y="181" fontSize="14" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[28].value}
         </text>
         
-        <circle fill="#2a2a3e" stroke="#ff5722" strokeWidth="2" cx="480.79" cy="149.13" r="24" opacity={matrix[29].locked ? 0.4 : 1} />
-        <text x="480.79" y="153" fontSize="14" fontWeight="bold" fill={matrix[29].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[29].locked ? '?' : matrix[29].value}
+        <circle fill="#2a2a3e" stroke="#ff5722" strokeWidth="2" cx="480.79" cy="149.13" r="24" />
+        <text x="480.79" y="153" fontSize="14" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[29].value}
         </text>
         
         {/* I1, I2 */}
-        <circle fill="#2a2a3e" stroke="#03a9f4" strokeWidth="2" cx="454.4" cy="416.91" r="21" opacity={matrix[30].locked ? 0.4 : 1} />
-        <text x="454.4" y="420" fontSize="14" fontWeight="bold" fill={matrix[30].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[30].locked ? '?' : matrix[30].value}
+        <circle fill="#2a2a3e" stroke="#03a9f4" strokeWidth="2" cx="454.4" cy="416.91" r="21" />
+        <text x="454.4" y="420" fontSize="14" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[30].value}
         </text>
         
-        <circle fill="#2a2a3e" stroke="#ff5722" strokeWidth="2" cx="479.79" cy="445.31" r="24" opacity={matrix[31].locked ? 0.4 : 1} />
-        <text x="479.79" y="449" fontSize="14" fontWeight="bold" fill={matrix[31].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[31].locked ? '?' : matrix[31].value}
+        <circle fill="#2a2a3e" stroke="#ff5722" strokeWidth="2" cx="479.79" cy="445.31" r="24" />
+        <text x="479.79" y="449" fontSize="14" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[31].value}
         </text>
         
         {/* H1, H2 */}
-        <circle fill="#2a2a3e" stroke="#03a9f4" strokeWidth="2" cx="215" cy="419" r="21" opacity={matrix[32].locked ? 0.4 : 1} />
-        <text x="215" y="423" fontSize="14" fontWeight="bold" fill={matrix[32].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[32].locked ? '?' : matrix[32].value}
+        <circle fill="#2a2a3e" stroke="#03a9f4" strokeWidth="2" cx="215" cy="419" r="21" />
+        <text x="215" y="423" fontSize="14" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[32].value}
         </text>
         
-        <circle fill="#2a2a3e" stroke="#ff5722" strokeWidth="2" cx="188.71" cy="446.7" r="24" opacity={matrix[33].locked ? 0.4 : 1} />
-        <text x="188.71" y="450" fontSize="14" fontWeight="bold" fill={matrix[33].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[33].locked ? '?' : matrix[33].value}
+        <circle fill="#2a2a3e" stroke="#ff5722" strokeWidth="2" cx="188.71" cy="446.7" r="24" />
+        <text x="188.71" y="450" fontSize="14" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[33].value}
         </text>
         
         {/* U, V */}
-        <circle fill="#2a2a3e" stroke="#ff5722" strokeWidth="2" cx="382" cy="297" r="24" opacity={matrix[34].locked ? 0.4 : 1} />
-        <text x="382" y="301" fontSize="14" fontWeight="bold" fill={matrix[34].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[34].locked ? '?' : matrix[34].value}
+        <circle fill="#2a2a3e" stroke="#ff5722" strokeWidth="2" cx="382" cy="297" r="24" />
+        <text x="382" y="301" fontSize="14" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[34].value}
         </text>
         
-        <circle fill="#2a2a3e" stroke="#03a9f4" strokeWidth="2" cx="420.54" cy="297" r="21" opacity={matrix[35].locked ? 0.4 : 1} />
-        <text x="420.54" y="301" fontSize="14" fontWeight="bold" fill={matrix[35].locked ? '#666' : '#ffd700'} textAnchor="middle">
-          {matrix[35].locked ? '?' : matrix[35].value}
+        <circle fill="#2a2a3e" stroke="#03a9f4" strokeWidth="2" cx="420.54" cy="297" r="21" />
+        <text x="420.54" y="301" fontSize="14" fontWeight="bold" fill="#ffd700" textAnchor="middle">
+          {matrix[35].value}
         </text>
       </g>
     </svg>

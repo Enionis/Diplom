@@ -54,8 +54,6 @@ export function useHoroscope(zodiacSign: string, period: 'today' | 'week' | 'mon
         const data = await response.json();
 
         if (data.ok) {
-          console.log('Received horoscope data:', data.horoscope);
-          console.log('Horoscope text contains newlines:', data.horoscope.text.includes('\n\n'));
           setHoroscope(data.horoscope);
         } else {
           setError(data.error || 'Ошибка получения гороскопа');

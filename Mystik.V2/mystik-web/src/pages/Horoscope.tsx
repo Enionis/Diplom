@@ -810,7 +810,12 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                 ) : (
                   <div style={{ textAlign: 'center', padding: 20 }}>
                     <Crown size={28} color="var(--accent)" style={{ marginBottom: 12 }} />
-                    <p style={{ color: 'var(--text-muted)', marginBottom: 12 }}>Доступно только для премиум</p>
+                    <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>
+                      Гороскоп на неделю и месяц
+                    </div>
+                    <div style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 16 }}>
+                      Доступно только для премиум пользователей
+                    </div>
                     <button type="button" className="btn-primary" onClick={() => navigate('/subscription')}>
                       Открыть доступ
                     </button>
@@ -882,19 +887,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                   <div style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 16 }}>
                     Доступно только для премиум пользователей
                   </div>
-                  <button
-                    onClick={() => navigate('/subscription')}
-                    style={{
-                      background: 'linear-gradient(135deg, var(--accent) 0%, #ffed4e 100%)',
-                      color: '#1a1a2e',
-                      border: 'none',
-                      borderRadius: 20,
-                      padding: '12px 24px',
-                      fontSize: 14,
-                      fontWeight: 600,
-                      cursor: 'pointer'
-                    }}
-                  >
+                  <button type="button" className="btn-primary" onClick={() => navigate('/subscription')}>
                     Открыть доступ
                   </button>
                 </div>
@@ -931,7 +924,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                 display: 'flex',
                 justifyContent: 'center'
               }}>
-                <MatrixSVG matrix={matrixData.matrix} isPremium={isPremium} />
+                <MatrixSVG matrix={matrixData.matrix} />
               </div>
 
               <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
@@ -945,25 +938,17 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                     marginBottom: 8,
                     background: 'var(--card-bg)',
                     borderRadius: 12,
-                    opacity: !isPremium ? 0.6 : 1,
                   }}
                 >
                   <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8, textTransform: 'capitalize' }}>
                     {name === 'sah' ? 'Сахасрара' : name === 'aj' ? 'Аджна' : name === 'vish' ? 'Вишудха' : 
                      name === 'anah' ? 'Анахата' : name === 'man' ? 'Манипура' : name === 'svad' ? 'Свадхистана' : 'Муладхара'}
                   </div>
-                  {isPremium ? (
+                  {(
                     <div style={{ display: 'flex', gap: 16, fontSize: 14, color: 'var(--text-muted)' }}>
                       <div>Физика: {data.physics}</div>
                       <div>Энергия: {data.energy}</div>
                       <div>Эмоции: {data.emotions}</div>
-                    </div>
-                  ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <Sparkles size={16} color="#666" />
-                      <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>
-                        Доступно с премиум подпиской
-                      </span>
                     </div>
                   )}
                 </div>
@@ -1258,11 +1243,12 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
               </div>
 
               {/* Таланты */}
-              {talents && (
-                <div style={{ marginTop: 24 }}>
-                  <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
-                    Таланты
-                  </div>
+              {isPremium ? (
+                talents && (
+                  <div style={{ marginTop: 24 }}>
+                    <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
+                      Таланты
+                    </div>
 
                   {/* Талант от Бога */}
                   {talents.fromGod.length > 0 && (
@@ -1423,14 +1409,73 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                     </div>
                   )}
                 </div>
+              )
+              ) : (
+                <div style={{ marginTop: 24 }}>
+                  <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
+                    Таланты
+                  </div>
+                  <div style={{
+                    padding: 16,
+                    marginBottom: 8,
+                    background: 'var(--card-bg)',
+                    borderRadius: 12,
+                    opacity: 0.6,
+                  }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+                      Талант от Бога
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Sparkles size={16} color="#666" />
+                      <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>
+                        Доступно с премиум подпиской
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{
+                    padding: 16,
+                    marginBottom: 8,
+                    background: 'var(--card-bg)',
+                    borderRadius: 12,
+                    opacity: 0.6,
+                  }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+                      Талант от Отца
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Sparkles size={16} color="#666" />
+                      <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>
+                        Доступно с премиум подпиской
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{
+                    padding: 16,
+                    marginBottom: 8,
+                    background: 'var(--card-bg)',
+                    borderRadius: 12,
+                    opacity: 0.6,
+                  }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+                      Талант от Матери
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Sparkles size={16} color="#666" />
+                      <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>
+                        Доступно с премиум подпиской
+                      </span>
+                    </div>
+                  </div>
+                </div>
               )}
 
               {/* Прошлая жизнь */}
-              {pastLife && (
-                <div style={{ marginTop: 24 }}>
-                  <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
-                    Прошлая жизнь
-                  </div>
+              {isPremium ? (
+                pastLife && (
+                  <div style={{ marginTop: 24 }}>
+                    <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
+                      Прошлая жизнь
+                    </div>
 
                   <div style={{ marginBottom: 8, background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden' }}>
                     <button
@@ -1502,14 +1547,39 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                     )}
                   </div>
                 </div>
+              )
+              ) : (
+                <div style={{ marginTop: 24 }}>
+                  <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
+                    Прошлая жизнь
+                  </div>
+                  <div style={{
+                    padding: 16,
+                    marginBottom: 8,
+                    background: 'var(--card-bg)',
+                    borderRadius: 12,
+                    opacity: 0.6,
+                  }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+                      Прошлая жизнь
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Sparkles size={16} color="#666" />
+                      <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>
+                        Доступно с премиум подпиской
+                      </span>
+                    </div>
+                  </div>
+                </div>
               )}
 
               {/* Здоровье */}
-              {matrixData && healthRecommendations && (
-                <div style={{ marginTop: 24 }}>
-                  <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
-                    Здоровье
-                  </div>
+              {isPremium ? (
+                matrixData && healthRecommendations && (
+                  <div style={{ marginTop: 24 }}>
+                    <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
+                      Здоровье
+                    </div>
 
                   {Object.entries(matrixData.chakras).map(([chakraKey, chakraData]) => {
                     const healthData = CHAKRA_HEALTH[chakraKey];
@@ -1617,14 +1687,52 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                     );
                   })}
                 </div>
+              )
+              ) : (
+                <div style={{ marginTop: 24 }}>
+                  <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
+                    Здоровье
+                  </div>
+                  {Object.entries({
+                    sah: 'Сахасрара',
+                    aj: 'Аджна', 
+                    vish: 'Вишудха',
+                    anah: 'Анахата',
+                    man: 'Манипура',
+                    svad: 'Свадхистана',
+                    mul: 'Муладхара'
+                  }).map(([key, name]) => (
+                    <div
+                      key={key}
+                      style={{
+                        padding: 16,
+                        marginBottom: 8,
+                        background: 'var(--card-bg)',
+                        borderRadius: 12,
+                        opacity: 0.6,
+                      }}
+                    >
+                      <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+                        {name}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Sparkles size={16} color="#666" />
+                        <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>
+                          Доступно с премиум подпиской
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
 
               {/* Предназначение (новая секция) */}
-              {matrixData && (
-                <div style={{ marginTop: 24 }}>
-                  <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
-                    Предназначение
-                  </div>
+              {isPremium ? (
+                matrixData && (
+                  <div style={{ marginTop: 24 }}>
+                    <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
+                      Предназначение
+                    </div>
 
                   {/* Предназначение 20-40 лет */}
                   <div style={{ marginBottom: 8, background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden' }}>
@@ -1791,14 +1899,73 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                     )}
                   </div>
                 </div>
+              )
+              ) : (
+                <div style={{ marginTop: 24 }}>
+                  <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
+                    Предназначение
+                  </div>
+                  <div style={{
+                    padding: 16,
+                    marginBottom: 8,
+                    background: 'var(--card-bg)',
+                    borderRadius: 12,
+                    opacity: 0.6,
+                  }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+                      Предназначение (20-40 лет)
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Sparkles size={16} color="#666" />
+                      <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>
+                        Доступно с премиум подпиской
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{
+                    padding: 16,
+                    marginBottom: 8,
+                    background: 'var(--card-bg)',
+                    borderRadius: 12,
+                    opacity: 0.6,
+                  }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+                      Предназначение (40-60 лет)
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Sparkles size={16} color="#666" />
+                      <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>
+                        Доступно с премиум подпиской
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{
+                    padding: 16,
+                    marginBottom: 8,
+                    background: 'var(--card-bg)',
+                    borderRadius: 12,
+                    opacity: 0.6,
+                  }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+                      Предназначение (общее)
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Sparkles size={16} color="#666" />
+                      <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>
+                        Доступно с премиум подпиской
+                      </span>
+                    </div>
+                  </div>
+                </div>
               )}
 
               {/* Прогноз на год */}
-              {yearForecast && (
-                <div style={{ marginTop: 24 }}>
-                  <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
-                    Прогноз на год
-                  </div>
+              {isPremium ? (
+                yearForecast && (
+                  <div style={{ marginTop: 24 }}>
+                    <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
+                      Прогноз на год
+                    </div>
 
                   {/* Суть года, основной мотив */}
                   <div style={{ marginBottom: 8, background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden' }}>
@@ -1898,14 +2065,56 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                     )}
                   </div>
                 </div>
+              )
+              ) : (
+                <div style={{ marginTop: 24 }}>
+                  <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
+                    Прогноз на год
+                  </div>
+                  <div style={{
+                    padding: 16,
+                    marginBottom: 8,
+                    background: 'var(--card-bg)',
+                    borderRadius: 12,
+                    opacity: 0.6,
+                  }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+                      Суть года
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Sparkles size={16} color="#666" />
+                      <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>
+                        Доступно с премиум подпиской
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{
+                    padding: 16,
+                    marginBottom: 8,
+                    background: 'var(--card-bg)',
+                    borderRadius: 12,
+                    opacity: 0.6,
+                  }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+                      Причины событий
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Sparkles size={16} color="#666" />
+                      <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>
+                        Доступно с премиум подпиской
+                      </span>
+                    </div>
+                  </div>
+                </div>
               )}
 
               {/* Испытания */}
-              {matrixData && (
-                <div style={{ marginTop: 24 }}>
-                  <div style={{ fontSize: 20, fontWeight: 600, color: '#ffd700', marginBottom: 12 }}>
-                    Испытания
-                  </div>
+              {isPremium ? (
+                matrixData && (
+                  <div style={{ marginTop: 24 }}>
+                    <div style={{ fontSize: 20, fontWeight: 600, color: '#ffd700', marginBottom: 12 }}>
+                      Испытания
+                    </div>
 
                   <div style={{ marginBottom: 8, background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden' }}>
                     <button
@@ -1957,14 +2166,39 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                     )}
                   </div>
                 </div>
+              )
+              ) : (
+                <div style={{ marginTop: 24 }}>
+                  <div style={{ fontSize: 20, fontWeight: 600, color: '#ffd700', marginBottom: 12 }}>
+                    Испытания
+                  </div>
+                  <div style={{
+                    padding: 16,
+                    marginBottom: 8,
+                    background: 'var(--card-bg)',
+                    borderRadius: 12,
+                    opacity: 0.6,
+                  }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+                      Испытания
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Sparkles size={16} color="#666" />
+                      <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>
+                        Доступно с премиум подпиской
+                      </span>
+                    </div>
+                  </div>
+                </div>
               )}
 
               {/* Отношения */}
-              {matrixData && (
-                <div style={{ marginTop: 24 }}>
-                  <div style={{ fontSize: 20, fontWeight: 600, color: '#ffd700', marginBottom: 12 }}>
-                    Отношения
-                  </div>
+              {isPremium ? (
+                matrixData && (
+                  <div style={{ marginTop: 24 }}>
+                    <div style={{ fontSize: 20, fontWeight: 600, color: '#ffd700', marginBottom: 12 }}>
+                      Отношения
+                    </div>
 
                   {/* Отношения для женщин */}
                   <div style={{ marginBottom: 8, background: 'var(--card-bg)', borderRadius: 12, overflow: 'hidden' }}>
@@ -2254,10 +2488,86 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                     )}
                   </div>
                 </div>
+              )
+              ) : (
+                <div style={{ marginTop: 24 }}>
+                  <div style={{ fontSize: 20, fontWeight: 600, color: '#ffd700', marginBottom: 12 }}>
+                    Отношения
+                  </div>
+                  <div style={{
+                    padding: 16,
+                    marginBottom: 8,
+                    background: 'var(--card-bg)',
+                    borderRadius: 12,
+                    opacity: 0.6,
+                  }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+                      Отношения для женщин
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Sparkles size={16} color="#666" />
+                      <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>
+                        Доступно с премиум подпиской
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{
+                    padding: 16,
+                    marginBottom: 8,
+                    background: 'var(--card-bg)',
+                    borderRadius: 12,
+                    opacity: 0.6,
+                  }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+                      Отношения для мужчин
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Sparkles size={16} color="#666" />
+                      <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>
+                        Доступно с премиум подпиской
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{
+                    padding: 16,
+                    marginBottom: 8,
+                    background: 'var(--card-bg)',
+                    borderRadius: 12,
+                    opacity: 0.6,
+                  }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+                      Причины выхода из отношений
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Sparkles size={16} color="#666" />
+                      <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>
+                        Доступно с премиум подпиской
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{
+                    padding: 16,
+                    marginBottom: 8,
+                    background: 'var(--card-bg)',
+                    borderRadius: 12,
+                    opacity: 0.6,
+                  }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+                      Характер в отношениях
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Sparkles size={16} color="#666" />
+                      <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>
+                        Доступно с премиум подпиской
+                      </span>
+                    </div>
+                  </div>
+                </div>
               )}
 
               {/* Деньги */}
-              {matrixData && (
+              {isPremium ? (
+                matrixData && (
                 <div style={{ marginTop: 24 }}>
                   <div style={{ fontSize: 20, fontWeight: 600, color: '#ffd700', marginBottom: 12 }}>
                     Деньги
@@ -2472,10 +2782,69 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                     )}
                   </div>
                 </div>
+              )
+              ) : (
+                <div style={{ marginTop: 24 }}>
+                  <div style={{ fontSize: 20, fontWeight: 600, color: '#ffd700', marginBottom: 12 }}>
+                    Деньги
+                  </div>
+                  <div style={{
+                    padding: 16,
+                    marginBottom: 8,
+                    background: 'var(--card-bg)',
+                    borderRadius: 12,
+                    opacity: 0.6,
+                  }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+                      Направление для заработка
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Sparkles size={16} color="#666" />
+                      <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>
+                        Доступно с премиум подпиской
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{
+                    padding: 16,
+                    marginBottom: 8,
+                    background: 'var(--card-bg)',
+                    borderRadius: 12,
+                    opacity: 0.6,
+                  }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+                      Успех в деньгах
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Sparkles size={16} color="#666" />
+                      <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>
+                        Доступно с премиум подпиской
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{
+                    padding: 16,
+                    marginBottom: 8,
+                    background: 'var(--card-bg)',
+                    borderRadius: 12,
+                    opacity: 0.6,
+                  }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+                      Денежный поток
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Sparkles size={16} color="#666" />
+                      <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>
+                        Доступно с премиум подпиской
+                      </span>
+                    </div>
+                  </div>
+                </div>
               )}
 
               {/* Родители */}
-              {matrixData && (
+              {isPremium ? (
+                matrixData && (
                 <div style={{ marginTop: 24 }}>
                   <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
                     Родители
@@ -2727,10 +3096,69 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                     )}
                   </div>
                 </div>
+              )
+              ) : (
+                <div style={{ marginTop: 24 }}>
+                  <div style={{ fontSize: 20, fontWeight: 600, color: '#ffd700', marginBottom: 12 }}>
+                    Родители
+                  </div>
+                  <div style={{
+                    padding: 16,
+                    marginBottom: 8,
+                    background: 'var(--card-bg)',
+                    borderRadius: 12,
+                    opacity: 0.6,
+                  }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+                      Мужская линия
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Sparkles size={16} color="#666" />
+                      <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>
+                        Доступно с премиум подпиской
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{
+                    padding: 16,
+                    marginBottom: 8,
+                    background: 'var(--card-bg)',
+                    borderRadius: 12,
+                    opacity: 0.6,
+                  }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+                      Женская линия
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Sparkles size={16} color="#666" />
+                      <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>
+                        Доступно с премиум подпиской
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{
+                    padding: 16,
+                    marginBottom: 8,
+                    background: 'var(--card-bg)',
+                    borderRadius: 12,
+                    opacity: 0.6,
+                  }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+                      Обиды на родителей
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Sparkles size={16} color="#666" />
+                      <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>
+                        Доступно с премиум подпиской
+                      </span>
+                    </div>
+                  </div>
+                </div>
               )}
 
               {/* Дети */}
-              {matrixData && (
+              {isPremium ? (
+                matrixData && (
                 <div style={{ marginTop: 24 }}>
                   <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
                     Дети
@@ -2815,10 +3243,35 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                     )}
                   </div>
                 </div>
+              )
+              ) : (
+                <div style={{ marginTop: 24 }}>
+                  <div style={{ fontSize: 20, fontWeight: 600, color: '#ffd700', marginBottom: 12 }}>
+                    Дети
+                  </div>
+                  <div style={{
+                    padding: 16,
+                    marginBottom: 8,
+                    background: 'var(--card-bg)',
+                    borderRadius: 12,
+                    opacity: 0.6,
+                  }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+                      Ошибки в воспитании детей
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Sparkles size={16} color="#666" />
+                      <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>
+                        Доступно с премиум подпиской
+                      </span>
+                    </div>
+                  </div>
+                </div>
               )}
 
               {/* Руководство */}
-              {matrixData && (
+              {isPremium ? (
+                matrixData && (
                 <div style={{ marginTop: 24 }}>
                   <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
                     Руководство
@@ -2901,6 +3354,30 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                         })()}
                       </div>
                     )}
+                  </div>
+                </div>
+              )
+              ) : (
+                <div style={{ marginTop: 24 }}>
+                  <div style={{ fontSize: 20, fontWeight: 600, color: '#ffd700', marginBottom: 12 }}>
+                    Руководство
+                  </div>
+                  <div style={{
+                    padding: 16,
+                    marginBottom: 8,
+                    background: 'var(--card-bg)',
+                    borderRadius: 12,
+                    opacity: 0.6,
+                  }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+                      Руководство
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Sparkles size={16} color="#666" />
+                      <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>
+                        Доступно с премиум подпиской
+                      </span>
+                    </div>
                   </div>
                 </div>
               )}
