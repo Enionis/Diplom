@@ -1,11 +1,40 @@
 import { Link } from 'react-router-dom';
-import { BookOpen, Lock } from 'lucide-react';
+import { BookOpen, Lock, Loader } from 'lucide-react';
 import { useSubscription } from '@/providers/SubscriptionProvider';
-import { QUIZZES } from '@/constants/quiz';
+import { useQuizzes } from '@/hooks/useQuizzes';
 
 export default function Tests() {
   const { isPremium } = useSubscription();
-  const quizzes = Object.values(QUIZZES);
+  const { quizzes, loading, error } = useQuizzes();
+
+  if (loading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '200px' 
+      }}>
+        <Loader size={32} color="var(--accent)" className="animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: 20, textAlign: 'center' }}>
+        <p style={{ color: 'var(--error)', marginBottom: 16 }}>Ошибка загрузки тестов: {error}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="btn-primary"
+        >
+          Попробовать снова
+        </button>
+      </div>
+    );
+  }
+
+  const quizzesArray = Object.values(quizzes);
 
   return (
     <div style={{ paddingBottom: 24 }}>
@@ -23,7 +52,7 @@ export default function Tests() {
           padding: '0 20px',
         }}
       >
-        {quizzes.map(quiz => {
+        {quizzesArray.map(quiz => {
           const locked = quiz.isPremium && !isPremium;
           return (
             <Link

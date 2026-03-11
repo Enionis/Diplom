@@ -231,6 +231,150 @@ app.put('/api/user/:id', (req, res) => {
   }
 });
 
+/** GET /api/quizzes — получение списка тестов */
+app.get('/api/quizzes', (req, res) => {
+  try {
+    const db = getDatabase();
+    const quizzes = db.prepare('SELECT id, title, description, is_premium FROM quizzes').all();
+    
+    const formattedQuizzes = quizzes.reduce((acc, quiz) => {
+      acc[quiz.id] = {
+        id: quiz.id,
+        title: quiz.title,
+        description: quiz.description,
+        isPremium: quiz.is_premium === 1
+      };
+      return acc;
+    }, {});
+    
+    res.json({ ok: true, quizzes: formattedQuizzes });
+  } catch (err) {
+    console.error('Get quizzes error:', err);
+    res.status(500).json({ ok: false, error: 'Ошибка сервера' });
+  }
+});
+
+/** GET /api/quiz/:id — получение конкретного теста */
+app.get('/api/quiz/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ ok: false, error: 'Нет id теста' });
+
+    const db = getDatabase();
+    const quiz = db.prepare('SELECT * FROM quizzes WHERE id = ?').get(id);
+    
+    if (!quiz) {
+      return res.status(404).json({ ok: false, error: 'Тест не найден' });
+    }
+
+    res.json({ 
+      ok: true, 
+      quiz: {
+        id: quiz.id,
+        title: quiz.title,
+        description: quiz.description,
+        isPremium: quiz.is_premium === 1,
+        questions: JSON.parse(quiz.questions)
+      }
+    });
+  } catch (err) {
+    console.error('Get quiz error:', err);
+    res.status(500).json({ ok: false, error: 'Ошибка сервера' });
+  }
+});
+
+/** GET /api/user/:userId/quiz/:quizId/result — получение результата теста пользователя */
+app.get('/api/user/:userId/quiz/:quizId/result', (req, res) => {
+  try {
+    const { userId, quizId } = req.params;
+    if (!userId || !quizId) {
+      return res.status(400).json({ ok: false, error: 'Нет userId или quizId' });
+    }
+
+    const db = getDatabase();
+    const result = db.prepare('SELECT * FROM quiz_results WHERE user_id = ? AND quiz_id = ?').get(userId, quizId);
+    
+    if (!result) {
+      return res.status(404).json({ ok: false, error: 'Результат не найден' });
+    }
+
+    res.json({ 
+      ok: true, 
+      result: {
+        id: result.id,
+        userId: result.user_id,
+        quizId: result.quiz_id,
+        answers: JSON.parse(result.answers),
+        result: JSON.parse(result.result),
+        createdAt: result.created_at,
+        updatedAt: result.updated_at
+      }
+    });
+  } catch (err) {
+    console.error('Get quiz result error:', err);
+    res.status(500).json({ ok: false, error: 'Ошибка сервера' });
+  }
+});
+
+/** POST /api/user/:userId/quiz/:quizId/result — сохранение результата теста */
+app.post('/api/user/:userId/quiz/:quizId/result', (req, res) => {
+  try {
+    const { userId, quizId } = req.params;
+    const { answers, result } = req.body || {};
+
+    if (!userId || !quizId) {
+      return res.status(400).json({ ok: false, error: 'Нет userId или quizId' });
+    }
+
+    if (!answers || !result) {
+      return res.status(400).json({ ok: false, error: 'Нет данных ответов или результата' });
+    }
+
+    const db = getDatabase();
+    
+    // Проверяем существование пользователя
+    const user = db.prepare('SELECT id FROM users WHERE id = ?').get(userId);
+    if (!user) {
+      return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
+    }
+
+    // Проверяем существование теста
+    const quiz = db.prepare('SELECT id FROM quizzes WHERE id = ?').get(quizId);
+    if (!quiz) {
+      return res.status(404).json({ ok: false, error: 'Тест не найден' });
+    }
+
+    const now = new Date().toISOString();
+    const resultId = `result_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+
+    // Используем INSERT OR REPLACE для обновления существующего результата
+    db.prepare(`
+      INSERT OR REPLACE INTO quiz_results (id, user_id, quiz_id, answers, result, created_at, updated_at)
+      VALUES (
+        COALESCE((SELECT id FROM quiz_results WHERE user_id = ? AND quiz_id = ?), ?),
+        ?, ?, ?, ?, 
+        COALESCE((SELECT created_at FROM quiz_results WHERE user_id = ? AND quiz_id = ?), ?),
+        ?
+      )
+    `).run(userId, quizId, resultId, userId, quizId, JSON.stringify(answers), JSON.stringify(result), userId, quizId, now, now);
+
+    res.json({ 
+      ok: true, 
+      message: 'Результат сохранен',
+      result: {
+        userId,
+        quizId,
+        answers,
+        result,
+        updatedAt: now
+      }
+    });
+  } catch (err) {
+    console.error('Save quiz result error:', err);
+    res.status(500).json({ ok: false, error: 'Ошибка сервера' });
+  }
+});
+
 /** POST /api/user/:id/change-password — смена пароля */
 app.post('/api/user/:id/change-password', (req, res) => {
   try {

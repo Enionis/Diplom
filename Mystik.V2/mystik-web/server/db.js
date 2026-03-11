@@ -23,6 +23,30 @@ function initSchema(database) {
     );
     CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
     CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+
+    CREATE TABLE IF NOT EXISTS quizzes (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL,
+      is_premium INTEGER NOT NULL DEFAULT 0,
+      questions TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS quiz_results (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      quiz_id TEXT NOT NULL,
+      answers TEXT NOT NULL,
+      result TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id),
+      FOREIGN KEY (quiz_id) REFERENCES quizzes(id),
+      UNIQUE(user_id, quiz_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_quiz_results_user ON quiz_results(user_id);
+    CREATE INDEX IF NOT EXISTS idx_quiz_results_quiz ON quiz_results(quiz_id);
   `);
 }
 

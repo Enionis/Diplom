@@ -1,19 +1,49 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronRight, Crown } from 'lucide-react';
+import { ChevronRight, Crown, Loader, ArrowLeft } from 'lucide-react';
 import { useSubscription } from '@/providers/SubscriptionProvider';
-import { QUIZZES } from '@/constants/quiz';
+import { useQuiz } from '@/hooks/useQuizzes';
 import { useQuizResults } from '@/hooks/useQuizResults';
+import { QUIZZES } from '@/constants/quiz';
 
 export default function Quiz() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const quiz = (id && QUIZZES[id]) ? QUIZZES[id] : QUIZZES.strengths;
   const { isPremium } = useSubscription();
-  const { result, saveResult, clearResult } = useQuizResults(id || 'strengths');
+  const { quiz, loading: quizLoading, error: quizError } = useQuiz(id || '');
+  const { result, loading: resultLoading, error: resultError, saveResult, clearResult } = useQuizResults(id || '');
 
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
+
+  // Используем данные из API, но fallback на локальные константы для логики расчета
+  const localQuiz = id && QUIZZES[id] ? QUIZZES[id] : null;
+
+  if (quizLoading || resultLoading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '200px' 
+      }}>
+        <Loader size={32} color="var(--accent)" className="animate-spin" />
+      </div>
+    );
+  }
+
+  if (quizError || !quiz) {
+    return (
+      <div style={{ padding: 20, textAlign: 'center' }}>
+        <p style={{ color: 'var(--error)', marginBottom: 16 }}>
+          {quizError || 'Тест не найден'}
+        </p>
+        <button onClick={() => navigate('/tests')} className="btn-primary">
+          Вернуться к тестам
+        </button>
+      </div>
+    );
+  }
 
   if (quiz.isPremium && !isPremium) {
     return (
@@ -59,6 +89,19 @@ export default function Quiz() {
         <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--accent)', marginBottom: 20, textAlign: 'center' }}>
           {quiz.title}
         </h1>
+
+        {resultError && (
+          <div style={{ 
+            padding: 12, 
+            background: 'rgba(255,0,0,0.1)', 
+            border: '1px solid rgba(255,0,0,0.3)', 
+            borderRadius: 8, 
+            marginBottom: 20,
+            color: 'var(--error)'
+          }}>
+            Ошибка: {resultError}
+          </div>
+        )}
 
         {quiz.id === 'strengths' && (
           <>
@@ -233,8 +276,9 @@ export default function Quiz() {
             setCurrentQuestion(0);
             setAnswers([]);
           }}
+          disabled={resultLoading}
         >
-          Пройти еще раз
+          {resultLoading ? 'Сохранение...' : 'Пройти еще раз'}
         </button>
         <button
           type="button"
@@ -247,19 +291,126 @@ export default function Quiz() {
     );
   }
 
-  const handleAnswer = (optionIndex: number) => {
+  const handleAnswer = async (optionIndex: number) => {
     const newAnswers = [...answers, optionIndex + 1];
     setAnswers(newAnswers);
+    
     if (currentQuestion < quiz.questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
-      const res = quiz.calculateResult(newAnswers);
-      saveResult(res);
+      // Используем локальную логику для расчета результата
+      if (localQuiz && localQuiz.calculateResult) {
+        const calculatedResult = localQuiz.calculateResult(newAnswers);
+        await saveResult(newAnswers, calculatedResult);
+      } else {
+        // Fallback: простой расчет результата если локальная логика недоступна
+        let calculatedResult;
+        
+        if (quiz.id === 'paei') {
+          // Простая логика для PAEI
+          const scores: Record<string, number> = { P: 0, A: 0, E: 0, I: 0 };
+          const mapping = [
+            ["A", "A", "E"], ["A", "P", "E"], ["A", "P", "E"], ["A", "P", "E"], ["A", "P", "E"],
+            ["P", "P", "I"], ["P", "I", "A"], ["P", "P", "A"], ["P", "P", "A"], ["P", "P", "E"],
+            ["E", "E", "A"], ["E", "P", "I"], ["E", "A", "P"], ["E", "E", "A"], ["E", "P", "A"],
+            ["I", "I", "P"], ["I", "P", "A"], ["I", "P", "A"], ["I", "A", "P"], ["I", "I", "A"],
+            ["P", "A", "E", "I"], ["P", "A", "E", "I"], ["P", "A", "E", "I"], ["P", "A", "E", "I"],
+          ];
+
+          newAnswers.forEach((answer, idx) => {
+            const func = mapping[idx]?.[answer - 1];
+            if (func) scores[func]++;
+          });
+
+          const codeParts = [];
+          for (const k of ["P", "A", "E", "I"]) {
+            const s = scores[k];
+            if (s >= 8) codeParts.push(k.toUpperCase());
+            else if (s <= 2) codeParts.push("-");
+            else codeParts.push(k.toLowerCase());
+          }
+          
+          calculatedResult = {
+            scores,
+            code: codeParts.join(""),
+            interpretation: [],
+            note: "Результат рассчитан упрощенным способом"
+          };
+        } else if (quiz.id === 'attachment') {
+          // Простая логика для attachment
+          const scores = {
+            Secure: (newAnswers[0] + newAnswers[4] + newAnswers[7]) / 3,
+            Anxious: (newAnswers[1] + newAnswers[3] + newAnswers[6]) / 3,
+            Avoidant: (newAnswers[2] + newAnswers[5]) / 2,
+          };
+          const maxScore = Math.max(scores.Secure, scores.Anxious, scores.Avoidant);
+          let type = "";
+          if (maxScore === scores.Secure) type = "Надежный";
+          else if (maxScore === scores.Anxious) type = "Тревожный";
+          else type = "Избегающий";
+          
+          calculatedResult = {
+            type,
+            description: `Ваш тип привязанности: ${type}`,
+            tips: ["Результат рассчитан упрощенным способом"]
+          };
+        } else if (quiz.id === 'archetype') {
+          // Простая логика для archetype
+          const scores = {
+            Искатель: (newAnswers[0] + newAnswers[4]) / 2,
+            Герой: (newAnswers[1] + newAnswers[5]) / 2,
+            Творец: (newAnswers[2] + newAnswers[6]) / 2,
+            Заботливый: (newAnswers[3] + newAnswers[7]) / 2,
+          };
+          const maxScore = Math.max(scores.Искатель, scores.Герой, scores.Творец, scores.Заботливый);
+          let archetype = "";
+          if (maxScore === scores.Искатель) archetype = "Искатель";
+          else if (maxScore === scores.Герой) archetype = "Герой";
+          else if (maxScore === scores.Творец) archetype = "Творец";
+          else archetype = "Заботливый";
+          
+          calculatedResult = {
+            archetype,
+            description: `Ваш архетип: ${archetype}`,
+            recommendations: ["Результат рассчитан упрощенным способом"]
+          };
+        } else {
+          // Для других тестов
+          calculatedResult = {
+            message: "Тест завершен",
+            answers: newAnswers
+          };
+        }
+        
+        await saveResult(newAnswers, calculatedResult);
+      }
     }
   };
 
   return (
     <div style={{ padding: 20, paddingBottom: 24 }}>
+      {/* Кнопка назад */}
+      <button
+        type="button"
+        onClick={() => navigate('/tests')}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '8px 12px',
+          background: 'transparent',
+          border: '1px solid var(--border)',
+          borderRadius: 8,
+          color: 'var(--text-muted)',
+          fontSize: 14,
+          marginBottom: 20,
+          cursor: 'pointer'
+        }}
+      >
+        <ArrowLeft size={16} />
+        Назад к тестам
+      </button>
+
       <div style={{ marginBottom: 20 }}>
         <div
           style={{
