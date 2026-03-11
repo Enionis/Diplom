@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
+import * as cheerio from 'cheerio';
 import { initDatabase, getDatabase } from './db.js';
 
 initDatabase();
@@ -9,7 +10,7 @@ const app = express();
 
 // CORS настройки
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:5175', 'http://127.0.0.1:5175'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -579,6 +580,570 @@ app.get('/api/user/:userId/tarot/readings', (req, res) => {
   } catch (err) {
     console.error('Get user tarot readings error:', err);
     res.status(500).json({ ok: false, error: 'Ошибка сервера' });
+  }
+});
+
+// API для получения гороскопа
+app.get('/api/horoscope/:sign', async (req, res) => {
+  try {
+    const { sign } = req.params;
+    const validSigns = ['aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo', 'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces'];
+    
+    if (!validSigns.includes(sign)) {
+      return res.status(400).json({ ok: false, error: 'Неверный знак зодиака' });
+    }
+
+    // Функция для получения гороскопа с сайта
+    async function fetchHoroscope(url) {
+      try {
+        console.log('Fetching horoscope from:', url);
+        const response = await fetch(url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          }
+        });
+        
+        if (!response.ok) {
+          console.log('Response not ok:', response.status);
+          return null;
+        }
+        
+        const html = await response.text();
+        const $ = cheerio.load(html);
+        
+        // Ищем текст гороскопа по различным селекторам
+        let horoscopeText = null;
+        
+        // Попробуем разные селекторы
+        const selectors = [
+          '.horoscope-text',
+          '.horoscope__text',
+          '.text',
+          'p:contains("Гороскоп")',
+          '.content p',
+          'article p',
+          '.description',
+          '.forecast-text'
+        ];
+        
+        for (const selector of selectors) {
+          const element = $(selector).first();
+          if (element.length > 0) {
+            const text = element.text().trim();
+            if (text.length > 50 && !text.includes('Реклама')) {
+              horoscopeText = text;
+              console.log('Found horoscope with selector:', selector);
+              break;
+            }
+          }
+        }
+        
+        // Если не нашли по селекторам, ищем по тексту
+        if (!horoscopeText) {
+          $('p').each((i, elem) => {
+            const text = $(elem).text().trim();
+            if (text.includes('Гороскоп на сегодня') || text.includes('говорит, что') || 
+                (text.length > 100 && text.includes('Овн') && !text.includes('Реклама'))) {
+              horoscopeText = text;
+              console.log('Found horoscope by text search');
+              return false; // break
+            }
+          });
+        }
+        
+        return horoscopeText;
+      } catch (error) {
+        console.error('Error fetching horoscope:', error);
+        return null;
+      }
+    }
+
+    // Функция для проверки даты на сайте и определения какой гороскоп брать
+    async function determineHoroscopeSource(sign) {
+      try {
+        const today = new Date();
+        const todayDay = today.getDate();
+        const todayMonth = today.getMonth() + 1; // getMonth() возвращает 0-11
+        const todayYear = today.getFullYear();
+        
+        console.log(`Current date: ${todayDay}.${todayMonth}.${todayYear}`);
+        
+        // Сначала проверяем обычную страницу
+        const todayUrl = `https://horoscopes.rambler.ru/${sign}/`;
+        const response = await fetch(todayUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          }
+        });
+        
+        if (!response.ok) {
+          return { url: todayUrl, isTomorrow: false };
+        }
+        
+        const html = await response.text();
+        const $ = cheerio.load(html);
+        
+        // Ищем дату на странице
+        const pageText = $('body').text();
+        
+        // Проверяем есть ли на странице сегодняшняя дата
+        const todayPatterns = [
+          `${todayDay} марта ${todayYear}`,
+          `${todayDay}.${todayMonth}.${todayYear}`,
+          `${todayDay}.0${todayMonth}.${todayYear}`,
+          `0${todayDay}.${todayMonth}.${todayYear}`
+        ];
+        
+        const hasTodayDate = todayPatterns.some(pattern => pageText.includes(pattern));
+        
+        if (hasTodayDate) {
+          console.log('Found today\'s date on main page, using today\'s horoscope');
+          return { url: todayUrl, isTomorrow: false };
+        }
+        
+        // Если сегодняшней даты нет, проверяем есть ли вчерашняя дата
+        const yesterday = new Date(today);
+        yesterday.setDate(today.getDate() - 1);
+        const yesterdayDay = yesterday.getDate();
+        const yesterdayMonth = yesterday.getMonth() + 1;
+        const yesterdayYear = yesterday.getFullYear();
+        
+        const yesterdayPatterns = [
+          `${yesterdayDay} марта ${yesterdayYear}`,
+          `${yesterdayDay}.${yesterdayMonth}.${yesterdayYear}`
+        ];
+        
+        const hasYesterdayDate = yesterdayPatterns.some(pattern => pageText.includes(pattern));
+        
+        if (hasYesterdayDate) {
+          console.log('Found yesterday\'s date on main page, using tomorrow\'s horoscope');
+          return { url: `https://horoscopes.rambler.ru/${sign}/tomorrow/`, isTomorrow: true };
+        }
+        
+        // Если не можем определить по дате, проверяем завтрашнюю страницу
+        const tomorrowUrl = `https://horoscopes.rambler.ru/${sign}/tomorrow/`;
+        const tomorrowResponse = await fetch(tomorrowUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          }
+        });
+        
+        if (tomorrowResponse.ok) {
+          const tomorrowHtml = await tomorrowResponse.text();
+          const $tomorrow = cheerio.load(tomorrowHtml);
+          const tomorrowText = $tomorrow('body').text();
+          
+          // Проверяем есть ли на завтрашней странице сегодняшняя дата
+          const hasTodayOnTomorrow = todayPatterns.some(pattern => tomorrowText.includes(pattern));
+          
+          if (hasTodayOnTomorrow) {
+            console.log('Found today\'s date on tomorrow page, using tomorrow\'s horoscope');
+            return { url: tomorrowUrl, isTomorrow: true };
+          }
+        }
+        
+        // По умолчанию используем сегодняшнюю страницу
+        console.log('Could not determine date, using today\'s horoscope by default');
+        return { url: todayUrl, isTomorrow: false };
+        
+      } catch (error) {
+        console.error('Error determining horoscope source:', error);
+        return { url: `https://horoscopes.rambler.ru/${sign}/`, isTomorrow: false };
+      }
+    }
+
+    let horoscopeText = null;
+    
+    // Получаем текущую локальную дату (не UTC)
+    const today = new Date();
+    const localDate = new Date(today.getTime() - (today.getTimezoneOffset() * 60000));
+    let actualDate = localDate;
+    
+    try {
+      // Определяем какой URL использовать на основе даты
+      const { url, isTomorrow } = await determineHoroscopeSource(sign);
+      console.log(`Using URL: ${url} (isTomorrow: ${isTomorrow})`);
+      
+      // Если мы используем tomorrow страницу, значит гороскоп актуален на сегодня
+      // Если мы используем обычную страницу, тоже актуален на сегодня
+      // В любом случае гороскоп актуален на текущую дату
+      actualDate = localDate;
+      
+      // Получаем гороскоп с определенного URL
+      horoscopeText = await fetchHoroscope(url);
+      
+      // Если не получилось с основного URL, пробуем альтернативный
+      if (!horoscopeText || horoscopeText.length < 50) {
+        const alternativeUrl = isTomorrow 
+          ? `https://horoscopes.rambler.ru/${sign}/`
+          : `https://horoscopes.rambler.ru/${sign}/tomorrow/`;
+        
+        console.log(`Trying alternative URL: ${alternativeUrl}`);
+        horoscopeText = await fetchHoroscope(alternativeUrl);
+      }
+      
+      // Очищаем текст от лишних символов
+      if (horoscopeText) {
+        horoscopeText = horoscopeText
+          .replace(/\s+/g, ' ')
+          .replace(/^\s*Гороскоп на сегодня — \w+\s*/, '')
+          .replace(/^\s*Сегодня\s+/, 'Сегодня ')
+          .trim();
+      }
+      
+    } catch (error) {
+      console.error('Ошибка при получении гороскопа:', error);
+    }
+
+    // Если не удалось получить с сайта, возвращаем заглушку
+    if (!horoscopeText || horoscopeText.length < 50) {
+      console.log('Using fallback text for', sign);
+      const fallbackTexts = {
+        aries: 'Сегодня звезды советуют Овнам проявить активность и решительность. Хороший день для новых начинаний.',
+        taurus: 'Тельцам рекомендуется сосредоточиться на практических делах. Стабильность принесет успех.',
+        gemini: 'Близнецы могут рассчитывать на интересные знакомства и плодотворное общение.',
+        cancer: 'Ракам стоит уделить внимание семье и домашним делам. Интуиция подскажет правильное решение.',
+        leo: 'Львы будут в центре внимания. Используйте свою харизму для достижения целей.',
+        virgo: 'Девам рекомендуется заняться планированием и организацией. Внимание к деталям принесет результат.',
+        libra: 'Весы найдут гармонию в отношениях. День благоприятен для творчества и красоты.',
+        scorpio: 'Скорпионам стоит довериться интуиции. Глубокий анализ поможет найти скрытые возможности.',
+        sagittarius: 'Стрельцы могут планировать путешествия или изучение нового. Расширение горизонтов принесет радость.',
+        capricorn: 'Козерогам рекомендуется сосредоточиться на карьере. Упорство и дисциплина приведут к успеху.',
+        aquarius: 'Водолеи могут рассчитывать на поддержку друзей. Оригинальные идеи найдут воплощение.',
+        pisces: 'Рыбам стоит прислушаться к своим чувствам. Творческий подход поможет решить проблемы.'
+      };
+      horoscopeText = fallbackTexts[sign] || 'Сегодня звезды благосклонны к вам. Следуйте своей интуиции.';
+    }
+
+    console.log('Final horoscope text:', horoscopeText.substring(0, 100) + '...');
+    console.log('Actual date being sent:', actualDate.toISOString().split('T')[0]);
+
+    res.json({
+      ok: true,
+      horoscope: {
+        sign,
+        text: horoscopeText,
+        date: actualDate.toISOString().split('T')[0] // Используем актуальную дату гороскопа
+      }
+    });
+
+  } catch (error) {
+    console.error('Ошибка API гороскопа:', error);
+    res.status(500).json({ ok: false, error: 'Внутренняя ошибка сервера' });
+  }
+});
+
+// API для получения недельного гороскопа
+app.get('/api/horoscope/:sign/weekly', async (req, res) => {
+  try {
+    const { sign } = req.params;
+    const validSigns = ['aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo', 'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces'];
+    
+    if (!validSigns.includes(sign)) {
+      return res.status(400).json({ ok: false, error: 'Неверный знак зодиака' });
+    }
+
+    // Функция для получения гороскопа с сайта
+    async function fetchHoroscope(url) {
+      try {
+        console.log('Fetching weekly horoscope from:', url);
+        const response = await fetch(url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          }
+        });
+        
+        if (!response.ok) {
+          console.log('Response not ok:', response.status);
+          return null;
+        }
+        
+        const html = await response.text();
+        const $ = cheerio.load(html);
+        
+        // Ищем текст гороскопа - для недельного гороскопа нужно собрать все абзацы
+        let horoscopeText = null;
+        
+        // Сначала попробуем найти контейнер с гороскопом
+        const containerSelectors = [
+          '.horoscope-content',
+          '.horoscope__content',
+          '.content',
+          'article',
+          '.forecast-content',
+          '.text-content'
+        ];
+        
+        for (const containerSelector of containerSelectors) {
+          const container = $(containerSelector).first();
+          if (container.length > 0) {
+            // Собираем все параграфы из контейнера
+            const paragraphs = [];
+            container.find('p').each((i, elem) => {
+              const text = $(elem).text().trim();
+              if (text.length > 20 && !text.includes('Реклама') && !text.includes('©')) {
+                paragraphs.push(text);
+              }
+            });
+            
+            if (paragraphs.length > 0) {
+              horoscopeText = paragraphs.join('\n\n');
+              console.log('Found weekly horoscope in container:', containerSelector, 'paragraphs:', paragraphs.length);
+              break;
+            }
+          }
+        }
+        
+        // Если не нашли в контейнере, попробуем собрать все подходящие параграфы
+        if (!horoscopeText) {
+          const paragraphs = [];
+          let foundStart = false;
+          
+          $('p').each((i, elem) => {
+            const text = $(elem).text().trim();
+            
+            // Ищем начало гороскопа
+            if (!foundStart && (text.includes('На этой неделе') || text.includes('Овны на этой неделе') || 
+                text.includes('Гороскоп на неделю'))) {
+              foundStart = true;
+            }
+            
+            // Если нашли начало, собираем все подходящие параграфы
+            if (foundStart && text.length > 20 && !text.includes('Реклама') && 
+                !text.includes('©') && !text.includes('Подписывайтесь') && 
+                !text.includes('Читайте также')) {
+              paragraphs.push(text);
+            }
+            
+            // Останавливаемся если встретили конец контента
+            if (foundStart && (text.includes('Читайте также') || text.includes('Другие гороскопы') || 
+                text.includes('Подписывайтесь'))) {
+              return false; // break
+            }
+          });
+          
+          if (paragraphs.length > 0) {
+            horoscopeText = paragraphs.join('\n\n');
+            console.log('Found weekly horoscope by paragraph collection, paragraphs:', paragraphs.length);
+            console.log('Sample paragraphs:', paragraphs.map((p, i) => `${i+1}: ${p.substring(0, 50)}...`));
+            console.log('Final joined text preview:', horoscopeText.substring(0, 200) + '...');
+            console.log('Contains newlines:', horoscopeText.includes('\n\n'));
+          }
+        }
+        
+        // Если все еще не нашли, попробуем простой поиск
+        if (!horoscopeText) {
+          $('p').each((i, elem) => {
+            const text = $(elem).text().trim();
+            if (text.includes('На этой неделе') || text.includes('Овны на этой неделе') || 
+                (text.length > 100 && !text.includes('Реклама'))) {
+              horoscopeText = text;
+              console.log('Found weekly horoscope by simple text search');
+              return false; // break
+            }
+          });
+        }
+        
+        return horoscopeText;
+      } catch (error) {
+        console.error('Error fetching weekly horoscope:', error);
+        return null;
+      }
+    }
+
+    // Функция для определения правильного недельного гороскопа
+    async function determineWeeklyHoroscopeSource(sign) {
+      try {
+        const today = new Date();
+        const todayDay = today.getDate();
+        
+        console.log(`Current date for weekly: ${todayDay}.${today.getMonth() + 1}.${today.getFullYear()}`);
+        
+        // Сначала проверяем текущую неделю
+        const weeklyUrl = `https://horoscopes.rambler.ru/${sign}/weekly/`;
+        const response = await fetch(weeklyUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          }
+        });
+        
+        if (!response.ok) {
+          return { url: weeklyUrl, isNextWeek: false };
+        }
+        
+        const html = await response.text();
+        const $ = cheerio.load(html);
+        const pageText = $('body').text();
+        
+        // Ищем диапазон дат на странице (например "9-15 марта")
+        const dateRangeMatch = pageText.match(/(\d{1,2})-(\d{1,2})\s+марта/);
+        
+        if (dateRangeMatch) {
+          const startDay = parseInt(dateRangeMatch[1]);
+          const endDay = parseInt(dateRangeMatch[2]);
+          
+          console.log(`Found weekly range: ${startDay}-${endDay} марта`);
+          
+          // Если текущий день в диапазоне недели
+          if (todayDay >= startDay && todayDay <= endDay) {
+            console.log('Current day is within weekly range, using current week');
+            return { url: weeklyUrl, isNextWeek: false };
+          }
+          
+          // Если текущий день больше конца недели, используем следующую неделю
+          if (todayDay > endDay) {
+            console.log('Current day is after weekly range, using next week');
+            return { url: `https://horoscopes.rambler.ru/${sign}/next-week/`, isNextWeek: true };
+          }
+        }
+        
+        // Если не можем определить по дате, проверяем следующую неделю
+        const nextWeekUrl = `https://horoscopes.rambler.ru/${sign}/next-week/`;
+        const nextWeekResponse = await fetch(nextWeekUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          }
+        });
+        
+        if (nextWeekResponse.ok) {
+          const nextWeekHtml = await nextWeekResponse.text();
+          const $nextWeek = cheerio.load(nextWeekHtml);
+          const nextWeekText = $nextWeek('body').text();
+          
+          // Проверяем есть ли на странице следующей недели текущая дата
+          const nextWeekDateMatch = nextWeekText.match(/(\d{1,2})-(\d{1,2})\s+марта/);
+          
+          if (nextWeekDateMatch) {
+            const nextStartDay = parseInt(nextWeekDateMatch[1]);
+            const nextEndDay = parseInt(nextWeekDateMatch[2]);
+            
+            if (todayDay >= nextStartDay && todayDay <= nextEndDay) {
+              console.log('Found current day in next week range, using next week');
+              return { url: nextWeekUrl, isNextWeek: true };
+            }
+          }
+        }
+        
+        // По умолчанию используем текущую неделю
+        console.log('Could not determine weekly date, using current week by default');
+        return { url: weeklyUrl, isNextWeek: false };
+        
+      } catch (error) {
+        console.error('Error determining weekly horoscope source:', error);
+        return { url: `https://horoscopes.rambler.ru/${sign}/weekly/`, isNextWeek: false };
+      }
+    }
+
+    let horoscopeText = null;
+    
+    // Получаем текущую локальную дату (не UTC)
+    const today = new Date();
+    const localDate = new Date(today.getTime() - (today.getTimezoneOffset() * 60000));
+    let actualDate = localDate;
+    let weekRange = null;
+    
+    try {
+      // Определяем какой URL использовать для недельного гороскопа
+      const { url, isNextWeek } = await determineWeeklyHoroscopeSource(sign);
+      console.log(`Using weekly URL: ${url} (isNextWeek: ${isNextWeek})`);
+      
+      // Получаем недельный гороскоп
+      horoscopeText = await fetchHoroscope(url);
+      
+      // Пытаемся извлечь диапазон дат из URL или контента
+      if (url.includes('/weekly/')) {
+        // Для текущей недели - определяем диапазон на основе текущей даты
+        const currentDay = localDate.getDate();
+        if (currentDay >= 9 && currentDay <= 15) {
+          weekRange = "9-15 марта 2026";
+        } else if (currentDay >= 16 && currentDay <= 22) {
+          weekRange = "16-22 марта 2026";
+        } else if (currentDay >= 23 && currentDay <= 29) {
+          weekRange = "23-29 марта 2026";
+        } else if (currentDay >= 2 && currentDay <= 8) {
+          weekRange = "2-8 марта 2026";
+        } else {
+          weekRange = `${currentDay} марта 2026`;
+        }
+      } else if (url.includes('/next-week/')) {
+        // Для следующей недели - добавляем 7 дней к текущему диапазону
+        const currentDay = localDate.getDate();
+        if (currentDay >= 9 && currentDay <= 15) {
+          weekRange = "16-22 марта 2026";
+        } else if (currentDay >= 16 && currentDay <= 22) {
+          weekRange = "23-29 марта 2026";
+        } else if (currentDay >= 2 && currentDay <= 8) {
+          weekRange = "9-15 марта 2026";
+        } else {
+          weekRange = `${currentDay + 7} марта 2026`;
+        }
+      }
+      
+      // Если не получилось с основного URL, пробуем альтернативный
+      if (!horoscopeText || horoscopeText.length < 50) {
+        const alternativeUrl = isNextWeek 
+          ? `https://horoscopes.rambler.ru/${sign}/weekly/`
+          : `https://horoscopes.rambler.ru/${sign}/next-week/`;
+        
+        console.log(`Trying alternative weekly URL: ${alternativeUrl}`);
+        horoscopeText = await fetchHoroscope(alternativeUrl);
+      }
+      
+      // Очищаем текст от лишних символов
+      if (horoscopeText) {
+        horoscopeText = horoscopeText
+          .replace(/[ \t]+/g, ' ')  // Заменяем множественные пробелы и табы на одиночные пробелы
+          .replace(/^\s*Гороскоп на неделю — \w+\s*/, '')
+          .replace(/^\s*На этой неделе\s+/, 'На этой неделе ')
+          .trim();
+      }
+      
+    } catch (error) {
+      console.error('Ошибка при получении недельного гороскопа:', error);
+    }
+
+    // Если не удалось получить с сайта, возвращаем заглушку
+    if (!horoscopeText || horoscopeText.length < 50) {
+      console.log('Using fallback weekly text for', sign);
+      const fallbackTexts = {
+        aries: 'На этой неделе Овнам рекомендуется проявить инициативу в важных делах. Звезды благоприятствуют новым проектам и активным действиям.',
+        taurus: 'Тельцам стоит сосредоточиться на стабильности и практических вопросах. Неделя благоприятна для финансовых решений.',
+        gemini: 'Близнецы могут рассчитывать на интересные знакомства и плодотворное общение. Хорошее время для обучения.',
+        cancer: 'Ракам рекомендуется уделить внимание семье и домашним делам. Интуиция будет особенно сильной.',
+        leo: 'Львы будут в центре внимания на этой неделе. Используйте харизму для достижения поставленных целей.',
+        virgo: 'Девам стоит заняться планированием и организацией. Внимание к деталям принесет отличные результаты.',
+        libra: 'Весы найдут гармонию в отношениях. Неделя благоприятна для творчества и эстетических проектов.',
+        scorpio: 'Скорпионам рекомендуется довериться интуиции. Глубокий анализ поможет найти скрытые возможности.',
+        sagittarius: 'Стрельцы могут планировать путешествия или изучение нового. Расширение горизонтов принесет радость.',
+        capricorn: 'Козерогам стоит сосредоточиться на карьерных вопросах. Упорство и дисциплина приведут к успеху.',
+        aquarius: 'Водолеи могут рассчитывать на поддержку друзей. Оригинальные идеи найдут практическое воплощение.',
+        pisces: 'Рыбам рекомендуется прислушаться к своим чувствам. Творческий подход поможет решить сложные задачи.'
+      };
+      horoscopeText = fallbackTexts[sign] || 'На этой неделе звезды благосклонны к вам. Следуйте своей интуиции и действуйте решительно.';
+    }
+
+    console.log('Final weekly horoscope text:', horoscopeText.substring(0, 100) + '...');
+    console.log('Text length:', horoscopeText.length);
+    console.log('Contains \\n\\n:', horoscopeText.includes('\n\n'));
+    console.log('Newline positions:', [...horoscopeText.matchAll(/\n\n/g)].map(m => m.index));
+
+    console.log('Final weekly horoscope text:', horoscopeText.substring(0, 100) + '...');
+    console.log('Week range determined:', weekRange);
+
+    res.json({
+      ok: true,
+      horoscope: {
+        sign,
+        text: horoscopeText,
+        period: 'week',
+        date: actualDate.toISOString().split('T')[0],
+        weekRange: weekRange // Добавляем диапазон недели
+      }
+    });
+
+  } catch (error) {
+    console.error('Ошибка API недельного гороскопа:', error);
+    res.status(500).json({ ok: false, error: 'Внутренняя ошибка сервера' });
   }
 });
 

@@ -4,6 +4,7 @@ import { Crown, Sparkles, ChevronDown, ChevronUp, Gem, Heart } from 'lucide-reac
 import { useUser } from '@/providers/UserProvider';
 import { useSubscription } from '@/providers/SubscriptionProvider';
 import { useAuth } from '@/providers/AuthProvider';
+import { useHoroscope } from '@/hooks/useHoroscope';
 import { ZODIAC_SIGNS, getZodiacSign } from '@/constants/zodiac';
 import { PERSONALITY_TRAITS } from '@/constants/personality';
 import { TALENTS } from '@/constants/talents';
@@ -256,6 +257,17 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
   const [activeTab, setActiveTab] = useState<'horoscope' | 'matrix'>(
     initialTab === 'matrix' || searchParams.get('tab') === 'matrix' ? 'matrix' : 'horoscope'
   );
+  
+  // Получаем знак зодиака для API гороскопа
+  const zodiacSignName = useMemo(() => {
+    if (!birthDate) return null;
+    return getZodiacSign(birthDate);
+  }, [birthDate]);
+  
+  // Хук для получения гороскопа через API
+  const { horoscope: dailyHoroscope, loading: horoscopeLoading } = useHoroscope(zodiacSignName || '', 'today');
+  const { horoscope: weeklyHoroscope, loading: weeklyLoading } = useHoroscope(zodiacSignName || '', 'week');
+  
   const [expandedSections, setExpandedSections] = useState<{
     positive: boolean;
     negative: boolean;
@@ -603,8 +615,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
     };
   }, [birthDate, matrixData]);
 
-  const zodiacSign = birthDate ? getZodiacSign(birthDate) : null;
-  const zodiacData = zodiacSign ? ZODIAC_SIGNS[zodiacSign] : null;
+  const zodiacData = zodiacSignName ? ZODIAC_SIGNS[zodiacSignName] : null;
 
   return (
     <div style={{ paddingBottom: 24 }}>
@@ -712,9 +723,63 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                     <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
                       {selectedPeriod === 'today' ? 'Прогноз на сегодня' : selectedPeriod === 'week' ? 'Прогноз на неделю' : 'Прогноз на месяц'}
                     </div>
-                    <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 }}>
-                      {zodiacData.horoscope[selectedPeriod]}
-                    </p>
+                    <div style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 }}>
+                      {selectedPeriod === 'today' && dailyHoroscope ? (
+                        <>
+                          {horoscopeLoading ? 'Загрузка гороскопа...' : 
+                            dailyHoroscope.text.split('\n\n').map((paragraph, index) => (
+                              <p key={index} style={{ margin: index === 0 ? 0 : '16px 0 0 0' }}>
+                                {paragraph}
+                              </p>
+                            ))
+                          }
+                          {!horoscopeLoading && dailyHoroscope && (
+                            <div style={{ 
+                              marginTop: 16, 
+                              paddingTop: 12, 
+                              borderTop: '1px solid rgba(255,255,255,0.1)', 
+                              fontSize: 12, 
+                              color: 'var(--text-muted)', 
+                              opacity: 0.7 
+                            }}>
+                              {new Date(dailyHoroscope.date).toLocaleDateString('ru-RU', {
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric'
+                              })} • Источник: Рамблер
+                            </div>
+                          )}
+                        </>
+                      ) : selectedPeriod === 'week' && weeklyHoroscope ? (
+                        <>
+                          {weeklyLoading ? 'Загрузка недельного гороскопа...' : 
+                            weeklyHoroscope.text.split('\n\n').map((paragraph, index) => (
+                              <p key={index} style={{ margin: index === 0 ? 0 : '16px 0 0 0' }}>
+                                {paragraph}
+                              </p>
+                            ))
+                          }
+                          {!weeklyLoading && weeklyHoroscope && (
+                            <div style={{ 
+                              marginTop: 16, 
+                              paddingTop: 12, 
+                              borderTop: '1px solid rgba(255,255,255,0.1)', 
+                              fontSize: 12, 
+                              color: 'var(--text-muted)', 
+                              opacity: 0.7 
+                            }}>
+                              {weeklyHoroscope.weekRange || new Date(weeklyHoroscope.date).toLocaleDateString('ru-RU', {
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric'
+                              })} • Источник: Рамблер
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <p style={{ margin: 0 }}>{zodiacData.horoscope[selectedPeriod]}</p>
+                      )}
+                    </div>
                   </>
                 ) : (
                   <div style={{ textAlign: 'center', padding: 20 }}>
