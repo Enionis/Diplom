@@ -8,7 +8,7 @@ import { initDatabase, getDatabase } from './db.js';
 initDatabase();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 8080;
 
 // CORS настройки для продакшена и разработки
 const allowedOrigins = [
@@ -1451,7 +1451,7 @@ app.get('/api/horoscope/:sign/monthly', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
   console.log(`DB file: server/data/mystic.db`);
