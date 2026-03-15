@@ -10,8 +10,7 @@
     "dev:bun": "bun --watch index.js",
     "migrate": "node migrate-full-quizzes.js",
     "migrate:bun": "bun migrate-full-quizzes.js",
-    "build": "echo 'No build step required'",
-    "postinstall": "npm run migrate"
+    "build": "echo 'No build step required'"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
