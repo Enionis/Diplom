@@ -1581,7 +1581,7 @@ export default function Horoscope({ tab: initialTab }: HoroscopeProps) {
                       Здоровье
                     </div>
 
-                  {Object.entries(matrixData.chakras).map(([chakraKey, chakraData]) => {
+                  {Object.entries(matrixData.chakras).map(([chakraKey]) => {
                     const healthData = CHAKRA_HEALTH[chakraKey];
                     const recommendations = healthRecommendations[chakraKey];
                     const sectionKey = `health${chakraKey.charAt(0).toUpperCase() + chakraKey.slice(1)}` as keyof typeof expandedSections;

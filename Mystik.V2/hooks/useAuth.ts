@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { checkServerConnection } from './useNetworkStatus';
+import { API_BASE_URL } from '../constants/api';
 
 export interface User {
   id: string;
@@ -43,7 +44,7 @@ export function useAuth() {
         if (serverAvailable) {
           // Проверяем, что пользователь все еще существует на сервере
           try {
-            const response = await fetch(`http://localhost:3001/api/user/${user.id}`, {
+            const response = await fetch(`${API_BASE_URL}/api/user/${user.id}`, {
               method: 'GET',
               headers: {
                 'Content-Type': 'application/json',
@@ -97,7 +98,7 @@ export function useAuth() {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const response = await fetch('http://localhost:3001/api/login', {
+      const response = await fetch(`${API_BASE_URL}/api/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -131,7 +132,7 @@ export function useAuth() {
 
   const register = async (email: string, password: string, name?: string, username?: string, birthDate?: string): Promise<boolean> => {
     try {
-      const response = await fetch('http://localhost:3001/api/register', {
+      const response = await fetch(`${API_BASE_URL}/api/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -188,7 +189,7 @@ export function useAuth() {
     if (!authState.user) return false;
 
     try {
-      const response = await fetch(`http://localhost:3001/api/user/${authState.user.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/user/${authState.user.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -221,7 +222,7 @@ export function useAuth() {
     if (!authState.user) return false;
 
     try {
-      const response = await fetch(`http://localhost:3001/api/user/${authState.user.id}/change-password`, {
+      const response = await fetch(`${API_BASE_URL}/api/user/${authState.user.id}/change-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

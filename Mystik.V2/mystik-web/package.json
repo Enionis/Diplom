@@ -6,13 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:check": "npx tsc -b && vite build",
     "preview": "vite preview",
-    "start": "cd server && npm start",
-    "start:full": "npm run serve:static & cd server && npm start",
-    "serve:static": "npx serve -s dist -l 8000",
-    "migrate": "cd server && npm run migrate",
-    "postinstall": "cd server && npm install --legacy-peer-deps"
+    "start": "npm run dev",
+    "server": "cd server && npm start",
+    "server:dev": "cd server && npm run dev",
+    "full": "concurrently \"npm run dev\" \"npm run server:dev\"",
+    "migrate": "cd server && npm run migrate"
   },
   "dependencies": {
     "react": "^18.2.0",
@@ -24,7 +23,7 @@
     "@vitejs/plugin-react": "^4.2.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
-    "serve": "^14.2.0"
+    "concurrently": "^8.2.0"
   },
   "devDependencies": {}
 }

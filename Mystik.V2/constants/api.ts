@@ -3,8 +3,16 @@ import Constants from 'expo-constants';
 
 // Определяем базовый URL в зависимости от окружения
 function getApiBaseUrl(): string {
+  // Локальная разработка
+  const LOCAL_API_URL = 'http://localhost:3001';
+  
+  // ВСЕГДА используем локальный URL для разработки
+  return LOCAL_API_URL;
+  
+  /* Для продакшена раскомментируйте этот блок:
+  
   // Продакшен URL - ваш деплой
-  const PRODUCTION_API_URL = 'https://linadugau-mystik-39d3.twc1.net';
+  const PRODUCTION_API_URL = 'https://your-domain.com';
   
   // В продакшене используем деплой URL
   if (!__DEV__) {
@@ -15,11 +23,12 @@ function getApiBaseUrl(): string {
   if (__DEV__ && Constants.expoConfig?.hostUri) {
     const hostUri = Constants.expoConfig.hostUri;
     const ip = hostUri.split(':')[0];
-    return `http://${ip}:8080`;
+    return `http://${ip}:3001`;
   }
   
   // Fallback на localhost для локальной разработки
-  return 'http://localhost:8080';
+  return 'http://localhost:3001';
+  */
 }
 
 export const API_BASE_URL = getApiBaseUrl();

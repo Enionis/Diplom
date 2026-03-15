@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../constants/api';
 
 interface Quiz {
   id: string;
@@ -26,7 +27,7 @@ export function useQuizzes() {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:3001/api/quizzes');
+      const response = await fetch(`${API_BASE_URL}/api/quizzes`);
       const data = await response.json();
 
       if (data.ok) {
@@ -66,7 +67,7 @@ export function useQuiz(quizId: string) {
     setError(null);
 
     try {
-      const response = await fetch(`http://localhost:3001/api/quiz/${quizId}`);
+      const response = await fetch(`${API_BASE_URL}/api/quiz/${quizId}`);
       const data = await response.json();
 
       if (data.ok) {

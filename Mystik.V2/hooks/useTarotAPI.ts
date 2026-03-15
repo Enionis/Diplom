@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuthContext } from '@/providers/AuthProvider';
+import { API_BASE_URL } from '../constants/api';
 
 export interface TarotCard {
   id: string;
@@ -39,7 +40,7 @@ export function useTarotSpreads() {
   useEffect(() => {
     const fetchSpreads = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/tarot/spreads');
+        const response = await fetch(`${API_BASE_URL}/api/tarot/spreads`);
         const data = await response.json();
         
         if (data.ok) {
@@ -70,7 +71,7 @@ export function useTarotCards() {
   useEffect(() => {
     const fetchCards = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/tarot/cards');
+        const response = await fetch(`${API_BASE_URL}/api/tarot/cards`);
         const data = await response.json();
         
         if (data.ok) {
@@ -108,7 +109,7 @@ export function useTarotReading() {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:3001/api/tarot/reading', {
+      const response = await fetch(`${API_BASE_URL}/api/tarot/reading`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -155,7 +156,7 @@ export function useUserTarotReadings(date?: string) {
       }
 
       try {
-        let url = `http://localhost:3001/api/user/${user.id}/tarot/readings`;
+        let url = `${API_BASE_URL}/api/user/${user.id}/tarot/readings`;
         if (date) {
           url += `?date=${date}`;
         }
