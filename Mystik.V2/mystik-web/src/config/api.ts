@@ -1,6 +1,6 @@
 // API Configuration for Web App
-const API_BASE_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? 'http://localhost:3001' : '');
+const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 
+  ((import.meta as any).env?.DEV ? 'http://localhost:3001' : '');
 
 export const API_ENDPOINTS = {
   // Auth
