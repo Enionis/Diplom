@@ -3,12 +3,17 @@ import cors from 'cors';
 import bcrypt from 'bcryptjs';
 import * as cheerio from 'cheerio';
 import { initDatabase, getDatabase } from './db.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Инициализация базы данных
 initDatabase();
 
 const app = express();
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3001;
 
 // CORS настройки для продакшена и разработки
 const allowedOrigins = [
@@ -61,6 +66,15 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// Отдача статических файлов веб-приложения (если есть)
+const distPath = path.join(__dirname, '..', 'dist');
+try {
+  app.use(express.static(distPath));
+  console.log('Serving static files from:', distPath);
+} catch (error) {
+  console.log('No static files found, serving API only');
+}
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -1451,7 +1465,22 @@ app.get('/api/horoscope/:sign/monthly', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 8080;
+// SPA fallback - отдаем index.html для всех не-API роутов
+app.get('*', (req, res) => {
+  // Если запрос не к API, отдаем index.html
+  if (!req.path.startsWith('/api')) {
+    try {
+      const indexPath = path.join(__dirname, '..', 'dist', 'index.html');
+      res.sendFile(indexPath);
+    } catch (error) {
+      res.status(404).json({ ok: false, error: 'Страница не найдена' });
+    }
+  } else {
+    res.status(404).json({ ok: false, error: 'API endpoint не найден' });
+  }
+});
+
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
   console.log(`DB file: server/data/mystic.db`);
