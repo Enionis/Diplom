@@ -6,18 +6,13 @@ import { useUser } from "@/providers/UserProvider";
 import { useSubscription } from "@/providers/SubscriptionProvider";
 import { ZODIAC_SIGNS, getZodiacSign } from "@/constants/zodiac";
 import { router, useLocalSearchParams } from "expo-router";
-import Svg, { Circle, Line, Text as SvgText } from "react-native-svg";
 import { useDatabase } from "@/hooks/useDatabase";
+import { useHoroscope } from "@/hooks/useHoroscope";
+import MatrixSVG from "@/components/MatrixSVG";
+import { calculateMatrixFromDate } from "@/utils/matrixCalculations";
+import { PERSONALITY_TRAITS } from "@/constants/personality";
 
 const { width, height } = Dimensions.get("window");
-
-interface MatrixPoint {
-  value: number;
-  x: number;
-  y: number;
-  meaning: string;
-  locked?: boolean;
-}
 
 export default function HoroscopeScreen() {
   const { birthDate, setBirthDate } = useUser();
@@ -27,6 +22,17 @@ export default function HoroscopeScreen() {
   const [dateInput, setDateInput] = useState(birthDate || "");
   const [selectedPeriod, setSelectedPeriod] = useState<"today" | "week" | "month">("today");
   const [activeTab, setActiveTab] = useState<"horoscope" | "matrix">(tab === "matrix" ? "matrix" : "horoscope");
+
+  // Получаем знак зодиака для API гороскопа
+  const zodiacSignName = useMemo(() => {
+    if (!birthDate) return null;
+    return getZodiacSign(birthDate);
+  }, [birthDate]);
+  
+  // Хуки для получения гороскопа через API
+  const { horoscope: dailyHoroscope, loading: horoscopeLoading } = useHoroscope(zodiacSignName || '', 'today');
+  const { horoscope: weeklyHoroscope, loading: weeklyLoading } = useHoroscope(zodiacSignName || '', 'week');
+  const { horoscope: monthlyHoroscope, loading: monthlyLoading } = useHoroscope(zodiacSignName || '', 'month');
 
   useEffect(() => {
     if (tab === "matrix") {
@@ -71,91 +77,11 @@ export default function HoroscopeScreen() {
     setBirthDate(dateInput);
   };
 
-  const calculateMatrix = (date: string): MatrixPoint[] | null => {
-    const regex = /^(\d{2})\.(\d{2})\.(\d{4})$/;
-    const match = date.match(regex);
-    if (!match) return null;
-    const [, dayStr, monthStr, yearStr] = match;
-    const day = parseInt(dayStr, 10);
-    const month = parseInt(monthStr, 10);
-    const year = parseInt(yearStr, 10);
-    const daysInMonth = new Date(year, month, 0).getDate();
-    if (month < 1 || month > 12 || day < 1 || day > daysInMonth) {
-      return null;
-    }
-
-    const reduceNum = (n: number): number => {
-      while (n > 22) {
-        n = n.toString().split('').map(Number).reduce((sum, digit) => sum + digit, 0);
-      }
-      return n;
-    };
-
-    const A = reduceNum(day);
-    const B = reduceNum(month);
-    const V = reduceNum(year);
-    const G = reduceNum(A + B + V);
-    const D = reduceNum(A + B + V + G);
-    const E = reduceNum(A + B);
-    const Zh = reduceNum(B + V);
-    const I = reduceNum(V + G);
-    const Z = reduceNum(A + G);
-    const S = reduceNum(E + Zh + I + Z);
-    const A1 = reduceNum(A + D);
-    const A2 = reduceNum(A1 + A);
-    const B1 = reduceNum(B + D);
-    const B2 = reduceNum(B1 + B);
-    const V1 = reduceNum(V + D);
-    const V2 = reduceNum(V1 + V);
-    const G1 = reduceNum(G + D);
-    const G2 = reduceNum(G1 + G);
-    const E1 = reduceNum(E + S);
-    const E2 = reduceNum(E1 + E);
-    const Zh1 = reduceNum(Zh + S);
-    const Zh2 = reduceNum(Zh1 + Zh);
-    const I1 = reduceNum(I + S);
-    const I2 = reduceNum(I1 + I);
-    const Z1 = reduceNum(Z + S);
-    const Z2 = reduceNum(Z1 + Z);
-
-    const scaleFactor = Math.min(width / 360, 1);
-    const centerX = width / 2;
-    const centerY = Math.min(height * 0.35, 250);
-    const mainRadius = 100 * scaleFactor;
-    const innerRadius = 57 * scaleFactor;
-    const outerRadius = 142 * scaleFactor;
-
-    const points: MatrixPoint[] = [
-      { value: D, x: centerX, y: centerY, meaning: "Центр матрицы (Д)" },
-      { value: A2, x: centerX - mainRadius, y: centerY, meaning: "День рождения (А2)" },
-      { value: B2, x: centerX, y: centerY - mainRadius, meaning: "Месяц рождения (Б2)" },
-      { value: V2, x: centerX + mainRadius, y: centerY, meaning: "Год рождения (В2)" },
-      { value: G2, x: centerX, y: centerY + mainRadius, meaning: "Сумма А+Б+В (Г2)" },
-      { value: E2, x: centerX - mainRadius / Math.sqrt(2), y: centerY - mainRadius / Math.sqrt(2), meaning: "А + Б (Е2)", locked: !isPremium },
-      { value: Zh2, x: centerX + mainRadius / Math.sqrt(2), y: centerY - mainRadius / Math.sqrt(2), meaning: "Б + В (Ж2)", locked: !isPremium },
-      { value: I2, x: centerX + mainRadius / Math.sqrt(2), y: centerY + mainRadius / Math.sqrt(2), meaning: "В + Г (И2)", locked: !isPremium },
-      { value: Z2, x: centerX - mainRadius / Math.sqrt(2), y: centerY + mainRadius / Math.sqrt(2), meaning: "А + Г (З2)", locked: !isPremium },
-      { value: A, x: centerX - outerRadius, y: centerY, meaning: "А", locked: !isPremium },
-      { value: B, x: centerX, y: centerY - outerRadius, meaning: "Б", locked: !isPremium },
-      { value: V, x: centerX + outerRadius, y: centerY, meaning: "В", locked: !isPremium },
-      { value: G, x: centerX, y: centerY + outerRadius, meaning: "Г", locked: !isPremium },
-      { value: E, x: centerX - outerRadius / Math.sqrt(2), y: centerY - outerRadius / Math.sqrt(2), meaning: "Е", locked: !isPremium },
-      { value: Zh, x: centerX + outerRadius / Math.sqrt(2), y: centerY - outerRadius / Math.sqrt(2), meaning: "Ж", locked: !isPremium },
-      { value: I, x: centerX + outerRadius / Math.sqrt(2), y: centerY + outerRadius / Math.sqrt(2), meaning: "И", locked: !isPremium },
-      { value: Z, x: centerX - outerRadius / Math.sqrt(2), y: centerY + outerRadius / Math.sqrt(2), meaning: "З", locked: !isPremium },
-      { value: A1, x: centerX - innerRadius, y: centerY, meaning: "А1", locked: !isPremium },
-      { value: B1, x: centerX, y: centerY - innerRadius, meaning: "Б1", locked: !isPremium },
-      { value: V1, x: centerX + innerRadius, y: centerY, meaning: "В1", locked: !isPremium },
-      { value: G1, x: centerX, y: centerY + innerRadius, meaning: "Г1", locked: !isPremium },
-      { value: E1, x: centerX - innerRadius / Math.sqrt(2), y: centerY - innerRadius / Math.sqrt(2), meaning: "Е1", locked: !isPremium },
-      { value: Zh1, x: centerX + innerRadius / Math.sqrt(2), y: centerY - innerRadius / Math.sqrt(2), meaning: "Ж1", locked: !isPremium },
-      { value: I1, x: centerX + innerRadius / Math.sqrt(2), y: centerY + innerRadius / Math.sqrt(2), meaning: "И1", locked: !isPremium },
-      { value: Z1, x: centerX - innerRadius / Math.sqrt(2), y: centerY + innerRadius / Math.sqrt(2), meaning: "З1", locked: !isPremium },
-    ];
-    return points;
+  const calculateMatrix = (date: string) => {
+    return calculateMatrixFromDate(date);
   };
 
-  const matrix = useMemo(() => {
+  const matrixData = useMemo(() => {
     if (!birthDate || !/^\d{2}\.\d{2}\.\d{4}$/.test(birthDate)) return null;
     return calculateMatrix(birthDate);
   }, [birthDate, isPremium]);
@@ -169,35 +95,8 @@ export default function HoroscopeScreen() {
     return arcanas[num] || `Аркан ${num}`;
   };
 
-  const getPointDescription = (index: number): string => {
-    const descriptions = [
-      "Центральная точка матрицы (Д) - предназначение, жизненный сценарий, основная задача души, здоровье, руководство по жизни.",
-      "День рождения (А2) - глубинные личные качества, таланты, программы из прошлой жизни, предназначение.",
-      "Месяц рождения (Б2) - глубинная зона комфорта, родители, женская линия, сексуальность, отношения.",
-      "Год рождения (В2) - глубинные таланты, наследство от предков, деньги, прошлая жизнь.",
-      "Сумма А+Б+В (Г2) - глубинная кармическая задача, прошлая жизнь, отношения, дети.",
-      "А + Б (Е2) - глубинная энергия родителей, семейные программы, детство, здоровье.",
-      "Б + В (Ж2) - глубинная энергия отношений, сексуальность, партнерство, дети.",
-      "В + Г (И2) - глубинная энергия карьеры, деньги, таланты в работе, успех.",
-      "А + Г (З2) - глубинная энергия здоровья, программы, жизненный сценарий, руководство по жизни.",
-      "А - личные качества, характер, таланты, предназначение, программы.",
-      "Б - зона комфорта, эмоциональная сфера, родители, женская энергия, сексуальность.",
-      "В - таланты, душа, прошлая жизнь, деньги, предназначение.",
-      "Г - кармическая задача, отец линия, прошлая жизнь, отношения, дети.",
-      "Е - энергия родителей, детство, семейные программы, здоровье.",
-      "Ж - энергия отношений, сексуальность, партнерство, дети.",
-      "И - энергия денег, карьера, успех, таланты.",
-      "З - энергия здоровья, программы, жизненный сценарий, руководство по жизни.",
-      "А1 - внутренняя личные качества, глубокие таланты, программы.",
-      "Б1 - внутренняя зона комфорта, глубокие отношения с родителями, сексуальность.",
-      "В1 - внутренние таланты, глубокие способности, деньги, прошлая жизнь.",
-      "Г1 - внутренняя кармическая задача, глубокая прошлая жизнь, отношения.",
-      "Е1 - внутренняя энергия родителей, глубокие программы, здоровье, детство.",
-      "Ж1 - внутренняя энергия отношений, глубокая сексуальность, партнерство, дети.",
-      "И1 - внутренняя энергия карьеры, глубокие деньги, успех, таланты.",
-      "З1 - внутренняя энергия здоровья, глубокие программы, жизненный сценарий, руководство."
-    ];
-    return descriptions[index] || "Дополнительная энергетическая характеристика матрицы судьбы.";
+  const getPointDescription = (value: number): string => {
+    return PERSONALITY_TRAITS[value]?.positive || "Дополнительная энергетическая характеристика матрицы судьбы.";
   };
 
   const zodiacSign = birthDate ? getZodiacSign(birthDate) : null;
@@ -297,7 +196,87 @@ export default function HoroscopeScreen() {
                     <Text style={styles.horoscopeTitle}>
                       {selectedPeriod === "today" ? "Прогноз на сегодня" : selectedPeriod === "week" ? "Прогноз на неделю" : "Прогноз на месяц"}
                     </Text>
-                    <Text style={styles.horoscopeText}>{zodiacData?.horoscope[selectedPeriod] || ""}</Text>
+                    
+                    {/* Отображение гороскопа в зависимости от периода */}
+                    {selectedPeriod === "today" && (
+                      <>
+                        {horoscopeLoading ? (
+                          <Text style={styles.horoscopeText}>Загрузка гороскопа...</Text>
+                        ) : dailyHoroscope ? (
+                          <>
+                            {dailyHoroscope.text.split('\n\n').map((paragraph, index) => (
+                              <Text key={index} style={[styles.horoscopeText, index > 0 && { marginTop: 16 }]}>
+                                {paragraph}
+                              </Text>
+                            ))}
+                            <View style={styles.horoscopeSource}>
+                              <Text style={styles.horoscopeSourceText}>
+                                {new Date(dailyHoroscope.date).toLocaleDateString('ru-RU', {
+                                  day: 'numeric',
+                                  month: 'long',
+                                  year: 'numeric'
+                                })} • Источник: Рамблер
+                              </Text>
+                            </View>
+                          </>
+                        ) : (
+                          <Text style={styles.horoscopeText}>Не удалось загрузить гороскоп</Text>
+                        )}
+                      </>
+                    )}
+                    
+                    {selectedPeriod === "week" && (
+                      <>
+                        {weeklyLoading ? (
+                          <Text style={styles.horoscopeText}>Загрузка недельного гороскопа...</Text>
+                        ) : weeklyHoroscope ? (
+                          <>
+                            {weeklyHoroscope.text.split('\n\n').map((paragraph, index) => (
+                              <Text key={index} style={[styles.horoscopeText, index > 0 && { marginTop: 16 }]}>
+                                {paragraph}
+                              </Text>
+                            ))}
+                            <View style={styles.horoscopeSource}>
+                              <Text style={styles.horoscopeSourceText}>
+                                {weeklyHoroscope.weekRange || new Date(weeklyHoroscope.date).toLocaleDateString('ru-RU', {
+                                  day: 'numeric',
+                                  month: 'long',
+                                  year: 'numeric'
+                                })} • Источник: Рамблер
+                              </Text>
+                            </View>
+                          </>
+                        ) : (
+                          <Text style={styles.horoscopeText}>Не удалось загрузить недельный гороскоп</Text>
+                        )}
+                      </>
+                    )}
+                    
+                    {selectedPeriod === "month" && (
+                      <>
+                        {monthlyLoading ? (
+                          <Text style={styles.horoscopeText}>Загрузка месячного гороскопа...</Text>
+                        ) : monthlyHoroscope ? (
+                          <>
+                            {monthlyHoroscope.text.split('\n\n').map((paragraph, index) => (
+                              <Text key={index} style={[styles.horoscopeText, index > 0 && { marginTop: 16 }]}>
+                                {paragraph}
+                              </Text>
+                            ))}
+                            <View style={styles.horoscopeSource}>
+                              <Text style={styles.horoscopeSourceText}>
+                                {monthlyHoroscope.monthRange || new Date(monthlyHoroscope.date).toLocaleDateString('ru-RU', {
+                                  month: 'long',
+                                  year: 'numeric'
+                                })} • Источник: Рамблер
+                              </Text>
+                            </View>
+                          </>
+                        ) : (
+                          <Text style={styles.horoscopeText}>Не удалось загрузить месячный гороскоп</Text>
+                        )}
+                      </>
+                    )}
                   </>
                 ) : (
                   <View style={styles.lockedBlock}>
@@ -354,158 +333,46 @@ export default function HoroscopeScreen() {
               </View>
             </View>
           )}
-          {activeTab === "matrix" && matrix && (
+          {activeTab === "matrix" && matrixData && (
             <View key="matrix-content">
-              <View style={[styles.matrixContainer, { marginTop: 0, marginBottom: 40, minHeight: Math.min(width * 1.2, height * 0.7, 600) }]}>
-                <Svg
-                  width={width * 0.95}
-                  height={Math.min(width * 1.3, height * 0.9, 700)}
-                  viewBox={`0 0 ${width * 0.95} ${Math.min(width * 1.3, height * 0.9, 700)}`}
-                >
-                  {matrix.slice(1, 9).map((point, i) => {
-                    const next = matrix[1 + ((i + 1) % 8)];
-                    return (
-                      <Line
-                        key={`side-${i}`}
-                        x1={point.x}
-                        y1={point.y}
-                        x2={next.x}
-                        y2={next.y}
-                        stroke="#666"
-                        strokeWidth="2"
-                      />
-                    );
-                  })}
-                  {matrix.slice(1, 9).map((point, i) => {
-                    const opposite = matrix[1 + ((i + 4) % 8)];
-                    return (
-                      <Line
-                        key={`diag-${i}`}
-                        x1={point.x}
-                        y1={point.y}
-                        x2={opposite.x}
-                        y2={opposite.y}
-                        stroke="#999"
-                        strokeWidth="1.5"
-                        strokeDasharray="4 3"
-                      />
-                    );
-                  })}
-                  {matrix.slice(1, 9).map((point, i) => (
-                    <Line
-                      key={`center-${i}`}
-                      x1={matrix[0].x}
-                      y1={matrix[0].y}
-                      x2={point.x}
-                      y2={point.y}
-                      stroke="#9c27b0"
-                      strokeWidth="2"
-                      opacity="0.6"
-                    />
-                  ))}
-                  {[...Array(8)].map((_, i) => (
-                    <React.Fragment key={`outer-inner-${i}`}>
-                      <Line
-                        x1={matrix[9 + i].x}
-                        y1={matrix[9 + i].y}
-                        x2={matrix[9 + ((i + 1) % 8)].x}
-                        y2={matrix[9 + ((i + 1) % 8)].y}
-                        stroke="#555"
-                        strokeWidth="1.5"
-                      />
-                      <Line
-                        x1={matrix[17 + i].x}
-                        y1={matrix[17 + i].y}
-                        x2={matrix[17 + ((i + 1) % 8)].x}
-                        y2={matrix[17 + ((i + 1) % 8)].y}
-                        stroke="#444"
-                        strokeWidth="1.5"
-                      />
-                      <Line
-                        x1={matrix[0].x}
-                        y1={matrix[0].y}
-                        x2={matrix[9 + i].x}
-                        y2={matrix[9 + i].y}
-                        stroke="#777"
-                        strokeWidth="1"
-                        opacity="0.5"
-                      />
-                      <Line
-                        x1={matrix[0].x}
-                        y1={matrix[0].y}
-                        x2={matrix[17 + i].x}
-                        y2={matrix[17 + i].y}
-                        stroke="#777"
-                        strokeWidth="1"
-                        opacity="0.5"
-                      />
-                    </React.Fragment>
-                  ))}
-                  {matrix.map((point, index) => (
-                    <React.Fragment key={`point-${index}`}>
-                      <Circle
-                        cx={point.x}
-                        cy={point.y}
-                        r={index === 0 ? 26 : 18}
-                        fill={index === 0 ? "#1a1a2e" : "#2a2a3e"}
-                        stroke={index === 0 ? "#ffd700" : "#9c27b0"}
-                        strokeWidth={2}
-                      />
-                      <SvgText
-                        x={point.x}
-                        y={point.y + 4}
-                        fontSize={index === 0 ? "14" : "12"}
-                        fontWeight="bold"
-                        fill="#ffd700"
-                        textAnchor="middle"
-                      >
-                        {point.value}
-                      </SvgText>
-                      <SvgText
-                        x={point.x}
-                        y={point.y + 30}
-                        fontSize="9"
-                        fill="#ccc"
-                        textAnchor="middle"
-                      >
-                        {point.meaning}
-                      </SvgText>
-                    </React.Fragment>
-                  ))}
-                </Svg>
+              <View style={styles.matrixContainer}>
+                <MatrixSVG matrix={matrixData.matrixArray} />
               </View>
-              <View style={[styles.interpretationContainer, { paddingTop: 10 }]}>
+              <View style={styles.interpretationContainer}>
                 <Text style={styles.interpretationTitle}>Расшифровка точек</Text>
-                {matrix.map((point, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={[styles.pointCard, point.locked && styles.pointCardLocked]}
-                    onPress={() => {
-                      if (point.locked) {
-                        router.push("/subscription");
-                      }
-                    }}
-                  >
-                    <View style={styles.pointHeader}>
-                      <View style={styles.pointInfo}>
-                        <Text style={styles.pointValue}>{point.locked ? "?" : point.value}</Text>
-                        <View>
-                          <Text style={styles.pointMeaning}>{point.meaning}</Text>
-                          {!point.locked && (
-                            <Text style={styles.arcanaName}>{getArcanaName(point.value)}</Text>
-                          )}
+                {matrixData.matrixArray.map((point, index) => {
+                  const isLocked = !isPremium && index > 4; // Lock points after the first 5 for non-premium users
+                  return (
+                    <TouchableOpacity
+                      key={index}
+                      style={[styles.pointCard, isLocked && styles.pointCardLocked]}
+                      onPress={() => {
+                        if (isLocked) {
+                          router.push("/subscription");
+                        }
+                      }}
+                    >
+                      <View style={styles.pointHeader}>
+                        <View style={styles.pointInfo}>
+                          <Text style={styles.pointValue}>{isLocked ? "?" : point.value}</Text>
+                          <View>
+                            <Text style={styles.pointMeaning}>Точка {index + 1}</Text>
+                            {!isLocked && (
+                              <Text style={styles.arcanaName}>{getArcanaName(point.value)}</Text>
+                            )}
+                          </View>
                         </View>
+                        {isLocked && <Sparkles size={20} color="#666" />}
                       </View>
-                      {point.locked && <Sparkles size={20} color="#666" />}
-                    </View>
-                    {!point.locked && (
-                      <Text style={styles.pointDescription}>{getPointDescription(index)}</Text>
-                    )}
-                    {point.locked && (
-                      <Text style={styles.lockedText}>Разблокируйте полную расшифровку с премиум подпиской</Text>
-                    )}
-                  </TouchableOpacity>
-                ))}
+                      {!isLocked && (
+                        <Text style={styles.pointDescription}>{getPointDescription(point.value)}</Text>
+                      )}
+                      {isLocked && (
+                        <Text style={styles.lockedText}>Разблокируйте полную расшифровку с премиум подпиской</Text>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
               {!isPremium && (
                 <TouchableOpacity
@@ -695,6 +562,17 @@ const styles = StyleSheet.create({
     color: "#b8b8d0",
     lineHeight: 22,
   },
+  horoscopeSource: {
+    marginTop: 16,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.1)",
+  },
+  horoscopeSourceText: {
+    fontSize: 12,
+    color: "#b8b8d0",
+    opacity: 0.7,
+  },
   infoCards: {
     flexDirection: "row",
     paddingHorizontal: 20,
@@ -795,9 +673,8 @@ const styles = StyleSheet.create({
   },
   matrixContainer: {
     alignItems: "center",
-    marginTop: 0,
-    marginBottom: 40,
-    minHeight: Math.min(width * 1.2, height * 0.7, 600),
+    marginVertical: 20,
+    paddingHorizontal: 10,
   },
   interpretationContainer: {
     padding: 20,

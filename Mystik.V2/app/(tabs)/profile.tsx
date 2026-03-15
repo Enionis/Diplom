@@ -8,6 +8,8 @@ import {
   Alert,
   Switch,
   Linking,
+  Modal,
+  TextInput,
   type ColorValue,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -21,20 +23,29 @@ import {
   Info,
   HelpCircle,
   Sparkles,
+  Edit,
+  Key,
 } from "lucide-react-native";
 import { useSubscription } from "@/providers/SubscriptionProvider";
 import { useUser } from "@/providers/UserProvider";
-import { useAuth } from "@/providers/AuthProvider";
+import { useAuthContext } from "@/providers/AuthProvider";
 import { router } from "expo-router";
 import { useDatabase } from "@/hooks/useDatabase";
 
 export default function ProfileScreen() {
   const { isPremium, cardBack, setCardBack, cancelSubscription } = useSubscription(); 
   const { birthDate, clearUserData } = useUser();
-  const { user, logout } = useAuth();
+  const { user, logout, updateProfile, changePassword } = useAuthContext();
   const { logAction } = useDatabase();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [selectedCardBack, setSelectedCardBack] = useState(cardBack);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editBirthDate, setEditBirthDate] = useState('');
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   useEffect(() => {
     setSelectedCardBack(cardBack);
@@ -132,6 +143,58 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleEditProfile = () => {
+    setEditName(user?.name || '');
+    setEditBirthDate(user?.birthDate || '');
+    setIsEditingProfile(true);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!editName.trim()) {
+      Alert.alert('Ошибка', 'Введите имя');
+      return;
+    }
+    
+    const updates: any = { name: editName };
+    if (editBirthDate.trim()) {
+      updates.birthDate = editBirthDate;
+    }
+    
+    const success = await updateProfile(updates);
+    if (success) {
+      Alert.alert('Успешно', 'Профиль обновлён');
+      setIsEditingProfile(false);
+    } else {
+      Alert.alert('Ошибка', 'Не удалось обновить профиль');
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      Alert.alert('Ошибка', 'Заполните все поля');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      Alert.alert('Ошибка', 'Новые пароли не совпадают');
+      return;
+    }
+    if (newPassword.length < 6) {
+      Alert.alert('Ошибка', 'Новый пароль должен быть не менее 6 символов');
+      return;
+    }
+    
+    const success = await changePassword(oldPassword, newPassword, confirmPassword);
+    if (success) {
+      Alert.alert('Успешно', 'Пароль успешно изменён');
+      setIsChangingPassword(false);
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } else {
+      Alert.alert('Ошибка', 'Не удалось изменить пароль. Проверьте старый пароль');
+    }
+  };
+
   const cardBacks: { id: string; name: string; colors: readonly [ColorValue, ...ColorValue[]]; textColor?: string }[] = [
     { id: "purple", name: "Фиолетовый", colors: ["#4a148c", "#7b1fa2", "#9c27b0"] },
     { id: "gold", name: "Золотистый", colors: ["#ffd700", "#ffed4e"], textColor: "#1a1a2e" },
@@ -150,10 +213,31 @@ export default function ProfileScreen() {
             <Text style={styles.avatarText}>👤</Text>
           </View>
           <Text style={styles.userName}>{user?.name || "Мистический странник"}</Text>
-          {birthDate && (
+          {user?.username && (
+            <Text style={styles.userUsername}>@{user.username}</Text>
+          )}
+          {(user?.birthDate || birthDate) && (
             <View style={styles.birthDateBadge}>
               <Calendar size={14} color="#ffd700" />
-              <Text style={styles.birthDateText}>{birthDate}</Text>
+              <Text style={styles.birthDateText}>{user?.birthDate || birthDate}</Text>
+            </View>
+          )}
+          {user && !user.isGuest && (
+            <View style={styles.editButtons}>
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={handleEditProfile}
+              >
+                <Edit size={16} color="#fff" />
+                <Text style={styles.editButtonText}>Редактировать</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => setIsChangingPassword(true)}
+              >
+                <Key size={16} color="#fff" />
+                <Text style={styles.editButtonText}>Пароль</Text>
+              </TouchableOpacity>
             </View>
           )}
         </LinearGradient>
@@ -281,7 +365,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      {user?.isGuest ? (
+      {!user ? (
         <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
           <LogIn size={20} color="#4caf50" />
           <Text style={styles.loginText}>Войти</Text>
@@ -292,6 +376,137 @@ export default function ProfileScreen() {
           <Text style={styles.logoutText}>Выйти</Text>
         </TouchableOpacity>
       )}
+
+      {/* Модальное окно редактирования профиля */}
+      <Modal
+        visible={isEditingProfile}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsEditingProfile(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Редактировать профиль</Text>
+            
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Имя</Text>
+              <TextInput
+                style={styles.textInput}
+                value={editName}
+                onChangeText={setEditName}
+                placeholder="Введите имя"
+                placeholderTextColor="#666"
+              />
+            </View>
+            
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Дата рождения</Text>
+              <TextInput
+                style={styles.textInput}
+                value={editBirthDate}
+                onChangeText={setEditBirthDate}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor="#666"
+              />
+            </View>
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setIsEditingProfile(false)}
+              >
+                <Text style={styles.cancelButtonText}>Отмена</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.saveButton]}
+                onPress={handleSaveProfile}
+              >
+                <LinearGradient
+                  colors={["#ffd700", "#ffed4e"]}
+                  style={styles.saveButtonGradient}
+                >
+                  <Text style={styles.saveButtonText}>Сохранить</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Модальное окно смены пароля */}
+      <Modal
+        visible={isChangingPassword}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsChangingPassword(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Сменить пароль</Text>
+            
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Старый пароль</Text>
+              <TextInput
+                style={styles.textInput}
+                value={oldPassword}
+                onChangeText={setOldPassword}
+                placeholder="Введите старый пароль"
+                placeholderTextColor="#666"
+                secureTextEntry
+              />
+            </View>
+            
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Новый пароль</Text>
+              <TextInput
+                style={styles.textInput}
+                value={newPassword}
+                onChangeText={setNewPassword}
+                placeholder="Минимум 6 символов"
+                placeholderTextColor="#666"
+                secureTextEntry
+              />
+            </View>
+            
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Повторите новый пароль</Text>
+              <TextInput
+                style={styles.textInput}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                placeholder="Повторите новый пароль"
+                placeholderTextColor="#666"
+                secureTextEntry
+              />
+            </View>
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => {
+                  setIsChangingPassword(false);
+                  setOldPassword('');
+                  setNewPassword('');
+                  setConfirmPassword('');
+                }}
+              >
+                <Text style={styles.cancelButtonText}>Отмена</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.saveButton]}
+                onPress={handleChangePassword}
+              >
+                <LinearGradient
+                  colors={["#ffd700", "#ffed4e"]}
+                  style={styles.saveButtonGradient}
+                >
+                  <Text style={styles.saveButtonText}>Изменить</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -326,6 +541,11 @@ const styles = StyleSheet.create({
     color: "#fff",
     marginBottom: 8,
   },
+  userUsername: {
+    fontSize: 14,
+    color: "#b8b8d0",
+    marginBottom: 8,
+  },
   birthDateBadge: {
     flexDirection: "row",
     alignItems: "center",
@@ -334,10 +554,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
+    marginBottom: 12,
   },
   birthDateText: {
     color: "#ffd700",
     fontSize: 12,
+  },
+  editButtons: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 12,
+  },
+  editButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderRadius: 8,
+  },
+  editButtonText: {
+    color: "#fff",
+    fontSize: 14,
   },
   premiumCard: {
     margin: 20,
@@ -493,5 +732,77 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
     color: "#4caf50",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.85)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: "#1a1a2e",
+    borderRadius: 16,
+    padding: 24,
+    width: "100%",
+    maxWidth: 400,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#fff",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  inputContainer: {
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontSize: 14,
+    color: "#b8b8d0",
+    marginBottom: 8,
+  },
+  textInput: {
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderRadius: 8,
+    padding: 12,
+    color: "#fff",
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+  },
+  modalButtons: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 20,
+  },
+  modalButton: {
+    flex: 1,
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  cancelButton: {
+    backgroundColor: "rgba(255,255,255,0.05)",
+    padding: 12,
+    alignItems: "center",
+  },
+  cancelButtonText: {
+    color: "#fff",
+    fontSize: 16,
+  },
+  saveButton: {
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  saveButtonGradient: {
+    padding: 12,
+    alignItems: "center",
+  },
+  saveButtonText: {
+    color: "#1a1a2e",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

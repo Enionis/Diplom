@@ -4,15 +4,22 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "bun index.js",
-    "dev": "bun --watch index.js",
-    "migrate": "bun migrate.js",
-    "test": "bun test-api.js"
+    "start": "node index.js",
+    "start:bun": "bun index.js",
+    "dev": "node --watch index.js",
+    "dev:bun": "bun --watch index.js",
+    "migrate": "node migrate-full-quizzes.js",
+    "migrate:bun": "bun migrate-full-quizzes.js",
+    "build": "echo 'No build step required'",
+    "postinstall": "npm run migrate"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cheerio": "^1.2.0",
     "cors": "^2.8.5",
     "express": "^4.21.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

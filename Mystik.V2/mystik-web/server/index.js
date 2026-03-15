@@ -4,19 +4,74 @@ import bcrypt from 'bcryptjs';
 import * as cheerio from 'cheerio';
 import { initDatabase, getDatabase } from './db.js';
 
+// Инициализация базы данных
 initDatabase();
 
 const app = express();
+const PORT = process.env.PORT || 3001;
 
-// CORS настройки
+// CORS настройки для продакшена и разработки
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173', 
+  'http://localhost:5175',
+  'http://127.0.0.1:5175',
+  'http://localhost:8081',
+  'http://127.0.0.1:8081',
+  // Добавляем поддержку Expo tunnel URLs
+  /^https:\/\/.*\.exp\.direct$/,
+  /^https:\/\/.*\.ngrok\.io$/,
+  /^https:\/\/.*\.railway\.app$/,
+  // Локальные IP адреса для мобильной разработки
+  /^http:\/\/192\.168\.\d+\.\d+:(3001|8081)$/,
+  /^http:\/\/10\.\d+\.\d+\.\d+:(3001|8081)$/,
+];
+
+// Если есть переменная окружения с дополнительными origins
+if (process.env.CORS_ORIGINS) {
+  allowedOrigins.push(...process.env.CORS_ORIGINS.split(','));
+}
+
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:5175', 'http://127.0.0.1:5175'],
+  origin: (origin, callback) => {
+    // Разрешаем запросы без origin (мобильные приложения)
+    if (!origin) return callback(null, true);
+    
+    // Проверяем разрешенные origins
+    const isAllowed = allowedOrigins.some(allowedOrigin => {
+      if (typeof allowedOrigin === 'string') {
+        return origin === allowedOrigin;
+      }
+      if (allowedOrigin instanceof RegExp) {
+        return allowedOrigin.test(origin);
+      }
+      return false;
+    });
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    ok: true, 
+    status: 'healthy', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    port: PORT
+  });
+});
 
 const SALT_ROUNDS = 10;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
