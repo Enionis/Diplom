@@ -5,3 +5,8 @@
 expo-env.d.ts
 # @end expo-cli
 node_modules
+
+# Lock files (platform-specific)
+package-lock.json
+mystik-web/package-lock.json
+mystik-web/server/package-lock.json
