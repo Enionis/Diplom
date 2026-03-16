@@ -5,10 +5,12 @@ import { useDatabase } from "@/hooks/useDatabase";
 import React, { useEffect } from "react";
 import { router } from "expo-router";
 import { useAuth } from "@/providers/AuthProvider";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabsLayout() {
   const { logTabClick, deviceId } = useDatabase();
   const { user, isLoading } = useAuth();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -28,8 +30,8 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: "#1a1a2e",
           borderTopColor: "#2a2a3e",
-          paddingBottom: Platform.OS === "ios" ? 0 : 5,
-          height: Platform.OS === "ios" ? 85 : 60,
+          paddingBottom: Platform.OS === "ios" ? 0 : Math.max(insets.bottom, 5),
+          height: Platform.OS === "ios" ? 85 : 60 + Math.max(insets.bottom, 5),
         },
         headerStyle: {
           backgroundColor: "#1a1a2e",
