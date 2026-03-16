@@ -6,7 +6,6 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SubscriptionProvider } from "@/providers/SubscriptionProvider";
 import { UserProvider } from "@/providers/UserProvider";
 import { AuthProvider } from "@/providers/AuthProvider";
-import NetworkGuard from "@/components/NetworkGuard";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -19,8 +18,8 @@ function RootLayoutNav() {
       <Stack.Screen
         name="auth"
         options={{
-          presentation: "modal",
           title: "Вход",
+          headerShown: false,
         }}
       />
       <Stack.Screen
@@ -49,15 +48,13 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <NetworkGuard>
-          <AuthProvider>
-            <UserProvider>
-              <SubscriptionProvider>
-                <RootLayoutNav />
-              </SubscriptionProvider>
-            </UserProvider>
-          </AuthProvider>
-        </NetworkGuard>
+        <AuthProvider>
+          <UserProvider>
+            <SubscriptionProvider>
+              <RootLayoutNav />
+            </SubscriptionProvider>
+          </UserProvider>
+        </AuthProvider>
       </GestureHandlerRootView>
     </QueryClientProvider>
   );

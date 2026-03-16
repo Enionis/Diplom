@@ -1,13 +1,9 @@
 import { useState, useEffect } from 'react';
-import { API_BASE_URL } from '@/config/api';
 
 export interface HoroscopeData {
   sign: string;
   text: string;
   date: string;
-  period?: string;
-  weekRange?: string;
-  monthRange?: string;
 }
 
 export function useHoroscope(zodiacSign: string, period: 'today' | 'week' | 'month' = 'today') {
@@ -45,7 +41,7 @@ export function useHoroscope(zodiacSign: string, period: 'today' | 'week' | 'mon
         const englishSign = signMapping[zodiacSign] || zodiacSign.toLowerCase();
         
         // Определяем URL в зависимости от периода
-        let apiUrl = `${API_BASE_URL}/api/horoscope/${englishSign}`;
+        let apiUrl = `http://localhost:3001/api/horoscope/${englishSign}`;
         if (period === 'week') {
           apiUrl += '/weekly';
         } else if (period === 'month') {

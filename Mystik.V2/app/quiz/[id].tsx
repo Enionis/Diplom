@@ -5,49 +5,24 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, router } from "expo-router";
-import { ChevronRight, Crown, ArrowLeft } from "lucide-react-native";
+import { ChevronRight, Crown } from "lucide-react-native";
 import { useSubscription } from "@/providers/SubscriptionProvider";
 import { QUIZZES } from "@/constants/quiz";
 import { useQuizResults } from "@/hooks/useQuizResults";
-import { useQuiz } from "@/hooks/useQuizzes";
 
 export default function QuizScreen() {
   const { id } = useLocalSearchParams();
+  const quiz = QUIZZES[id as keyof typeof QUIZZES] || QUIZZES.strengths;
   const { isPremium } = useSubscription();
-  const { quiz, loading: quizLoading, error: quizError } = useQuiz(id as string);
-  const { result, loading: resultLoading, error: resultError, saveResult, clearResult } = useQuizResults(id as string);
+  const { result, saveResult, clearResult } = useQuizResults(id as string);
 
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
 
-  // Используем данные из API, но fallback на локальные константы для логики расчета
-  const localQuiz = id && QUIZZES[id as keyof typeof QUIZZES] ? QUIZZES[id as keyof typeof QUIZZES] : null;
-
-  if (quizLoading || resultLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#ffd700" />
-      </View>
-    );
-  }
-
-  if (quizError || !quiz) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>
-          {quizError || 'Тест не найден'}
-        </Text>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Text style={styles.backText}>Вернуться к тестам</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
+  // Проверка подписки для премиум-тестов
   if (quiz.isPremium && !isPremium) {
     return (
       <View style={styles.lockedContainer}>
@@ -81,16 +56,10 @@ export default function QuizScreen() {
         <View style={styles.resultContainer}>
           <Text style={styles.resultTitle}>{quiz.title}</Text>
 
-          {resultError && (
-            <View style={styles.errorBanner}>
-              <Text style={styles.errorBannerText}>Ошибка: {resultError}</Text>
-            </View>
-          )}
-
           {quiz.id === "strengths" && (
             <>
               <Text style={styles.sectionTitle}>1) Доминирующие таланты</Text>
-              {result.topTalents?.map((talent: any, index: number) => (
+              {result.topTalents.map((talent: any, index: number) => (
                 <View key={index} style={styles.talentContainer}>
                   <Text style={styles.talentTitle}>
                     {talent.theme} — {talent.score}/5
@@ -106,21 +75,19 @@ export default function QuizScreen() {
                   <Text style={styles.talentText}>
                     <Text style={styles.bold}>Советы:</Text>
                   </Text>
-                  {talent.tips?.map((tip: string, idx: number) => (
+                  {talent.tips.map((tip: string, idx: number) => (
                     <Text key={idx} style={styles.talentText}>- {tip}</Text>
                   ))}
                 </View>
               ))}
 
               <Text style={styles.sectionTitle}>2) Профессиональные сферы</Text>
-              {result.careers && Object.entries(result.careers).map(([category, roles]: [string, any], index: number) => (
+              {Object.entries(result.careers).map(([category, roles]: [string, string[]], index: number) => (
                 <View key={index} style={styles.talentContainer}>
                   <Text style={styles.talentTitle}>{category}</Text>
-                  {Array.isArray(roles) ? roles.map((role: string, idx: number) => (
+                  {roles.map((role: string, idx: number) => (
                     <Text key={idx} style={styles.talentText}>- {role}</Text>
-                  )) : (
-                    <Text style={styles.talentText}>- {String(roles)}</Text>
-                  )}
+                  ))}
                 </View>
               ))}
 
@@ -130,26 +97,33 @@ export default function QuizScreen() {
               </Text>
               {[
                 "Составьте личный план развития на 3–6 месяцев с конкретными метриками.",
-                "Фокусируйтесь на усилении сильных сторон.",
+                "Фокусируйтесь на усилении сильных сторон: ищите проекты, где ваши лучшие качества критичны.",
                 "Ищите роли и задачи, где вы проводите хотя бы 50% времени в зонах своего таланта.",
                 "Запрашивайте регулярную обратную связь и измеряйте прогресс.",
               ].map((tip: string, idx: number) => (
                 <Text key={idx} style={styles.talentText}>- {tip}</Text>
+              ))}
+              <Text style={styles.talentText}>
+                <Text style={styles.bold}>По вашим талантам:</Text>
+              </Text>
+              {result.topTalents.map((talent: any, idx: number) => (
+                <View key={idx}>
+                  <Text style={styles.talentText}>- {talent.theme}:</Text>
+                  {talent.tips.map((tip: string, i: number) => (
+                    <Text key={i} style={styles.talentText}>  - {tip}</Text>
+                  ))}
+                </View>
               ))}
             </>
           )}
 
           {quiz.id === "paei" && (
             <>
-              <View style={styles.typeContainer}>
-                <Text style={styles.sectionTitle}>Ваш тип личности:</Text>
-                <View style={styles.typeBadge}>
-                  <Text style={styles.typeBadgeText}>{result.code}</Text>
-                </View>
-              </View>
+              <Text style={styles.sectionTitle}>Ваш тип личности</Text>
+              <Text style={styles.talentTitle}>{result.code}</Text>
               <Text style={styles.talentText}>
                 <Text style={styles.bold}>Описание: </Text>
-                {result.interpretation?.map((i: any) => `${i.letter} - ${i.description}`).join('\n')}
+                {result.interpretation.map((i: any) => `${i.letter} - ${i.description}`).join("\n")}
               </Text>
               <Text style={styles.talentText}>
                 <Text style={styles.bold}>Примечание: </Text>
@@ -160,17 +134,16 @@ export default function QuizScreen() {
 
           {quiz.id === "attachment" && (
             <>
-              <View style={styles.typeContainer}>
-                <Text style={styles.sectionTitle}>Ваш тип привязанности:</Text>
-                <View style={styles.typeBadge}>
-                  <Text style={styles.typeBadgeText}>{result.type}</Text>
-                </View>
-              </View>
-              <Text style={styles.talentText}>{result.description}</Text>
+              <Text style={styles.sectionTitle}>Ваш тип привязанности</Text>
+              <Text style={styles.talentTitle}>{result.type}</Text>
               <Text style={styles.talentText}>
-                <Text style={styles.bold}>Советы:</Text>
+                <Text style={styles.bold}>Описание: </Text>
+                {result.description}
               </Text>
-              {result.tips?.map((tip: string, idx: number) => (
+              <Text style={styles.talentText}>
+                <Text style={styles.bold}>Советы: </Text>
+              </Text>
+              {result.tips.map((tip: string, idx: number) => (
                 <Text key={idx} style={styles.talentText}>- {tip}</Text>
               ))}
             </>
@@ -178,17 +151,16 @@ export default function QuizScreen() {
 
           {quiz.id === "archetype" && (
             <>
-              <View style={styles.typeContainer}>
-                <Text style={styles.sectionTitle}>Ваш архетип личности:</Text>
-                <View style={styles.typeBadge}>
-                  <Text style={styles.typeBadgeText}>{result.archetype}</Text>
-                </View>
-              </View>
-              <Text style={styles.talentText}>{result.description}</Text>
+              <Text style={styles.sectionTitle}>Ваш архетип личности</Text>
+              <Text style={styles.talentTitle}>{result.archetype}</Text>
               <Text style={styles.talentText}>
-                <Text style={styles.bold}>Рекомендации:</Text>
+                <Text style={styles.bold}>Описание: </Text>
+                {result.description}
               </Text>
-              {result.recommendations?.map((rec: string, idx: number) => (
+              <Text style={styles.talentText}>
+                <Text style={styles.bold}>Рекомендации: </Text>
+              </Text>
+              {result.recommendations.map((rec: string, idx: number) => (
                 <Text key={idx} style={styles.talentText}>- {rec}</Text>
               ))}
             </>
@@ -201,15 +173,12 @@ export default function QuizScreen() {
               setCurrentQuestion(0);
               setAnswers([]);
             }}
-            disabled={resultLoading}
           >
             <LinearGradient
               colors={["#ffd700", "#ffed4e"]}
               style={styles.restartGradient}
             >
-              <Text style={styles.restartText}>
-                {resultLoading ? 'Сохранение...' : 'Пройти еще раз'}
-              </Text>
+              <Text style={styles.restartText}>Пройти еще раз</Text>
             </LinearGradient>
           </TouchableOpacity>
 

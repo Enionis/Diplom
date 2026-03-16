@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, Lock, RefreshCw, ArrowLeft } from 'lucide-react';
 import { useSubscription } from '@/providers/SubscriptionProvider';
 import { useDailyCard } from '@/hooks/useDailyCard';
 import { useTarotReadings } from '@/hooks/useTarotReading';
-import { useTarotSpreads, useTarotCards, useTarotReading, TarotCard, TarotSpread } from '@/hooks/useTarotAPI';
+import { useTarotSpreads, useTarotCards, useTarotReading, TarotCard, TarotSpread, TarotReading } from '@/hooks/useTarotAPI';
+import { TAROT_CARDS } from '@/constants/tarot'; // Оставляем для карты дня
 
 interface ReadingResult {
   spread: TarotSpread;
@@ -14,6 +15,11 @@ interface ReadingResult {
     card: TarotCard;
     interpretation: string;
   }[];
+}
+
+function getRandomCards(count: number, availableCards: TarotCard[]): TarotCard[] {
+  const shuffled = [...availableCards].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
 }
 
 function getRandomCardIds(count: number, availableCards: TarotCard[]): string[] {
@@ -54,7 +60,7 @@ export default function Tarot() {
   // API хуки
   const { spreads, loading: spreadsLoading } = useTarotSpreads();
   const { cards, loading: cardsLoading } = useTarotCards();
-  const { createReading } = useTarotReading();
+  const { createReading, loading: readingLoading } = useTarotReading();
   
   const [currentView, setCurrentView] = useState<'spreads' | 'reading'>('spreads');
   const [currentReading, setCurrentReading] = useState<ReadingResult | null>(null);
@@ -83,21 +89,12 @@ export default function Tarot() {
       let card = dailyCard;
       if (isNewDay || !card) card = drawDailyCard();
       if (card) {
-        // Создаем совместимую карту с id
-        const compatibleCard: TarotCard = {
-          id: card.number,
-          number: card.number,
-          name: card.name,
-          symbol: card.symbol,
-          meaning: card.meaning
-        };
-        
         setCurrentReading({ 
           spread, 
-          cards: [compatibleCard],
+          cards: [card],
           interpretations: [{
             position: spread.positions[0],
-            card: compatibleCard,
+            card: card,
             interpretation: card.interpretation
           }]
         });

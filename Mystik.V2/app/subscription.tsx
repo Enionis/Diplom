@@ -20,10 +20,10 @@ export default function SubscriptionScreen() {
   const { logSubscription } = useDatabase();
 
   useEffect(() => {
-    if (!isLoading && user?.isGuest) {
+    if (!isLoading && !user) {
       router.replace("/auth");
     }
-  }, [isLoading, user?.isGuest]); 
+  }, [isLoading, user]); 
 
   const features = [
     { icon: Infinity, text: "Безлимитные гадания на Таро" },
@@ -52,7 +52,7 @@ export default function SubscriptionScreen() {
     );
   };
 
-  if (!isLoading && user?.isGuest) {
+  if (!isLoading && !user) {
     return null;
   }
 

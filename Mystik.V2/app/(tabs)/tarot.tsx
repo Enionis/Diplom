@@ -18,7 +18,6 @@ import { useDailyCard } from "@/hooks/useDailyCard";
 import { useTarotReadings } from "@/hooks/useTarotReading";
 import { router } from "expo-router";
 import { TAROT_CARDS, TAROT_SPREADS, TarotCard, TarotSpread } from "@/constants/tarot";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDatabase } from "@/hooks/useDatabase"; 
 
 interface ReadingResult {
@@ -36,9 +35,8 @@ export default function TarotScreen() {
   const [flippedCards, setFlippedCards] = useState<boolean[]>([]);
   const flipAnimations = useRef<Animated.Value[]>([]).current;
   const { width } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
 
-  const cardBackStyles: Record<string, readonly [ColorValue, ...ColorValue[]]> = {
+  const cardBackStyles: Record<string, readonly [ColorValue, ColorValue, ...ColorValue[]]> = {
     purple: ["#4a148c", "#7b1fa2", "#9c27b0"],
     gold: ["#ffd700", "#ffed4e"],
     black: ["#1a1a2e", "#333"],
@@ -162,7 +160,7 @@ export default function TarotScreen() {
 
   if (currentView === 'reading' && currentReading) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.container}>
         <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
             <TouchableOpacity onPress={goBackToSpreads} style={styles.backButton}>
@@ -242,7 +240,7 @@ export default function TarotScreen() {
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Text style={styles.title}>Гадание на Таро</Text>

@@ -3,103 +3,20 @@ import cors from 'cors';
 import bcrypt from 'bcryptjs';
 import * as cheerio from 'cheerio';
 import { initDatabase, getDatabase } from './db.js';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Инициализация базы данных
 initDatabase();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
 
-// CORS настройки для продакшена и разработки
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://127.0.0.1:5173', 
-  'http://localhost:5175',
-  'http://127.0.0.1:5175',
-  'http://localhost:8081',
-  'http://127.0.0.1:8081',
-  'https://linadugau-mystik-39d3.twc1.net',
-  // Добавляем поддержку Expo tunnel URLs
-  /^https:\/\/.*\.exp\.direct$/,
-  /^https:\/\/.*\.ngrok\.io$/,
-  /^https:\/\/.*\.railway\.app$/,
-  // Локальные IP адреса для мобильной разработки
-  /^http:\/\/192\.168\.\d+\.\d+:(3001|8081)$/,
-  /^http:\/\/10\.\d+\.\d+\.\d+:(3001|8081)$/,
-];
-
-// Если есть переменная окружения с дополнительными origins
-if (process.env.CORS_ORIGINS) {
-  allowedOrigins.push(...process.env.CORS_ORIGINS.split(','));
-}
-
+// CORS настройки
 app.use(cors({
-  origin: (origin, callback) => {
-    console.log('CORS check for origin:', origin);
-    
-    // Разрешаем запросы без origin (мобильные приложения)
-    if (!origin) {
-      console.log('No origin - allowing');
-      return callback(null, true);
-    }
-    
-    // Проверяем разрешенные origins
-    const isAllowed = allowedOrigins.some(allowedOrigin => {
-      if (typeof allowedOrigin === 'string') {
-        const match = origin === allowedOrigin;
-        if (match) console.log('String match:', allowedOrigin);
-        return match;
-      }
-      if (allowedOrigin instanceof RegExp) {
-        const match = allowedOrigin.test(origin);
-        if (match) console.log('Regex match:', allowedOrigin);
-        return match;
-      }
-      return false;
-    });
-    
-    if (isAllowed) {
-      console.log('Origin allowed:', origin);
-      callback(null, true);
-    } else {
-      console.log('CORS blocked origin:', origin);
-      console.log('Allowed origins:', allowedOrigins);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: true, // разрешить любой origin в dev
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 app.use(express.json());
-
-// Логирование запросов для отладки
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-  console.log('Headers:', JSON.stringify(req.headers, null, 2));
-  console.log('Query:', JSON.stringify(req.query, null, 2));
-  if (req.body && Object.keys(req.body).length > 0) {
-    console.log('Body:', JSON.stringify(req.body, null, 2));
-  }
-  next();
-});
-
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    ok: true, 
-    status: 'healthy', 
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
-    port: PORT
-  });
-});
 
 const SALT_ROUNDS = 10;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -319,10 +236,7 @@ app.put('/api/user/:id', (req, res) => {
 app.get('/api/quizzes', (req, res) => {
   try {
     const db = getDatabase();
-    console.log('Getting quizzes from database...');
-    
     const quizzes = db.prepare('SELECT id, title, description, is_premium FROM quizzes').all();
-    console.log('Found quizzes:', quizzes.length);
     
     const formattedQuizzes = quizzes.reduce((acc, quiz) => {
       acc[quiz.id] = {
@@ -507,10 +421,7 @@ app.post('/api/user/:id/change-password', (req, res) => {
 app.get('/api/tarot/spreads', (req, res) => {
   try {
     const db = getDatabase();
-    console.log('Getting tarot spreads from database...');
-    
     const spreads = db.prepare('SELECT * FROM tarot_spreads ORDER BY card_count ASC').all();
-    console.log('Found tarot spreads:', spreads.length);
     
     const formattedSpreads = spreads.map(spread => ({
       id: spread.id,
@@ -1485,44 +1396,8 @@ app.get('/api/horoscope/:sign/monthly', async (req, res) => {
   }
 });
 
-// Отдача статических файлов веб-приложения (после всех API роутов)
-const distPath = path.join(__dirname, '..', 'dist');
-
-// ВАЖНО: Исключаем папку /api из статических файлов
-app.use(express.static(distPath, {
-  index: false, // Не обслуживать index.html автоматически
-  setHeaders: (res, path) => {
-    // Не кешировать API запросы
-    if (path.includes('/api/')) {
-      res.setHeader('Cache-Control', 'no-cache');
-    }
-  }
-}));
-
-console.log('Serving static files from:', distPath);
-
-// Глобальная обработка ошибок для API
-app.use('/api/*', (err, req, res, next) => {
-  console.error('API Error:', err);
-  res.status(500).json({ ok: false, error: 'Внутренняя ошибка сервера' });
-});
-
-// SPA fallback - отдаем index.html для всех не-API роутов
-app.get('*', (req, res) => {
-  // Если запрос не к API, отдаем index.html
-  if (!req.path.startsWith('/api')) {
-    try {
-      const indexPath = path.join(__dirname, '..', 'dist', 'index.html');
-      res.sendFile(indexPath);
-    } catch (error) {
-      res.status(404).json({ ok: false, error: 'Страница не найдена' });
-    }
-  } else {
-    res.status(404).json({ ok: false, error: 'API endpoint не найден' });
-  }
-});
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running at http://0.0.0.0:${PORT}`);
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`);
   console.log(`DB file: server/data/mystic.db`);
 });

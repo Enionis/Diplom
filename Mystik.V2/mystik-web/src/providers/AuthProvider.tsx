@@ -24,6 +24,15 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const GUEST_USER: User = {
+  id: 'guest',
+  email: 'guest@mystic.com',
+  username: 'guest',
+  name: 'Мистический странник',
+  isGuest: true,
+  createdAt: new Date().toISOString(),
+};
+
 const STORAGE_KEY = 'mystic_user';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -158,7 +167,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return false;
     }
     
-    // Без API обновление профиля недоступно
+    // Fallback to local database
+    const success = authDatabase.updateUser(user.id, { name, birthDate });
+    if (success) {
+      const updatedUser = { ...user, name, birthDate };
+      setUser(updatedUser);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedUser));
+      return true;
+    }
     return false;
   };
 
@@ -170,8 +186,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return result.ok;
     }
     
-    // Без API смена пароля недоступна
-    return false;
+    // Fallback to local database
+    return authDatabase.changePassword(user.id, oldPassword, newPassword);
   };
 
   const logout = async () => {

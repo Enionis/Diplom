@@ -32,11 +32,11 @@ export default function Quiz() {
     );
   }
 
-  if (quizError || !quiz || !quiz.questions) {
+  if (quizError || !quiz) {
     return (
       <div style={{ padding: 20, textAlign: 'center' }}>
         <p style={{ color: 'var(--error)', marginBottom: 16 }}>
-          {quizError || 'Тест не найден или поврежден'}
+          {quizError || 'Тест не найден'}
         </p>
         <button onClick={() => navigate('/tests')} className="btn-primary">
           Вернуться к тестам
@@ -292,8 +292,6 @@ export default function Quiz() {
   }
 
   const handleAnswer = async (optionIndex: number) => {
-    if (!quiz.questions) return;
-    
     const newAnswers = [...answers, optionIndex + 1];
     setAnswers(newAnswers);
     

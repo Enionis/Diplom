@@ -2,9 +2,23 @@ import { Tabs } from "expo-router";
 import { Home, Star, User, Sparkles, BookOpen } from "lucide-react-native";
 import { Platform } from "react-native";
 import { useDatabase } from "@/hooks/useDatabase";
+import React, { useEffect } from "react";
+import { router } from "expo-router";
+import { useAuth } from "@/providers/AuthProvider";
 
 export default function TabsLayout() {
   const { logTabClick, deviceId } = useDatabase();
+  const { user, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.replace("/auth");
+    }
+  }, [isLoading, user]);
+
+  if (!isLoading && !user) {
+    return null;
+  }
 
   return (
     <Tabs

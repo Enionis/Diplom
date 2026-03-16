@@ -4,28 +4,15 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "node production-server.js",
-    "start:old": "node index.js",
-    "start:bun": "bun index.js",
-    "dev": "node --watch index.js",
-    "dev:bun": "bun --watch index.js",
-    "migrate": "node migrate-node.js",
-    "migrate:full": "node migrate-full-quizzes.js",
-    "migrate:bun": "bun migrate-full-quizzes.js",
-    "build": "echo 'No build step required'",
-    "verify": "node verify-startup.js",
-    "test-server": "node test-server.js",
-    "debug": "node debug-startup.js"
+    "start": "bun index.js",
+    "dev": "bun --watch index.js",
+    "migrate": "bun migrate.js",
+    "test": "bun test-api.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
-    "better-sqlite3": "^12.8.0",
     "cheerio": "^1.2.0",
     "cors": "^2.8.5",
     "express": "^4.21.0"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "optionalDependencies": {}
+  }
 }

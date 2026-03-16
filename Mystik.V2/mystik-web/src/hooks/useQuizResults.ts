@@ -1,6 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
-import { API_BASE_URL } from '@/config/api';
+
+interface QuizResult {
+  id?: string;
+  userId: string;
+  quizId: string;
+  answers: number[];
+  result: any;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 export function useQuizResults(quizId: string) {
   const { user } = useAuth();
@@ -22,7 +31,7 @@ export function useQuizResults(quizId: string) {
     setError(null);
     
     try {
-      const response = await fetch(`${API_BASE_URL}/api/user/${user.id}/quiz/${quizId}/result`);
+      const response = await fetch(`http://localhost:3001/api/user/${user.id}/quiz/${quizId}/result`);
       const data = await response.json();
       
       if (data.ok) {
@@ -49,7 +58,7 @@ export function useQuizResults(quizId: string) {
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/user/${user.id}/quiz/${quizId}/result`, {
+      const response = await fetch(`http://localhost:3001/api/user/${user.id}/quiz/${quizId}/result`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

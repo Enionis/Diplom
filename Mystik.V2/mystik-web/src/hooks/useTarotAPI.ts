@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
-import { API_BASE_URL } from '@/config/api';
 
 export interface TarotCard {
   id: string;
@@ -40,21 +39,7 @@ export function useTarotSpreads() {
   useEffect(() => {
     const fetchSpreads = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/tarot/spreads`);
-        
-        console.log('Tarot spreads API response status:', response.status);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          const text = await response.text();
-          console.error('Expected JSON but got:', text.substring(0, 200));
-          throw new Error(`Expected JSON but got: ${contentType}`);
-        }
-        
+        const response = await fetch('http://localhost:3001/api/tarot/spreads');
         const data = await response.json();
         
         if (data.ok) {
@@ -85,21 +70,7 @@ export function useTarotCards() {
   useEffect(() => {
     const fetchCards = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/tarot/cards`);
-        
-        console.log('Tarot cards API response status:', response.status);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          const text = await response.text();
-          console.error('Expected JSON but got:', text.substring(0, 200));
-          throw new Error(`Expected JSON but got: ${contentType}`);
-        }
-        
+        const response = await fetch('http://localhost:3001/api/tarot/cards');
         const data = await response.json();
         
         if (data.ok) {
@@ -137,7 +108,7 @@ export function useTarotReading() {
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/tarot/reading`, {
+      const response = await fetch('http://localhost:3001/api/tarot/reading', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -184,7 +155,7 @@ export function useUserTarotReadings(date?: string) {
       }
 
       try {
-        let url = `${API_BASE_URL}/api/user/${user.id}/tarot/readings`;
+        let url = `http://localhost:3001/api/user/${user.id}/tarot/readings`;
         if (date) {
           url += `?date=${date}`;
         }

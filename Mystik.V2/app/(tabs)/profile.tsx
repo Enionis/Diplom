@@ -8,8 +8,10 @@ import {
   Alert,
   Switch,
   Linking,
-  Modal,
   TextInput,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
   type ColorValue,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -28,28 +30,48 @@ import {
 } from "lucide-react-native";
 import { useSubscription } from "@/providers/SubscriptionProvider";
 import { useUser } from "@/providers/UserProvider";
-import { useAuthContext } from "@/providers/AuthProvider";
+import { useAuth } from "@/providers/AuthProvider";
 import { router } from "expo-router";
 import { useDatabase } from "@/hooks/useDatabase";
 
 export default function ProfileScreen() {
   const { isPremium, cardBack, setCardBack, cancelSubscription } = useSubscription(); 
-  const { birthDate, clearUserData } = useUser();
-  const { user, logout, updateProfile, changePassword } = useAuthContext();
+  const { birthDate, setBirthDate, clearUserData } = useUser();
+  const { user, logout, updateProfile, changePassword } = useAuth();
   const { logAction } = useDatabase();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [selectedCardBack, setSelectedCardBack] = useState(cardBack);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editBirthDate, setEditBirthDate] = useState("");
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [editName, setEditName] = useState('');
-  const [editBirthDate, setEditBirthDate] = useState('');
-  const [oldPassword, setOldPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
     setSelectedCardBack(cardBack);
   }, [cardBack]);
+
+  const formatDateInput = (text: string) => {
+    const digits = text.replace(/\D/g, "");
+    let formatted = "";
+    for (let i = 0; i < digits.length && i < 8; i++) {
+      if (i === 2 || i === 4) {
+        formatted += ".";
+      }
+      formatted += digits[i];
+    }
+    return formatted;
+  };
+
+  const isValidDate = (date: string): boolean => {
+    if (!/^\d{2}\.\d{2}\.\d{4}$/.test(date)) return false;
+    const [day, month, year] = date.split(".").map(Number);
+    if (year < 1900 || year > 2100 || month < 1 || month > 12) return false;
+    const daysInMonth = new Date(year, month, 0).getDate();
+    return day >= 1 && day <= daysInMonth;
+  };
 
   const handleLogin = () => {
     router.push("/auth");
@@ -68,7 +90,7 @@ export default function ProfileScreen() {
             logAction("logout");
             await logout();
             clearUserData();
-            router.replace("/");
+            router.replace("/auth");
           },
         },
       ]
@@ -143,64 +165,76 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleEditProfile = () => {
-    setEditName(user?.name || '');
-    setEditBirthDate(user?.birthDate || '');
-    setIsEditingProfile(true);
-  };
-
-  const handleSaveProfile = async () => {
-    if (!editName.trim()) {
-      Alert.alert('Ошибка', 'Введите имя');
-      return;
-    }
-    
-    const updates: any = { name: editName };
-    if (editBirthDate.trim()) {
-      updates.birthDate = editBirthDate;
-    }
-    
-    const success = await updateProfile(updates);
-    if (success) {
-      Alert.alert('Успешно', 'Профиль обновлён');
-      setIsEditingProfile(false);
-    } else {
-      Alert.alert('Ошибка', 'Не удалось обновить профиль');
-    }
-  };
-
-  const handleChangePassword = async () => {
-    if (!oldPassword || !newPassword || !confirmPassword) {
-      Alert.alert('Ошибка', 'Заполните все поля');
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      Alert.alert('Ошибка', 'Новые пароли не совпадают');
-      return;
-    }
-    if (newPassword.length < 6) {
-      Alert.alert('Ошибка', 'Новый пароль должен быть не менее 6 символов');
-      return;
-    }
-    
-    const success = await changePassword(oldPassword, newPassword, confirmPassword);
-    if (success) {
-      Alert.alert('Успешно', 'Пароль успешно изменён');
-      setIsChangingPassword(false);
-      setOldPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-    } else {
-      Alert.alert('Ошибка', 'Не удалось изменить пароль. Проверьте старый пароль');
-    }
-  };
-
   const cardBacks: { id: string; name: string; colors: readonly [ColorValue, ...ColorValue[]]; textColor?: string }[] = [
     { id: "purple", name: "Фиолетовый", colors: ["#4a148c", "#7b1fa2", "#9c27b0"] },
     { id: "gold", name: "Золотистый", colors: ["#ffd700", "#ffed4e"], textColor: "#1a1a2e" },
     { id: "black", name: "Черный", colors: ["#1a1a2e", "#333"] },
     { id: "red", name: "Красный", colors: ["#d32f2f", "#f44336"] },
   ];
+
+  const handleEditProfilePress = () => {
+    setEditName(user?.name || "Мистический странник");
+    setEditBirthDate(birthDate || "");
+    setIsEditingProfile(true);
+  };
+
+  const handleSaveProfile = async () => {
+    const trimmedName = editName.trim();
+    const trimmedDate = editBirthDate.trim();
+
+    if (!trimmedName) {
+      Alert.alert("Ошибка", "Введите имя");
+      return;
+    }
+
+    if (trimmedDate && !isValidDate(trimmedDate)) {
+      Alert.alert("Ошибка", "Введите корректную дату в формате ДД.ММ.ГГГГ");
+      return;
+    }
+
+    const success = await updateProfile(trimmedName, trimmedDate || undefined);
+    if (!success) {
+      Alert.alert("Ошибка", "Не удалось сохранить профиль. Попробуйте снова.");
+      return;
+    }
+
+    if (trimmedDate) {
+      await setBirthDate(trimmedDate);
+    }
+
+    logAction("update_profile");
+    Alert.alert("Успешно", "Профиль обновлён");
+    setIsEditingProfile(false);
+  };
+
+  const handleChangePassword = async () => {
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      Alert.alert("Ошибка", "Заполните все поля");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      Alert.alert("Ошибка", "Новые пароли не совпадают");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      Alert.alert("Ошибка", "Новый пароль должен быть не менее 6 символов");
+      return;
+    }
+
+    const success = await changePassword(oldPassword, newPassword);
+    if (success) {
+      logAction("change_password");
+      Alert.alert("Успешно", "Пароль успешно изменён");
+      setIsChangingPassword(false);
+      setOldPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } else {
+      Alert.alert("Ошибка", "Не удалось изменить пароль. Проверьте старый пароль");
+    }
+  };
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -213,30 +247,29 @@ export default function ProfileScreen() {
             <Text style={styles.avatarText}>👤</Text>
           </View>
           <Text style={styles.userName}>{user?.name || "Мистический странник"}</Text>
-          {user?.username && (
-            <Text style={styles.userUsername}>@{user.username}</Text>
-          )}
-          {(user?.birthDate || birthDate) && (
+          {birthDate && (
             <View style={styles.birthDateBadge}>
               <Calendar size={14} color="#ffd700" />
-              <Text style={styles.birthDateText}>{user?.birthDate || birthDate}</Text>
+              <Text style={styles.birthDateText}>{birthDate}</Text>
             </View>
           )}
           {user && !user.isGuest && (
-            <View style={styles.editButtons}>
-              <TouchableOpacity
-                style={styles.editButton}
-                onPress={handleEditProfile}
-              >
+            <View style={styles.headerButtonsRow}>
+              <TouchableOpacity style={styles.headerButton} onPress={handleEditProfilePress}>
                 <Edit size={16} color="#fff" />
-                <Text style={styles.editButtonText}>Редактировать</Text>
+                <Text style={styles.headerButtonText}>Редактировать</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.editButton}
-                onPress={() => setIsChangingPassword(true)}
+                style={styles.headerButton}
+                onPress={() => {
+                  setIsChangingPassword(true);
+                  setOldPassword("");
+                  setNewPassword("");
+                  setConfirmPassword("");
+                }}
               >
                 <Key size={16} color="#fff" />
-                <Text style={styles.editButtonText}>Пароль</Text>
+                <Text style={styles.headerButtonText}>Пароль</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -377,77 +410,74 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       )}
 
-      {/* Модальное окно редактирования профиля */}
       <Modal
         visible={isEditingProfile}
-        transparent={true}
+        transparent
         animationType="fade"
         onRequestClose={() => setIsEditingProfile(false)}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={styles.modalOverlay}
+        >
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Редактировать профиль</Text>
-            
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Имя</Text>
+            <View style={styles.modalField}>
+              <Text style={styles.modalLabel}>Имя</Text>
               <TextInput
-                style={styles.textInput}
+                style={styles.modalInput}
                 value={editName}
                 onChangeText={setEditName}
                 placeholder="Введите имя"
                 placeholderTextColor="#666"
               />
             </View>
-            
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Дата рождения</Text>
+            <View style={styles.modalField}>
+              <Text style={styles.modalLabel}>Дата рождения</Text>
               <TextInput
-                style={styles.textInput}
+                style={styles.modalInput}
                 value={editBirthDate}
-                onChangeText={setEditBirthDate}
-                placeholder="YYYY-MM-DD"
+                onChangeText={(text) => setEditBirthDate(formatDateInput(text))}
+                placeholder="ДД.ММ.ГГГГ"
                 placeholderTextColor="#666"
+                keyboardType="numeric"
+                maxLength={10}
               />
             </View>
-            
-            <View style={styles.modalButtons}>
+            <View style={styles.modalButtonsRow}>
               <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
+                style={styles.modalButton}
                 onPress={() => setIsEditingProfile(false)}
               >
-                <Text style={styles.cancelButtonText}>Отмена</Text>
+                <Text style={styles.modalButtonText}>Отмена</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalButton, styles.saveButton]}
+                style={[styles.modalButton, styles.modalButtonPrimary]}
                 onPress={handleSaveProfile}
               >
-                <LinearGradient
-                  colors={["#ffd700", "#ffed4e"]}
-                  style={styles.saveButtonGradient}
-                >
-                  <Text style={styles.saveButtonText}>Сохранить</Text>
-                </LinearGradient>
+                <Text style={styles.modalButtonTextPrimary}>Сохранить</Text>
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
-      {/* Модальное окно смены пароля */}
       <Modal
         visible={isChangingPassword}
-        transparent={true}
+        transparent
         animationType="fade"
         onRequestClose={() => setIsChangingPassword(false)}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={styles.modalOverlay}
+        >
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Сменить пароль</Text>
-            
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Старый пароль</Text>
+            <View style={styles.modalField}>
+              <Text style={styles.modalLabel}>Старый пароль</Text>
               <TextInput
-                style={styles.textInput}
+                style={styles.modalInput}
                 value={oldPassword}
                 onChangeText={setOldPassword}
                 placeholder="Введите старый пароль"
@@ -455,11 +485,10 @@ export default function ProfileScreen() {
                 secureTextEntry
               />
             </View>
-            
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Новый пароль</Text>
+            <View style={styles.modalField}>
+              <Text style={styles.modalLabel}>Новый пароль</Text>
               <TextInput
-                style={styles.textInput}
+                style={styles.modalInput}
                 value={newPassword}
                 onChangeText={setNewPassword}
                 placeholder="Минимум 6 символов"
@@ -467,11 +496,10 @@ export default function ProfileScreen() {
                 secureTextEntry
               />
             </View>
-            
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Повторите новый пароль</Text>
+            <View style={styles.modalField}>
+              <Text style={styles.modalLabel}>Повторите новый пароль</Text>
               <TextInput
-                style={styles.textInput}
+                style={styles.modalInput}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 placeholder="Повторите новый пароль"
@@ -479,33 +507,27 @@ export default function ProfileScreen() {
                 secureTextEntry
               />
             </View>
-            
-            <View style={styles.modalButtons}>
+            <View style={styles.modalButtonsRow}>
               <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
+                style={styles.modalButton}
                 onPress={() => {
                   setIsChangingPassword(false);
-                  setOldPassword('');
-                  setNewPassword('');
-                  setConfirmPassword('');
+                  setOldPassword("");
+                  setNewPassword("");
+                  setConfirmPassword("");
                 }}
               >
-                <Text style={styles.cancelButtonText}>Отмена</Text>
+                <Text style={styles.modalButtonText}>Отмена</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalButton, styles.saveButton]}
+                style={[styles.modalButton, styles.modalButtonPrimary]}
                 onPress={handleChangePassword}
               >
-                <LinearGradient
-                  colors={["#ffd700", "#ffed4e"]}
-                  style={styles.saveButtonGradient}
-                >
-                  <Text style={styles.saveButtonText}>Изменить</Text>
-                </LinearGradient>
+                <Text style={styles.modalButtonTextPrimary}>Изменить</Text>
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </ScrollView>
   );
@@ -541,11 +563,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     marginBottom: 8,
   },
-  userUsername: {
-    fontSize: 14,
-    color: "#b8b8d0",
-    marginBottom: 8,
-  },
   birthDateBadge: {
     flexDirection: "row",
     alignItems: "center",
@@ -554,27 +571,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
-    marginBottom: 12,
   },
   birthDateText: {
     color: "#ffd700",
     fontSize: 12,
   },
-  editButtons: {
+  headerButtonsRow: {
+    marginTop: 12,
     flexDirection: "row",
     gap: 8,
-    marginTop: 12,
   },
-  editButton: {
+  headerButton: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    borderRadius: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.3)",
   },
-  editButtonText: {
+  headerButtonText: {
     color: "#fff",
     fontSize: 14,
   },
@@ -735,74 +752,62 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.85)",
-    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.7)",
     alignItems: "center",
+    justifyContent: "center",
     padding: 20,
   },
   modalContent: {
+    width: "100%",
+    maxWidth: 420,
     backgroundColor: "#1a1a2e",
     borderRadius: 16,
-    padding: 24,
-    width: "100%",
-    maxWidth: 400,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    padding: 20,
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: "600",
     color: "#fff",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  inputContainer: {
     marginBottom: 16,
   },
-  inputLabel: {
+  modalField: {
+    marginBottom: 12,
+  },
+  modalLabel: {
     fontSize: 14,
     color: "#b8b8d0",
-    marginBottom: 8,
+    marginBottom: 6,
   },
-  textInput: {
+  modalInput: {
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     backgroundColor: "rgba(255,255,255,0.05)",
-    borderRadius: 8,
-    padding: 12,
     color: "#fff",
     fontSize: 16,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
   },
-  modalButtons: {
+  modalButtonsRow: {
     flexDirection: "row",
+    justifyContent: "flex-end",
     gap: 12,
-    marginTop: 20,
+    marginTop: 16,
   },
   modalButton: {
-    flex: 1,
-    borderRadius: 8,
-    overflow: "hidden",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.08)",
   },
-  cancelButton: {
-    backgroundColor: "rgba(255,255,255,0.05)",
-    padding: 12,
-    alignItems: "center",
+  modalButtonPrimary: {
+    backgroundColor: "#ffd700",
   },
-  cancelButtonText: {
+  modalButtonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 14,
   },
-  saveButton: {
-    borderRadius: 8,
-    overflow: "hidden",
-  },
-  saveButtonGradient: {
-    padding: 12,
-    alignItems: "center",
-  },
-  saveButtonText: {
+  modalButtonTextPrimary: {
     color: "#1a1a2e",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
   },
 });

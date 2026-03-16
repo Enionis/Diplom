@@ -14,11 +14,13 @@ import { router } from "expo-router";
 import { useSubscription } from "@/providers/SubscriptionProvider";
 import { useDailyCard } from "@/hooks/useDailyCard";
 import { useDatabase } from "@/hooks/useDatabase"; 
+import { getDailyAdvice } from "@/constants/dailyAdvice";
 
 export default function HomeScreen() {
   const { isPremium } = useSubscription();
   const { card } = useDailyCard();
   const { logHoroscopeClick, logTestClick, logTarotClick } = useDatabase(); 
+  const dailyAdvice = getDailyAdvice();
 
   const features = [
     {
@@ -110,7 +112,13 @@ export default function HomeScreen() {
       <View style={styles.dailyTip}>
         <Text style={styles.tipTitle}>💫 Совет дня</Text>
         <Text style={styles.tipText}>
-          Доверьтесь интуиции - она ваш лучший проводник в мире неизведанного
+          {dailyAdvice.text}
+          {dailyAdvice.author && (
+            <Text style={styles.tipAuthor}>
+              {" — "}
+              {dailyAdvice.author}
+            </Text>
+          )}
         </Text>
       </View>
     </ScrollView>
@@ -199,5 +207,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#b8b8d0",
     lineHeight: 20,
+  },
+  tipAuthor: {
+    fontStyle: "italic",
+    opacity: 0.8,
   },
 });
