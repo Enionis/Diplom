@@ -14,11 +14,21 @@ import { calculateDestinyMatrix } from "@/utils/destinyMatrix";
 import { useAuth } from "@/providers/AuthProvider";
 import { 
   PURPOSE_20_40, 
-  PURPOSE_40_60, 
+  PURPOSE_40_60,
+  PURPOSE_GENERAL,
   TALENTS,
   CHALLENGES,
   MONEY_DIRECTION,
   MONEY_SUCCESS,
+  CHAKRA_HEALTH,
+  HEALTH_RECOMMENDATIONS,
+  PAST_LIVES,
+  CHILDREN_MISTAKES,
+  MANAGEMENT_GUIDANCE,
+  RELATIONSHIPS_WOMEN,
+  RELATIONSHIPS_MEN,
+  CHARACTER,
+  YEAR_ESSENCE,
 } from "@/constants/destinyMatrix";
 
 const { width, height } = Dimensions.get("window");
@@ -32,7 +42,7 @@ export default function HoroscopeScreen() {
   const [dateInput, setDateInput] = useState(birthDate || "");
   const [selectedPeriod, setSelectedPeriod] = useState<"today" | "week" | "month">("today");
   const [activeTab, setActiveTab] = useState<"horoscope" | "matrix">(tab === "matrix" ? "matrix" : "horoscope");
-  const [matrixTab, setMatrixTab] = useState<"visual" | "purpose" | "talents" | "money" | "challenges">("visual");
+  const [matrixTab, setMatrixTab] = useState<"visual" | "purpose" | "talents" | "money" | "challenges" | "health" | "pastlives" | "children" | "guidance" | "relationships" | "yearforecast">("visual");
 
   const normalizeAccountBirthDate = (value?: string): string | null => {
     if (!value) return null;
@@ -111,27 +121,6 @@ export default function HoroscopeScreen() {
     const isoDate = convertDateForMatrix(birthDate);
     return calculateDestinyMatrix(isoDate);
   }, [birthDate]);
-
-  const calculateAge = () => {
-    if (!birthDate) return 0;
-    const match = birthDate.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
-    if (!match) return 0;
-    const [, day, month, year] = match;
-    const birth = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-    const today = new Date();
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--;
-    }
-    return age;
-  };
-
-  const getPurposeForAge = () => {
-    const age = calculateAge();
-    if (age < 40) return PURPOSE_20_40;
-    return PURPOSE_40_60;
-  };
 
   const getArcanaName = (num: number): string => {
     const arcanas = [
@@ -449,6 +438,54 @@ export default function HoroscopeScreen() {
                       Испытания
                     </Text>
                   </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.matrixTab, matrixTab === "health" && styles.matrixTabActive]}
+                    onPress={() => setMatrixTab("health")}
+                  >
+                    <Text style={[styles.matrixTabText, matrixTab === "health" && styles.matrixTabTextActive]}>
+                      Здоровье
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.matrixTab, matrixTab === "pastlives" && styles.matrixTabActive]}
+                    onPress={() => setMatrixTab("pastlives")}
+                  >
+                    <Text style={[styles.matrixTabText, matrixTab === "pastlives" && styles.matrixTabTextActive]}>
+                      Прошлые жизни
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.matrixTab, matrixTab === "children" && styles.matrixTabActive]}
+                    onPress={() => setMatrixTab("children")}
+                  >
+                    <Text style={[styles.matrixTabText, matrixTab === "children" && styles.matrixTabTextActive]}>
+                      Дети
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.matrixTab, matrixTab === "guidance" && styles.matrixTabActive]}
+                    onPress={() => setMatrixTab("guidance")}
+                  >
+                    <Text style={[styles.matrixTabText, matrixTab === "guidance" && styles.matrixTabTextActive]}>
+                      Руководство
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.matrixTab, matrixTab === "relationships" && styles.matrixTabActive]}
+                    onPress={() => setMatrixTab("relationships")}
+                  >
+                    <Text style={[styles.matrixTabText, matrixTab === "relationships" && styles.matrixTabTextActive]}>
+                      Отношения
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.matrixTab, matrixTab === "yearforecast" && styles.matrixTabActive]}
+                    onPress={() => setMatrixTab("yearforecast")}
+                  >
+                    <Text style={[styles.matrixTabText, matrixTab === "yearforecast" && styles.matrixTabTextActive]}>
+                      Прогноз на год
+                    </Text>
+                  </TouchableOpacity>
                 </ScrollView>
               </View>
 
@@ -484,11 +521,57 @@ export default function HoroscopeScreen() {
               {/* Предназначение */}
               {matrixTab === "purpose" && (
                 <View style={styles.contentCard}>
-                  <Text style={styles.contentTitle}>Предназначение ({calculateAge()} лет)</Text>
-                  {matrixData.points[0] && getPurposeForAge()[matrixData.points[0].value] && (
-                    <Text style={styles.contentText}>
-                      {getPurposeForAge()[matrixData.points[0].value].description}
-                    </Text>
+                  <Text style={styles.contentTitle}>Предназначение</Text>
+                  
+                  {/* От 20 до 40 лет */}
+                  {matrixData.points[0] && PURPOSE_20_40[matrixData.points[0].value] && (
+                    <>
+                      <View style={styles.arcanaIndicator}>
+                        <View style={styles.arcanaCircle}>
+                          <Text style={styles.arcanaNumber}>{matrixData.points[0].value}</Text>
+                        </View>
+                        <Text style={styles.arcanaText}>
+                          От 20 до 40 лет 
+                        </Text>
+                      </View>
+                      <Text style={styles.contentText}>
+                        {PURPOSE_20_40[matrixData.points[0].value].description}
+                      </Text>
+                    </>
+                  )}
+
+                  {/* От 40 до 60 лет */}
+                  {matrixData.points[0] && PURPOSE_40_60[matrixData.points[0].value] && (
+                    <>
+                      <View style={[styles.arcanaIndicator, { marginTop: 20 }]}>
+                        <View style={styles.arcanaCircle}>
+                          <Text style={styles.arcanaNumber}>{matrixData.points[0].value}</Text>
+                        </View>
+                        <Text style={styles.arcanaText}>
+                          От 40 до 60 лет 
+                        </Text>
+                      </View>
+                      <Text style={styles.contentText}>
+                        {PURPOSE_40_60[matrixData.points[0].value].description}
+                      </Text>
+                    </>
+                  )}
+
+                  {/* Общее предназначение */}
+                  {matrixData.points[0] && PURPOSE_GENERAL[matrixData.points[0].value] && (
+                    <>
+                      <View style={[styles.arcanaIndicator, { marginTop: 20 }]}>
+                        <View style={styles.arcanaCircle}>
+                          <Text style={styles.arcanaNumber}>{matrixData.points[0].value}</Text>
+                        </View>
+                        <Text style={styles.arcanaText}>
+                          Общее предназначение 
+                        </Text>
+                      </View>
+                      <Text style={styles.contentText}>
+                        {PURPOSE_GENERAL[matrixData.points[0].value].description}
+                      </Text>
+                    </>
                   )}
                 </View>
               )}
@@ -497,10 +580,21 @@ export default function HoroscopeScreen() {
               {matrixTab === "talents" && (
                 <View style={styles.contentCard}>
                   <Text style={styles.contentTitle}>Ваши таланты</Text>
+                  
                   {matrixData.points[0] && TALENTS[matrixData.points[0].value] && (
-                    <Text style={styles.contentText}>
-                      {TALENTS[matrixData.points[0].value].description}
-                    </Text>
+                    <>
+                      <View style={styles.arcanaIndicator}>
+                        <View style={styles.arcanaCircle}>
+                          <Text style={styles.arcanaNumber}>{matrixData.points[0].value}</Text>
+                        </View>
+                        <Text style={styles.arcanaText}>
+                          Расчет по центральной точке матрицы
+                        </Text>
+                      </View>
+                      <Text style={styles.contentText}>
+                        {TALENTS[matrixData.points[0].value].description}
+                      </Text>
+                    </>
                   )}
                 </View>
               )}
@@ -509,17 +603,33 @@ export default function HoroscopeScreen() {
               {matrixTab === "money" && (
                 <View style={styles.contentCard}>
                   <Text style={styles.contentTitle}>Финансы и карьера</Text>
+                  
                   {matrixData.points[15] && MONEY_DIRECTION[matrixData.points[15].value] && (
                     <>
-                      <Text style={styles.contentSubtitle}>Направление деятельности:</Text>
+                      <View style={styles.arcanaIndicator}>
+                        <View style={styles.arcanaCircle}>
+                          <Text style={styles.arcanaNumber}>{matrixData.points[15].value}</Text>
+                        </View>
+                        <Text style={styles.arcanaText}>
+                          Направление деятельности
+                        </Text>
+                      </View>
                       <Text style={styles.contentText}>
                         {MONEY_DIRECTION[matrixData.points[15].value].description}
                       </Text>
                     </>
                   )}
+                  
                   {matrixData.points[25] && MONEY_SUCCESS[matrixData.points[25].value] && (
                     <>
-                      <Text style={styles.contentSubtitle}>Для достижения успеха:</Text>
+                      <View style={[styles.arcanaIndicator, { marginTop: 20 }]}>
+                        <View style={styles.arcanaCircle}>
+                          <Text style={styles.arcanaNumber}>{matrixData.points[25].value}</Text>
+                        </View>
+                        <Text style={styles.arcanaText}>
+                          Для достижения успеха 
+                        </Text>
+                      </View>
                       <Text style={styles.contentText}>
                         {MONEY_SUCCESS[matrixData.points[25].value].description}
                       </Text>
@@ -532,11 +642,342 @@ export default function HoroscopeScreen() {
               {matrixTab === "challenges" && (
                 <View style={styles.contentCard}>
                   <Text style={styles.contentTitle}>Жизненные испытания</Text>
+                  
                   {matrixData.points[0] && CHALLENGES[matrixData.points[0].value] && (
-                    <Text style={styles.contentText}>
-                      {CHALLENGES[matrixData.points[0].value].description}
-                    </Text>
+                    <>
+                      <View style={styles.arcanaIndicator}>
+                        <View style={styles.arcanaCircle}>
+                          <Text style={styles.arcanaNumber}>{matrixData.points[0].value}</Text>
+                        </View>
+                        <Text style={styles.arcanaText}>
+                          Расчет по центральной точке матрицы
+                        </Text>
+                      </View>
+                      <Text style={styles.contentText}>
+                        {CHALLENGES[matrixData.points[0].value].description}
+                      </Text>
+                    </>
                   )}
+                </View>
+              )}
+
+              {/* Здоровье */}
+              {matrixTab === "health" && (
+                <View style={styles.contentCard}>
+                  <Text style={styles.contentTitle}>Здоровье по чакрам</Text>
+                  
+                  {/* Общая рекомендация */}
+                  {matrixData.points[0] && HEALTH_RECOMMENDATIONS[matrixData.points[0].value] && (
+                    <>
+                      <View style={styles.arcanaIndicator}>
+                        <View style={styles.arcanaCircle}>
+                          <Text style={styles.arcanaNumber}>{matrixData.points[0].value}</Text>
+                        </View>
+                        <Text style={styles.arcanaText}>
+                          Общая рекомендация 
+                        </Text>
+                      </View>
+                      <Text style={styles.contentText}>
+                        {HEALTH_RECOMMENDATIONS[matrixData.points[0].value].description}
+                      </Text>
+                    </>
+                  )}
+
+                  {/* Чакры */}
+                  {matrixData.chartHeart && (
+                    <>
+                      {/* Сахасрара */}
+                      <View style={styles.chakraCard}>
+                        <Text style={styles.chakraTitle}>
+                          {CHAKRA_HEALTH.sah.name} ({matrixData.chartHeart.sahphysics})
+                        </Text>
+                        <Text style={styles.chakraOrgans}>{CHAKRA_HEALTH.sah.organs}</Text>
+                        <Text style={styles.chakraLabel}>Проблемы:</Text>
+                        <Text style={styles.chakraText}>{CHAKRA_HEALTH.sah.problems}</Text>
+                        <Text style={styles.chakraLabel}>Причины:</Text>
+                        <Text style={styles.chakraText}>{CHAKRA_HEALTH.sah.causes}</Text>
+                        <Text style={styles.chakraLabel}>Решение:</Text>
+                        <Text style={styles.chakraText}>{CHAKRA_HEALTH.sah.solution}</Text>
+                      </View>
+
+                      {/* Аджна */}
+                      <View style={styles.chakraCard}>
+                        <Text style={styles.chakraTitle}>
+                          {CHAKRA_HEALTH.aj.name} ({matrixData.chartHeart.ajphysics})
+                        </Text>
+                        <Text style={styles.chakraOrgans}>{CHAKRA_HEALTH.aj.organs}</Text>
+                        <Text style={styles.chakraLabel}>Проблемы:</Text>
+                        <Text style={styles.chakraText}>{CHAKRA_HEALTH.aj.problems}</Text>
+                        <Text style={styles.chakraLabel}>Причины:</Text>
+                        <Text style={styles.chakraText}>{CHAKRA_HEALTH.aj.causes}</Text>
+                        <Text style={styles.chakraLabel}>Решение:</Text>
+                        <Text style={styles.chakraText}>{CHAKRA_HEALTH.aj.solution}</Text>
+                      </View>
+
+                      {/* Вишудха */}
+                      <View style={styles.chakraCard}>
+                        <Text style={styles.chakraTitle}>
+                          {CHAKRA_HEALTH.vish.name} ({matrixData.chartHeart.vishphysics})
+                        </Text>
+                        <Text style={styles.chakraOrgans}>{CHAKRA_HEALTH.vish.organs}</Text>
+                        <Text style={styles.chakraLabel}>Проблемы:</Text>
+                        <Text style={styles.chakraText}>{CHAKRA_HEALTH.vish.problems}</Text>
+                        <Text style={styles.chakraLabel}>Причины:</Text>
+                        <Text style={styles.chakraText}>{CHAKRA_HEALTH.vish.causes}</Text>
+                        <Text style={styles.chakraLabel}>Решение:</Text>
+                        <Text style={styles.chakraText}>{CHAKRA_HEALTH.vish.solution}</Text>
+                      </View>
+
+                      {/* Анахата */}
+                      <View style={styles.chakraCard}>
+                        <Text style={styles.chakraTitle}>
+                          {CHAKRA_HEALTH.anah.name} ({matrixData.chartHeart.anahphysics})
+                        </Text>
+                        <Text style={styles.chakraOrgans}>{CHAKRA_HEALTH.anah.organs}</Text>
+                        <Text style={styles.chakraLabel}>Проблемы:</Text>
+                        <Text style={styles.chakraText}>{CHAKRA_HEALTH.anah.problems}</Text>
+                        <Text style={styles.chakraLabel}>Причины:</Text>
+                        <Text style={styles.chakraText}>{CHAKRA_HEALTH.anah.causes}</Text>
+                        <Text style={styles.chakraLabel}>Решение:</Text>
+                        <Text style={styles.chakraText}>{CHAKRA_HEALTH.anah.solution}</Text>
+                      </View>
+
+                      {/* Манипура */}
+                      <View style={styles.chakraCard}>
+                        <Text style={styles.chakraTitle}>
+                          {CHAKRA_HEALTH.man.name} ({matrixData.chartHeart.manphysics})
+                        </Text>
+                        <Text style={styles.chakraOrgans}>{CHAKRA_HEALTH.man.organs}</Text>
+                        <Text style={styles.chakraLabel}>Проблемы:</Text>
+                        <Text style={styles.chakraText}>{CHAKRA_HEALTH.man.problems}</Text>
+                        <Text style={styles.chakraLabel}>Причины:</Text>
+                        <Text style={styles.chakraText}>{CHAKRA_HEALTH.man.causes}</Text>
+                        <Text style={styles.chakraLabel}>Решение:</Text>
+                        <Text style={styles.chakraText}>{CHAKRA_HEALTH.man.solution}</Text>
+                      </View>
+
+                      {/* Свадхистана */}
+                      <View style={styles.chakraCard}>
+                        <Text style={styles.chakraTitle}>
+                          {CHAKRA_HEALTH.svad.name} ({matrixData.chartHeart.svadphysics})
+                        </Text>
+                        <Text style={styles.chakraOrgans}>{CHAKRA_HEALTH.svad.organs}</Text>
+                        <Text style={styles.chakraLabel}>Проблемы:</Text>
+                        <Text style={styles.chakraText}>{CHAKRA_HEALTH.svad.problems}</Text>
+                        <Text style={styles.chakraLabel}>Причины:</Text>
+                        <Text style={styles.chakraText}>{CHAKRA_HEALTH.svad.causes}</Text>
+                        <Text style={styles.chakraLabel}>Решение:</Text>
+                        <Text style={styles.chakraText}>{CHAKRA_HEALTH.svad.solution}</Text>
+                      </View>
+
+                      {/* Муладхара */}
+                      <View style={styles.chakraCard}>
+                        <Text style={styles.chakraTitle}>
+                          {CHAKRA_HEALTH.mul.name} ({matrixData.chartHeart.mulphysics})
+                        </Text>
+                        <Text style={styles.chakraOrgans}>{CHAKRA_HEALTH.mul.organs}</Text>
+                        <Text style={styles.chakraLabel}>Проблемы:</Text>
+                        <Text style={styles.chakraText}>{CHAKRA_HEALTH.mul.problems}</Text>
+                        <Text style={styles.chakraLabel}>Причины:</Text>
+                        <Text style={styles.chakraText}>{CHAKRA_HEALTH.mul.causes}</Text>
+                        <Text style={styles.chakraLabel}>Решение:</Text>
+                        <Text style={styles.chakraText}>{CHAKRA_HEALTH.mul.solution}</Text>
+                      </View>
+                    </>
+                  )}
+                </View>
+              )}
+
+              {/* Прошлые жизни */}
+              {matrixTab === "pastlives" && (
+                <View style={styles.contentCard}>
+                  <Text style={styles.contentTitle}>Прошлые жизни</Text>
+                  {(() => {
+                    // Формируем ключ из точек матрицы (например, точки 1, 2, 3 - день, месяц, год)
+                    const key = `${matrixData.points[1]?.value}-${matrixData.points[2]?.value}-${matrixData.points[3]?.value}`;
+                    const pastLife = PAST_LIVES[key];
+                    
+                    return (
+                      <>
+                        <View style={styles.pastLifeIndicator}>
+                          <View style={styles.arcanaCircle}>
+                            <Text style={styles.arcanaNumber}>{matrixData.points[1]?.value}</Text>
+                          </View>
+                          <Text style={styles.arcanaDash}>—</Text>
+                          <View style={styles.arcanaCircle}>
+                            <Text style={styles.arcanaNumber}>{matrixData.points[2]?.value}</Text>
+                          </View>
+                          <Text style={styles.arcanaDash}>—</Text>
+                          <View style={styles.arcanaCircle}>
+                            <Text style={styles.arcanaNumber}>{matrixData.points[3]?.value}</Text>
+                          </View>
+                        </View>
+                        
+                        {pastLife ? (
+                          <>
+                            <Text style={styles.pastLifeTitle}>{pastLife.name}</Text>
+                            <Text style={styles.contentText}>{pastLife.description}</Text>
+                          </>
+                        ) : (
+                          <Text style={styles.contentText}>
+                            Информация о прошлых жизнях для комбинации {key} пока недоступна.
+                          </Text>
+                        )}
+                      </>
+                    );
+                  })()}
+                </View>
+              )}
+
+              {/* Дети */}
+              {matrixTab === "children" && (
+                <View style={styles.contentCard}>
+                  <Text style={styles.contentTitle}>Отношения с детьми</Text>
+                  
+                  {matrixData.points[4] && CHILDREN_MISTAKES[matrixData.points[4].value] && (
+                    <>
+                      <View style={styles.arcanaIndicator}>
+                        <View style={styles.arcanaCircle}>
+                          <Text style={styles.arcanaNumber}>{matrixData.points[4].value}</Text>
+                        </View>
+                        <Text style={styles.arcanaText}>
+                          Кармическая задача
+                        </Text>
+                      </View>
+                      <Text style={styles.contentText}>
+                        {CHILDREN_MISTAKES[matrixData.points[4].value]}
+                      </Text>
+                    </>
+                  )}
+                </View>
+              )}
+
+              {/* Руководство */}
+              {matrixTab === "guidance" && (
+                <View style={styles.contentCard}>
+                  <Text style={styles.contentTitle}>Руководство по жизни</Text>
+                  
+                  {matrixData.points[0] && MANAGEMENT_GUIDANCE[matrixData.points[0].value] && (
+                    <>
+                      <View style={styles.arcanaIndicator}>
+                        <View style={styles.arcanaCircle}>
+                          <Text style={styles.arcanaNumber}>{matrixData.points[0].value}</Text>
+                        </View>
+                        <Text style={styles.arcanaText}>
+                          Рекомендации 
+                        </Text>
+                      </View>
+                      <Text style={styles.contentText}>
+                        {MANAGEMENT_GUIDANCE[matrixData.points[0].value]}
+                      </Text>
+                    </>
+                  )}
+                </View>
+              )}
+
+              {/* Отношения */}
+              {matrixTab === "relationships" && (
+                <View style={styles.contentCard}>
+                  <Text style={styles.contentTitle}>Отношения и партнёр</Text>
+                  
+                  {/* Характер партнёра */}
+                  {matrixData.points[2] && CHARACTER[matrixData.points[2].value] && (
+                    <>
+                      <View style={styles.arcanaIndicator}>
+                        <View style={styles.arcanaCircle}>
+                          <Text style={styles.arcanaNumber}>{matrixData.points[2].value}</Text>
+                        </View>
+                        <Text style={styles.arcanaText}>
+                          Характер партнёра
+                        </Text>
+                      </View>
+                      <Text style={styles.contentText}>
+                        {CHARACTER[matrixData.points[2].value]}
+                      </Text>
+                    </>
+                  )}
+
+                  {/* Описание партнёра для женщин */}
+                  {matrixData.points[2] && RELATIONSHIPS_WOMEN[matrixData.points[2].value] && (
+                    <>
+                      <View style={[styles.arcanaIndicator, { marginTop: 20 }]}>
+                        <View style={styles.arcanaCircle}>
+                          <Text style={styles.arcanaNumber}>{matrixData.points[2].value}</Text>
+                        </View>
+                        <Text style={styles.arcanaText}>
+                          Партнёр для женщин 
+                        </Text>
+                      </View>
+                      <Text style={styles.contentText}>
+                        {RELATIONSHIPS_WOMEN[matrixData.points[2].value]}
+                      </Text>
+                    </>
+                  )}
+
+                  {/* Описание партнёра для мужчин */}
+                  {matrixData.points[2] && RELATIONSHIPS_MEN[matrixData.points[2].value] && (
+                    <>
+                      <View style={[styles.arcanaIndicator, { marginTop: 20 }]}>
+                        <View style={styles.arcanaCircle}>
+                          <Text style={styles.arcanaNumber}>{matrixData.points[2].value}</Text>
+                        </View>
+                        <Text style={styles.arcanaText}>
+                          Партнёр для мужчин 
+                        </Text>
+                      </View>
+                      <Text style={styles.contentText}>
+                        {RELATIONSHIPS_MEN[matrixData.points[2].value]}
+                      </Text>
+                    </>
+                  )}
+                </View>
+              )}
+
+              {/* Прогноз на год */}
+              {matrixTab === "yearforecast" && (
+                <View style={styles.contentCard}>
+                  <Text style={styles.contentTitle}>Прогноз на год</Text>
+                  
+                  {(() => {
+                    // Вычисляем прогноз на текущий год
+                    const currentYear = new Date().getFullYear();
+                    const yearSum = currentYear.toString().split('').reduce((sum, digit) => sum + parseInt(digit), 0);
+                    const reducedYearSum = yearSum > 22 ? (yearSum % 10) + Math.floor(yearSum / 10) : yearSum;
+                    
+                    // Прогноз = центральная точка + сумма цифр текущего года
+                    const centralPoint = matrixData.points[0].value;
+                    let yearForecastNumber = centralPoint + reducedYearSum;
+                    if (yearForecastNumber > 22) {
+                      yearForecastNumber = (yearForecastNumber % 10) + Math.floor(yearForecastNumber / 10);
+                    }
+                    
+                    return (
+                      <>
+                        <View style={styles.arcanaIndicator}>
+                          <View style={styles.arcanaCircle}>
+                            <Text style={styles.arcanaNumber}>{yearForecastNumber}</Text>
+                          </View>
+                          <Text style={styles.arcanaText}>
+                            Суть года 
+                          </Text>
+                        </View>
+                        
+                        {YEAR_ESSENCE[yearForecastNumber] && (
+                          <>
+                            <Text style={styles.yearForecastLabel}>Позитивный сценарий:</Text>
+                            <Text style={styles.contentText}>
+                              {YEAR_ESSENCE[yearForecastNumber].positive}
+                            </Text>
+                            
+                            <Text style={styles.yearForecastLabel}>Негативный сценарий:</Text>
+                            <Text style={styles.contentText}>
+                              {YEAR_ESSENCE[yearForecastNumber].negative}
+                            </Text>
+                          </>
+                        )}
+                      </>
+                    );
+                  })()}
                 </View>
               )}
 
@@ -558,18 +999,28 @@ export default function HoroscopeScreen() {
 
                   <View style={styles.personalityCard}>
                     <Text style={styles.personalityCardTitle}>В плюсе</Text>
-                    <Text style={styles.personalityLabel}>
-                      День рождения: {matrixData.points[1]?.value}
-                    </Text>
+                    <View style={styles.personalityIndicator}>
+                      <View style={styles.smallArcanaCircle}>
+                        <Text style={styles.smallArcanaNumber}>{matrixData.points[1]?.value}</Text>
+                      </View>
+                      <Text style={styles.personalityLabel}>
+                        День рождения
+                      </Text>
+                    </View>
                     <Text style={styles.personalityText}>
                       {PERSONALITY_TRAITS[matrixData.points[1]?.value || 0]?.positive || "Описание отсутствует"}
                     </Text>
                     {matrixData.points[2] && matrixData.points[2].value !== matrixData.points[1]?.value && (
                       <>
                         <View style={styles.personalityDivider} />
-                        <Text style={styles.personalityLabel}>
-                          Месяц рождения: {matrixData.points[2].value}
-                        </Text>
+                        <View style={styles.personalityIndicator}>
+                          <View style={styles.smallArcanaCircle}>
+                            <Text style={styles.smallArcanaNumber}>{matrixData.points[2].value}</Text>
+                          </View>
+                          <Text style={styles.personalityLabel}>
+                            Месяц рождения
+                          </Text>
+                        </View>
                         <Text style={styles.personalityText}>
                           {PERSONALITY_TRAITS[matrixData.points[2].value]?.positive || "Описание отсутствует"}
                         </Text>
@@ -579,18 +1030,28 @@ export default function HoroscopeScreen() {
 
                   <View style={styles.personalityCard}>
                     <Text style={styles.personalityCardTitle}>В минусе</Text>
-                    <Text style={styles.personalityLabel}>
-                      День рождения: {matrixData.points[1]?.value}
-                    </Text>
+                    <View style={styles.personalityIndicator}>
+                      <View style={styles.smallArcanaCircle}>
+                        <Text style={styles.smallArcanaNumber}>{matrixData.points[1]?.value}</Text>
+                      </View>
+                      <Text style={styles.personalityLabel}>
+                        День рождения
+                      </Text>
+                    </View>
                     <Text style={styles.personalityText}>
                       {PERSONALITY_TRAITS[matrixData.points[1]?.value || 0]?.negative || "Описание отсутствует"}
                     </Text>
                     {matrixData.points[2] && matrixData.points[2].value !== matrixData.points[1]?.value && (
                       <>
                         <View style={styles.personalityDivider} />
-                        <Text style={styles.personalityLabel}>
-                          Месяц рождения: {matrixData.points[2].value}
-                        </Text>
+                        <View style={styles.personalityIndicator}>
+                          <View style={styles.smallArcanaCircle}>
+                            <Text style={styles.smallArcanaNumber}>{matrixData.points[2].value}</Text>
+                          </View>
+                          <Text style={styles.personalityLabel}>
+                            Месяц рождения
+                          </Text>
+                        </View>
                         <Text style={styles.personalityText}>
                           {PERSONALITY_TRAITS[matrixData.points[2].value]?.negative || "Описание отсутствует"}
                         </Text>
@@ -600,9 +1061,14 @@ export default function HoroscopeScreen() {
 
                   <View style={styles.personalityCard}>
                     <Text style={styles.personalityCardTitle}>В общении</Text>
-                    <Text style={styles.personalityLabel}>
-                      Центральная точка: {matrixData.points[0]?.value}
-                    </Text>
+                    <View style={styles.personalityIndicator}>
+                      <View style={styles.smallArcanaCircle}>
+                        <Text style={styles.smallArcanaNumber}>{matrixData.points[0]?.value}</Text>
+                      </View>
+                      <Text style={styles.personalityLabel}>
+                        Центральная точка
+                      </Text>
+                    </View>
                     <Text style={styles.personalityText}>
                       {PERSONALITY_TRAITS[matrixData.points[0]?.value || 0]?.communication || "Описание отсутствует"}
                     </Text>
@@ -610,9 +1076,14 @@ export default function HoroscopeScreen() {
 
                   <View style={styles.personalityCard}>
                     <Text style={styles.personalityCardTitle}>Ваша суперсила</Text>
-                    <Text style={styles.personalityLabel}>
-                      Центральная точка: {matrixData.points[0]?.value}
-                    </Text>
+                    <View style={styles.personalityIndicator}>
+                      <View style={styles.smallArcanaCircle}>
+                        <Text style={styles.smallArcanaNumber}>{matrixData.points[0]?.value}</Text>
+                      </View>
+                      <Text style={styles.personalityLabel}>
+                        Центральная точка
+                      </Text>
+                    </View>
                     <Text style={styles.personalityText}>
                       {PERSONALITY_TRAITS[matrixData.points[0]?.value || 0]?.superpower || "Описание отсутствует"}
                     </Text>
@@ -1077,5 +1548,148 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#b8b8d0",
     lineHeight: 22,
+  },
+  chakraCard: {
+    backgroundColor: "rgba(255,255,255,0.03)",
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+    borderLeftWidth: 3,
+    borderLeftColor: "#9c27b0",
+  },
+  chakraTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#9c27b0",
+    marginBottom: 8,
+  },
+  chakraOrgans: {
+    fontSize: 13,
+    color: "#ffd700",
+    marginBottom: 12,
+    fontStyle: "italic",
+  },
+  chakraLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#fff",
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  chakraText: {
+    fontSize: 13,
+    color: "#b8b8d0",
+    lineHeight: 20,
+  },
+  pastLifeTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#ffd700",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  pastLifeKey: {
+    fontSize: 12,
+    color: "#9c27b0",
+    marginBottom: 16,
+    textAlign: "center",
+    fontStyle: "italic",
+  },
+  childrenSubtitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#4caf50",
+    marginBottom: 12,
+  },
+  guidanceSubtitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#2196f3",
+    marginBottom: 12,
+  },
+  relationshipSubtitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#ff69b4",
+    marginTop: 16,
+    marginBottom: 12,
+  },
+  yearForecastSubtitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#00bcd4",
+    marginTop: 20,
+    marginBottom: 12,
+  },
+  yearForecastLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#ffd700",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  arcanaIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255,215,0,0.1)",
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  arcanaCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#ffd700",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  arcanaNumber: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#1a1a2e",
+  },
+  arcanaText: {
+    flex: 1,
+    fontSize: 14,
+    color: "#b8b8d0",
+    lineHeight: 20,
+  },
+  pastLifeIndicator: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "rgba(255,215,0,0.1)",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  arcanaDash: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#ffd700",
+    marginHorizontal: 4,
+    lineHeight: 50,
+  },
+  personalityIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+    gap: 10,
+  },
+  smallArcanaCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#ffd700",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  smallArcanaNumber: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#1a1a2e",
   },
 });
