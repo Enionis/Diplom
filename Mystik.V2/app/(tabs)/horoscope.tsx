@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Alert, Dimensions } from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Alert, Dimensions, Modal } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Calendar, Gem, Heart, Crown, Sparkles } from "lucide-react-native";
+import { Calendar, Gem, Heart, Crown, Sparkles, X } from "lucide-react-native";
 import { useUser } from "@/providers/UserProvider";
 import { useSubscription } from "@/providers/SubscriptionProvider";
 import { ZODIAC_SIGNS, getZodiacSign } from "@/constants/zodiac";
@@ -47,6 +47,7 @@ export default function HoroscopeScreen() {
   const [dateInput, setDateInput] = useState(birthDate || "");
   const [selectedPeriod, setSelectedPeriod] = useState<"today" | "week" | "month">("today");
   const [activeTab, setActiveTab] = useState<"horoscope" | "matrix">(tab === "matrix" ? "matrix" : "horoscope");
+<<<<<<< HEAD
   const [matrixTab, setMatrixTab] = useState<"visual" | "purpose" | "talents" | "money" | "challenges" | "health" | "pastlives" | "children" | "guidance" | "relationships" | "yearforecast" | "parents">("visual");
   const [expandedTalentSections, setExpandedTalentSections] = useState({
     god: true,
@@ -68,6 +69,12 @@ export default function HoroscopeScreen() {
     femaleLine: false,
     resentments: false,
   });
+=======
+  const [matrixTab, setMatrixTab] = useState<"visual" | "purpose" | "talents" | "money" | "challenges" | "health" | "pastlives" | "children" | "guidance" | "relationships" | "yearforecast">("visual");
+  const [expandedChakras, setExpandedChakras] = useState<{ [key: string]: boolean }>({});
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalContent, setModalContent] = useState<{ title: string; description: string }>({ title: "", description: "" });
+>>>>>>> ca2c80f520936ac8d40cb49908d2ba21e1c1a353
 
   const normalizeAccountBirthDate = (value?: string): string | null => {
     if (!value) return null;
@@ -398,21 +405,41 @@ export default function HoroscopeScreen() {
               </View>
               {isPremium ? (
                 <View style={styles.infoCards}>
-                  <View style={styles.infoCard}>
-                    <Gem size={24} color="#ffd700" />
-                    <Text style={styles.infoTitle}>Камни-талисманы</Text>
-                    <Text style={styles.infoText}>{zodiacData?.stones.join(", ") || ""}</Text>
-                  </View>
-                  <View style={styles.infoCard}>
+                  <TouchableOpacity 
+                    style={styles.infoCard}
+                    onPress={() => {
+                      setModalContent({
+                        title: `Тотемное животное: ${zodiacData?.totem || ""}`,
+                        description: zodiacData?.totemDescription || ""
+                      });
+                      setModalVisible(true);
+                    }}
+                  >
                     <Heart size={24} color="#ff69b4" />
                     <Text style={styles.infoTitle}>Тотемное животное</Text>
                     <Text style={styles.infoText}>{zodiacData?.totem || ""}</Text>
-                  </View>
+                    <Text style={styles.infoHint}>Нажмите для подробностей</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.infoCard}
+                    onPress={() => {
+                      setModalContent({
+                        title: "Камни-талисманы",
+                        description: zodiacData?.stonesDescription || ""
+                      });
+                      setModalVisible(true);
+                    }}
+                  >
+                    <Gem size={24} color="#ffd700" />
+                    <Text style={styles.infoTitle}>Камни - талисманы</Text>
+                    <Text style={styles.infoText}>{zodiacData?.stones.join(", ") || ""}</Text>
+                    <Text style={styles.infoHint}>Нажмите для подробностей</Text>
+                  </TouchableOpacity>
                 </View>
               ) : (
                 <View style={styles.lockedBlock}>
                   <Crown size={28} color="#ffd700" />
-                  <Text style={styles.lockedText}>Камни и тотемное животное доступны только для премиум</Text>
+                  <Text style={styles.lockedText}>Тотемное животное и камни доступны только для премиум</Text>
                   <TouchableOpacity style={styles.unlockButton} onPress={() => router.push("/subscription")}>
                     <LinearGradient colors={["#ffd700", "#ffed4e"]} style={styles.unlockGradient}>
                       <Text style={styles.unlockText}>Открыть доступ</Text>
@@ -961,6 +988,7 @@ export default function HoroscopeScreen() {
                   )}
 
                   {/* Чакры */}
+<<<<<<< HEAD
                   {matrixData.chartHeart && (() => {
                     // Глобальный набор использованных чисел для всех чакр
                     const usedNumbers = new Set<number>();
@@ -1092,6 +1120,187 @@ export default function HoroscopeScreen() {
                       })}
                     )()}
                   </View>
+=======
+                  {matrixData.chartHeart && (
+                    <>
+                      {/* Сахасрара */}
+                      <TouchableOpacity 
+                        style={styles.chakraCard}
+                        onPress={() => setExpandedChakras(prev => ({ ...prev, sah: !prev.sah }))}
+                        activeOpacity={0.7}
+                      >
+                        <View style={styles.chakraHeader}>
+                          <Text style={styles.chakraTitle}>
+                            {CHAKRA_HEALTH.sah.name} ({matrixData.chartHeart.sahphysics})
+                          </Text>
+                          <Text style={styles.chakraArrow}>{expandedChakras.sah ? '▼' : '▶'}</Text>
+                        </View>
+                        <Text style={styles.chakraOrgans}>{CHAKRA_HEALTH.sah.organs}</Text>
+                        {expandedChakras.sah && (
+                          <>
+                            <Text style={styles.chakraLabel}>Проблемы:</Text>
+                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.sah.problems}</Text>
+                            <Text style={styles.chakraLabel}>Причины:</Text>
+                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.sah.causes}</Text>
+                            <Text style={styles.chakraLabel}>Решение:</Text>
+                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.sah.solution}</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+
+                      {/* Аджна */}
+                      <TouchableOpacity 
+                        style={styles.chakraCard}
+                        onPress={() => setExpandedChakras(prev => ({ ...prev, aj: !prev.aj }))}
+                        activeOpacity={0.7}
+                      >
+                        <View style={styles.chakraHeader}>
+                          <Text style={styles.chakraTitle}>
+                            {CHAKRA_HEALTH.aj.name} ({matrixData.chartHeart.ajphysics})
+                          </Text>
+                          <Text style={styles.chakraArrow}>{expandedChakras.aj ? '▼' : '▶'}</Text>
+                        </View>
+                        <Text style={styles.chakraOrgans}>{CHAKRA_HEALTH.aj.organs}</Text>
+                        {expandedChakras.aj && (
+                          <>
+                            <Text style={styles.chakraLabel}>Проблемы:</Text>
+                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.aj.problems}</Text>
+                            <Text style={styles.chakraLabel}>Причины:</Text>
+                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.aj.causes}</Text>
+                            <Text style={styles.chakraLabel}>Решение:</Text>
+                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.aj.solution}</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+
+                      {/* Вишудха */}
+                      <TouchableOpacity 
+                        style={styles.chakraCard}
+                        onPress={() => setExpandedChakras(prev => ({ ...prev, vish: !prev.vish }))}
+                        activeOpacity={0.7}
+                      >
+                        <View style={styles.chakraHeader}>
+                          <Text style={styles.chakraTitle}>
+                            {CHAKRA_HEALTH.vish.name} ({matrixData.chartHeart.vishphysics})
+                          </Text>
+                          <Text style={styles.chakraArrow}>{expandedChakras.vish ? '▼' : '▶'}</Text>
+                        </View>
+                        <Text style={styles.chakraOrgans}>{CHAKRA_HEALTH.vish.organs}</Text>
+                        {expandedChakras.vish && (
+                          <>
+                            <Text style={styles.chakraLabel}>Проблемы:</Text>
+                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.vish.problems}</Text>
+                            <Text style={styles.chakraLabel}>Причины:</Text>
+                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.vish.causes}</Text>
+                            <Text style={styles.chakraLabel}>Решение:</Text>
+                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.vish.solution}</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+
+                      {/* Анахата */}
+                      <TouchableOpacity 
+                        style={styles.chakraCard}
+                        onPress={() => setExpandedChakras(prev => ({ ...prev, anah: !prev.anah }))}
+                        activeOpacity={0.7}
+                      >
+                        <View style={styles.chakraHeader}>
+                          <Text style={styles.chakraTitle}>
+                            {CHAKRA_HEALTH.anah.name} ({matrixData.chartHeart.anahphysics})
+                          </Text>
+                          <Text style={styles.chakraArrow}>{expandedChakras.anah ? '▼' : '▶'}</Text>
+                        </View>
+                        <Text style={styles.chakraOrgans}>{CHAKRA_HEALTH.anah.organs}</Text>
+                        {expandedChakras.anah && (
+                          <>
+                            <Text style={styles.chakraLabel}>Проблемы:</Text>
+                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.anah.problems}</Text>
+                            <Text style={styles.chakraLabel}>Причины:</Text>
+                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.anah.causes}</Text>
+                            <Text style={styles.chakraLabel}>Решение:</Text>
+                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.anah.solution}</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+
+                      {/* Манипура */}
+                      <TouchableOpacity 
+                        style={styles.chakraCard}
+                        onPress={() => setExpandedChakras(prev => ({ ...prev, man: !prev.man }))}
+                        activeOpacity={0.7}
+                      >
+                        <View style={styles.chakraHeader}>
+                          <Text style={styles.chakraTitle}>
+                            {CHAKRA_HEALTH.man.name} ({matrixData.chartHeart.manphysics})
+                          </Text>
+                          <Text style={styles.chakraArrow}>{expandedChakras.man ? '▼' : '▶'}</Text>
+                        </View>
+                        <Text style={styles.chakraOrgans}>{CHAKRA_HEALTH.man.organs}</Text>
+                        {expandedChakras.man && (
+                          <>
+                            <Text style={styles.chakraLabel}>Проблемы:</Text>
+                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.man.problems}</Text>
+                            <Text style={styles.chakraLabel}>Причины:</Text>
+                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.man.causes}</Text>
+                            <Text style={styles.chakraLabel}>Решение:</Text>
+                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.man.solution}</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+
+                      {/* Свадхистана */}
+                      <TouchableOpacity 
+                        style={styles.chakraCard}
+                        onPress={() => setExpandedChakras(prev => ({ ...prev, svad: !prev.svad }))}
+                        activeOpacity={0.7}
+                      >
+                        <View style={styles.chakraHeader}>
+                          <Text style={styles.chakraTitle}>
+                            {CHAKRA_HEALTH.svad.name} ({matrixData.chartHeart.svadphysics})
+                          </Text>
+                          <Text style={styles.chakraArrow}>{expandedChakras.svad ? '▼' : '▶'}</Text>
+                        </View>
+                        <Text style={styles.chakraOrgans}>{CHAKRA_HEALTH.svad.organs}</Text>
+                        {expandedChakras.svad && (
+                          <>
+                            <Text style={styles.chakraLabel}>Проблемы:</Text>
+                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.svad.problems}</Text>
+                            <Text style={styles.chakraLabel}>Причины:</Text>
+                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.svad.causes}</Text>
+                            <Text style={styles.chakraLabel}>Решение:</Text>
+                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.svad.solution}</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+
+                      {/* Муладхара */}
+                      <TouchableOpacity 
+                        style={styles.chakraCard}
+                        onPress={() => setExpandedChakras(prev => ({ ...prev, mul: !prev.mul }))}
+                        activeOpacity={0.7}
+                      >
+                        <View style={styles.chakraHeader}>
+                          <Text style={styles.chakraTitle}>
+                            {CHAKRA_HEALTH.mul.name} ({matrixData.chartHeart.mulphysics})
+                          </Text>
+                          <Text style={styles.chakraArrow}>{expandedChakras.mul ? '▼' : '▶'}</Text>
+                        </View>
+                        <Text style={styles.chakraOrgans}>{CHAKRA_HEALTH.mul.organs}</Text>
+                        {expandedChakras.mul && (
+                          <>
+                            <Text style={styles.chakraLabel}>Проблемы:</Text>
+                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.mul.problems}</Text>
+                            <Text style={styles.chakraLabel}>Причины:</Text>
+                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.mul.causes}</Text>
+                            <Text style={styles.chakraLabel}>Решение:</Text>
+                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.mul.solution}</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </View>
+>>>>>>> ca2c80f520936ac8d40cb49908d2ba21e1c1a353
               )}
 
               {/* Прошлые жизни */}
@@ -1959,6 +2168,29 @@ export default function HoroscopeScreen() {
           </TouchableOpacity>
         </>
       )}
+
+      {/* Модальное окно для описаний */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <TouchableOpacity 
+              style={styles.modalCloseButton}
+              onPress={() => setModalVisible(false)}
+            >
+              <X size={24} color="#fff" />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>{modalContent.title}</Text>
+            <ScrollView style={styles.modalScrollView} showsVerticalScrollIndicator={false}>
+              <Text style={styles.modalDescription}>{modalContent.description}</Text>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -2135,6 +2367,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingHorizontal: 20,
     gap: 10,
+    marginBottom: 10,
   },
   infoCard: {
     flex: 1,
@@ -2149,10 +2382,18 @@ const styles = StyleSheet.create({
     color: "#fff",
     marginTop: 8,
     marginBottom: 8,
+    textAlign: "center",
   },
   infoText: {
     fontSize: 12,
     color: "#b8b8d0",
+    textAlign: "center",
+  },
+  infoHint: {
+    fontSize: 10,
+    color: "#ffd700",
+    marginTop: 8,
+    fontStyle: "italic",
     textAlign: "center",
   },
   compatibilityCard: {
@@ -2598,6 +2839,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#1a1a2e",
   },
+<<<<<<< HEAD
   talentSection: {
     backgroundColor: "rgba(255,255,255,0.05)",
     borderRadius: 12,
@@ -2663,10 +2905,13 @@ const styles = StyleSheet.create({
     borderBottomColor: "rgba(255,255,255,0.1)",
     paddingBottom: 16,
   },
+=======
+>>>>>>> ca2c80f520936ac8d40cb49908d2ba21e1c1a353
   chakraHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+<<<<<<< HEAD
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 8,
@@ -2716,5 +2961,53 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginLeft: 12,
+=======
+    marginBottom: 8,
+  },
+  chakraArrow: {
+    fontSize: 16,
+    color: "#9c27b0",
+    fontWeight: "bold",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: "#1a1a2e",
+    borderRadius: 20,
+    padding: 24,
+    width: "100%",
+    maxHeight: "80%",
+    borderWidth: 1,
+    borderColor: "#ffd700",
+  },
+  modalCloseButton: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    zIndex: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: 20,
+    padding: 8,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#ffd700",
+    marginBottom: 16,
+    paddingRight: 40,
+  },
+  modalScrollView: {
+    maxHeight: "100%",
+  },
+  modalDescription: {
+    fontSize: 16,
+    color: "#b8b8d0",
+    lineHeight: 24,
+>>>>>>> ca2c80f520936ac8d40cb49908d2ba21e1c1a353
   },
 });
