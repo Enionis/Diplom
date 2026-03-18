@@ -104,18 +104,6 @@ const hashPassword = (password: string): string => {
 };
 
 export const authDatabase = {
-  async isAvailable(): Promise<boolean> {
-    if (Platform.OS === 'web') return true;
-    try {
-      const db = await getDatabase();
-      if (!db) return false;
-      await db.getFirstAsync('SELECT 1 FROM users LIMIT 1');
-      return true;
-    } catch {
-      return false;
-    }
-  },
-
   async registerUser(email: string, username: string, password: string, name: string, birthDate?: string): Promise<RegisterResult> {
     try {
       // Web fallback: localStorage

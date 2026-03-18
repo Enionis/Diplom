@@ -10,7 +10,6 @@ interface User {
   name: string;
   createdAt: string;
   birthDate?: string;
-  isGuest?: boolean;
 }
 
 interface AuthContextType {
@@ -28,15 +27,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const STORAGE_KEY = "mystic_user";
 const COOKIE_KEY = "mystic_session";
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
-
-const GUEST_USER: User = {
-  id: "guest",
-  email: "guest@mystic.com",
-  username: "guest",
-  name: "Мистический странник",
-  createdAt: new Date().toISOString(),
-  isGuest: true,
-};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -131,12 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loadUser = async () => {
     try {
       const savedUser = await readSession();
-      if (savedUser?.isGuest) {
-        await clearSession();
-        setUser(null);
-      } else {
-        setUser(savedUser);
-      }
+      setUser(savedUser);
     } catch (error) {
       console.error("Error loading user:", error);
       setUser(null);
@@ -157,36 +142,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           name: userData.name,
           createdAt: new Date().toISOString(),
           birthDate: userData.birthDate,
-          isGuest: false,
         };
         
         setUser(loggedInUser);
         await writeSession(loggedInUser);
         return true;
       }
-
-      const available = await authDatabase.isAvailable();
-      if (!available) {
-        setUser(GUEST_USER);
-        await writeSession(GUEST_USER);
-        return true;
-      }
-
+      
       return false;
     } catch (error) {
       console.error("Login error:", error);
-
-      try {
-        const available = await authDatabase.isAvailable();
-        if (!available) {
-          setUser(GUEST_USER);
-          await writeSession(GUEST_USER);
-          return true;
-        }
-      } catch {
-        // ignore
-      }
-
       return false;
     }
   };
@@ -233,10 +198,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return false;
       }
 
-      if (user.isGuest) {
-        return false;
-      }
-
       const trimmedName = name.trim();
       if (!trimmedName) {
         return false;
@@ -266,10 +227,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       if (!user) {
         console.error("AuthProvider: changePassword called for null user");
-        return false;
-      }
-
-      if (user.isGuest) {
         return false;
       }
 

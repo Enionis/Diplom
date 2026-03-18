@@ -5,12 +5,11 @@ import { useDatabase } from "@/hooks/useDatabase";
 import React, { useEffect } from "react";
 import { router } from "expo-router";
 import { useAuth } from "@/providers/AuthProvider";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { View, ActivityIndicator } from "react-native";
 
-export default function TabsLayout() {
+function TabsLayoutInner() {
   const { logTabClick, deviceId } = useDatabase();
   const { user, isLoading } = useAuth();
-  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -30,8 +29,8 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: "#1a1a2e",
           borderTopColor: "#2a2a3e",
-          paddingBottom: Platform.OS === "ios" ? 0 : Math.max(insets.bottom, 5),
-          height: Platform.OS === "ios" ? 85 : 60 + Math.max(insets.bottom, 5),
+          paddingBottom: Platform.OS === "ios" ? 0 : 5,
+          height: Platform.OS === "ios" ? 85 : 60,
         },
         headerStyle: {
           backgroundColor: "#1a1a2e",
@@ -87,4 +86,24 @@ export default function TabsLayout() {
       />
     </Tabs>
   );
+}
+
+export default function TabsLayout() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#1a1a2e' }}>
+        <ActivityIndicator size="large" color="#ffd700" />
+      </View>
+    );
+  }
+
+  if (!user) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#1a1a2e' }} />
+    );
+  }
+
+  return <TabsLayoutInner />;
 }

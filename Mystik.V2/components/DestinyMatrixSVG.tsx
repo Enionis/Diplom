@@ -31,6 +31,16 @@ export default function DestinyMatrixSVG({ matrix, width = 340, height = 300 }: 
             <Line stroke="#4caf50" strokeWidth="1.5" x1="442" y1="405" x2="226" y2="189" />
             <Polygon fill="#4caf50" points="441 402 439 404 442 405 441 402" />
             <Polygon fill="#4caf50" points="226 189 229 190 227 192 226 189" />
+            {/* ♂ label */}
+            <Text
+              fill="#4caf50"
+              fontSize="18"
+              fontWeight="bold"
+              x="280"
+              y="230"
+            >
+              ♂
+            </Text>
           </G>
           
           {/* Female generation line (blue) */}
@@ -38,6 +48,16 @@ export default function DestinyMatrixSVG({ matrix, width = 340, height = 300 }: 
             <Line stroke="#2196f3" strokeWidth="1.5" x1="442" y1="189" x2="226" y2="405" />
             <Polygon fill="#2196f3" points="442 189 439 190 441 192 442 189" />
             <Polygon fill="#2196f3" points="226 405 227 402 229 404 226 405" />
+            {/* ♀ label */}
+            <Text
+              fill="#2196f3"
+              fontSize="18"
+              fontWeight="bold"
+              x="375"
+              y="230"
+            >
+              ♀
+            </Text>
           </G>
           
           <Line stroke="#666" strokeWidth="1" x1="502" y1="297" x2="335" y2="465" />

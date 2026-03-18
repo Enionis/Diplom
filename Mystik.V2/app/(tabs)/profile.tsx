@@ -9,9 +9,6 @@ import {
   Switch,
   Linking,
   TextInput,
-  Modal,
-  KeyboardAvoidingView,
-  Platform,
   type ColorValue,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -25,8 +22,6 @@ import {
   Info,
   HelpCircle,
   Sparkles,
-  Edit,
-  Key,
 } from "lucide-react-native";
 import { useSubscription } from "@/providers/SubscriptionProvider";
 import { useUser } from "@/providers/UserProvider";
@@ -253,25 +248,10 @@ export default function ProfileScreen() {
               <Text style={styles.birthDateText}>{birthDate}</Text>
             </View>
           )}
-          {user && !user.isGuest && (
-            <View style={styles.headerButtonsRow}>
-              <TouchableOpacity style={styles.headerButton} onPress={handleEditProfilePress}>
-                <Edit size={16} color="#fff" />
-                <Text style={styles.headerButtonText}>Редактировать</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.headerButton}
-                onPress={() => {
-                  setIsChangingPassword(true);
-                  setOldPassword("");
-                  setNewPassword("");
-                  setConfirmPassword("");
-                }}
-              >
-                <Key size={16} color="#fff" />
-                <Text style={styles.headerButtonText}>Пароль</Text>
-              </TouchableOpacity>
-            </View>
+          {user && (
+            <TouchableOpacity style={styles.editProfileButton} onPress={handleEditProfilePress}>
+              <Text style={styles.editProfileText}>Редактировать профиль</Text>
+            </TouchableOpacity>
           )}
         </LinearGradient>
       </View>
@@ -357,6 +337,24 @@ export default function ProfileScreen() {
           </View>
         )}
 
+        {user && (
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => {
+              setIsChangingPassword(true);
+              setOldPassword("");
+              setNewPassword("");
+              setConfirmPassword("");
+            }}
+          >
+            <View style={styles.menuItemLeft}>
+              <Sparkles size={20} color="#ffd700" />
+              <Text style={styles.menuText}>Сменить пароль</Text>
+            </View>
+            <Text style={styles.menuArrow}>›</Text>
+          </TouchableOpacity>
+        )}
+
         <View style={styles.menuItem}>
           <View style={styles.menuItemLeft}>
             <Bell size={20} color="#ffd700" />
@@ -410,16 +408,8 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       )}
 
-      <Modal
-        visible={isEditingProfile}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setIsEditingProfile(false)}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          style={styles.modalOverlay}
-        >
+      {isEditingProfile && (
+        <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Редактировать профиль</Text>
             <View style={styles.modalField}>
@@ -459,19 +449,11 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </KeyboardAvoidingView>
-      </Modal>
+        </View>
+      )}
 
-      <Modal
-        visible={isChangingPassword}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setIsChangingPassword(false)}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          style={styles.modalOverlay}
-        >
+      {isChangingPassword && (
+        <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Сменить пароль</Text>
             <View style={styles.modalField}>
@@ -527,8 +509,8 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </KeyboardAvoidingView>
-      </Modal>
+        </View>
+      )}
     </ScrollView>
   );
 }
@@ -576,22 +558,15 @@ const styles = StyleSheet.create({
     color: "#ffd700",
     fontSize: 12,
   },
-  headerButtonsRow: {
+  editProfileButton: {
     marginTop: 12,
-    flexDirection: "row",
-    gap: 8,
-  },
-  headerButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.3)",
   },
-  headerButtonText: {
+  editProfileText: {
     color: "#fff",
     fontSize: 14,
   },
@@ -751,7 +726,11 @@ const styles = StyleSheet.create({
     color: "#4caf50",
   },
   modalOverlay: {
-    flex: 1,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: "rgba(0,0,0,0.7)",
     alignItems: "center",
     justifyContent: "center",
