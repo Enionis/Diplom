@@ -9,7 +9,6 @@ import {
   Switch,
   Linking,
   TextInput,
-  type ColorValue,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -22,6 +21,8 @@ import {
   Info,
   HelpCircle,
   Sparkles,
+  SquarePen,
+  Key,
 } from "lucide-react-native";
 import { useSubscription } from "@/providers/SubscriptionProvider";
 import { useUser } from "@/providers/UserProvider";
@@ -160,7 +161,7 @@ export default function ProfileScreen() {
     }
   };
 
-  const cardBacks: { id: string; name: string; colors: readonly [ColorValue, ...ColorValue[]]; textColor?: string }[] = [
+  const cardBacks: { id: string; name: string; colors: [string, string, ...string[]]; textColor?: string }[] = [
     { id: "purple", name: "Фиолетовый", colors: ["#4a148c", "#7b1fa2", "#9c27b0"] },
     { id: "gold", name: "Золотистый", colors: ["#ffd700", "#ffed4e"], textColor: "#1a1a2e" },
     { id: "black", name: "Черный", colors: ["#1a1a2e", "#333"] },
@@ -249,9 +250,24 @@ export default function ProfileScreen() {
             </View>
           )}
           {user && (
-            <TouchableOpacity style={styles.editProfileButton} onPress={handleEditProfilePress}>
-              <Text style={styles.editProfileText}>Редактировать профиль</Text>
-            </TouchableOpacity>
+            <View style={styles.profileButtonsContainer}>
+              <TouchableOpacity style={styles.editProfileButton} onPress={handleEditProfilePress}>
+                <SquarePen size={16} color="#ffffff" />
+                <Text style={styles.editProfileText}>Редактировать</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.changePasswordButton} 
+                onPress={() => {
+                  setIsChangingPassword(true);
+                  setOldPassword("");
+                  setNewPassword("");
+                  setConfirmPassword("");
+                }}
+              >
+                <Key size={16} color="#ffffff" />
+                <Text style={styles.changePasswordText}>Пароль</Text>
+              </TouchableOpacity>
+            </View>
           )}
         </LinearGradient>
       </View>
@@ -335,24 +351,6 @@ export default function ProfileScreen() {
               ))}
             </View>
           </View>
-        )}
-
-        {user && (
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => {
-              setIsChangingPassword(true);
-              setOldPassword("");
-              setNewPassword("");
-              setConfirmPassword("");
-            }}
-          >
-            <View style={styles.menuItemLeft}>
-              <Sparkles size={20} color="#ffd700" />
-              <Text style={styles.menuText}>Сменить пароль</Text>
-            </View>
-            <Text style={styles.menuArrow}>›</Text>
-          </TouchableOpacity>
         )}
 
         <View style={styles.menuItem}>
@@ -559,14 +557,36 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   editProfileButton: {
-    marginTop: 12,
-    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.3)",
+    paddingHorizontal: 16,
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderRadius: 8,
+    gap: 6,
   },
   editProfileText: {
+    color: "#fff",
+    fontSize: 14,
+  },
+  profileButtonsContainer: {
+    flexDirection: "row",
+    marginTop: 12,
+    gap: 8,
+    justifyContent: "center",
+  },
+  changePasswordButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderRadius: 8,
+    gap: 6,
+  },
+  changePasswordText: {
     color: "#fff",
     fontSize: 14,
   },

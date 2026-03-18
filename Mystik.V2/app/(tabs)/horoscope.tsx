@@ -47,7 +47,6 @@ export default function HoroscopeScreen() {
   const [dateInput, setDateInput] = useState(birthDate || "");
   const [selectedPeriod, setSelectedPeriod] = useState<"today" | "week" | "month">("today");
   const [activeTab, setActiveTab] = useState<"horoscope" | "matrix">(tab === "matrix" ? "matrix" : "horoscope");
-<<<<<<< HEAD
   const [matrixTab, setMatrixTab] = useState<"visual" | "purpose" | "talents" | "money" | "challenges" | "health" | "pastlives" | "children" | "guidance" | "relationships" | "yearforecast" | "parents">("visual");
   const [expandedTalentSections, setExpandedTalentSections] = useState({
     god: true,
@@ -69,12 +68,9 @@ export default function HoroscopeScreen() {
     femaleLine: false,
     resentments: false,
   });
-=======
-  const [matrixTab, setMatrixTab] = useState<"visual" | "purpose" | "talents" | "money" | "challenges" | "health" | "pastlives" | "children" | "guidance" | "relationships" | "yearforecast">("visual");
   const [expandedChakras, setExpandedChakras] = useState<{ [key: string]: boolean }>({});
   const [modalVisible, setModalVisible] = useState(false);
   const [modalContent, setModalContent] = useState<{ title: string; description: string }>({ title: "", description: "" });
->>>>>>> ca2c80f520936ac8d40cb49908d2ba21e1c1a353
 
   const normalizeAccountBirthDate = (value?: string): string | null => {
     if (!value) return null;
@@ -480,43 +476,11 @@ export default function HoroscopeScreen() {
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.matrixTab, matrixTab === "purpose" && styles.matrixTabActive]}
-                    onPress={() => setMatrixTab("purpose")}
-                  >
-                    <Text style={[styles.matrixTabText, matrixTab === "purpose" && styles.matrixTabTextActive]}>
-                      Предназначение
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
                     style={[styles.matrixTab, matrixTab === "talents" && styles.matrixTabActive]}
                     onPress={() => setMatrixTab("talents")}
                   >
                     <Text style={[styles.matrixTabText, matrixTab === "talents" && styles.matrixTabTextActive]}>
-                      Таланты
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.matrixTab, matrixTab === "money" && styles.matrixTabActive]}
-                    onPress={() => setMatrixTab("money")}
-                  >
-                    <Text style={[styles.matrixTabText, matrixTab === "money" && styles.matrixTabTextActive]}>
-                      Деньги
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.matrixTab, matrixTab === "challenges" && styles.matrixTabActive]}
-                    onPress={() => setMatrixTab("challenges")}
-                  >
-                    <Text style={[styles.matrixTabText, matrixTab === "challenges" && styles.matrixTabTextActive]}>
-                      Испытания
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.matrixTab, matrixTab === "health" && styles.matrixTabActive]}
-                    onPress={() => setMatrixTab("health")}
-                  >
-                    <Text style={[styles.matrixTabText, matrixTab === "health" && styles.matrixTabTextActive]}>
-                      Здоровье
+                      Таланты {!isPremium && <Crown size={12} color="#ffd700" />}
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -524,23 +488,31 @@ export default function HoroscopeScreen() {
                     onPress={() => setMatrixTab("pastlives")}
                   >
                     <Text style={[styles.matrixTabText, matrixTab === "pastlives" && styles.matrixTabTextActive]}>
-                      Прошлые жизни
+                      Прошлая жизнь
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.matrixTab, matrixTab === "children" && styles.matrixTabActive]}
-                    onPress={() => setMatrixTab("children")}
+                    style={[styles.matrixTab, matrixTab === "health" && styles.matrixTabActive]}
+                    onPress={() => setMatrixTab("health")}
                   >
-                    <Text style={[styles.matrixTabText, matrixTab === "children" && styles.matrixTabTextActive]}>
-                      Дети
+                    <Text style={[styles.matrixTabText, matrixTab === "health" && styles.matrixTabTextActive]}>
+                      Здоровье {!isPremium && <Crown size={12} color="#ffd700" />}
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.matrixTab, matrixTab === "guidance" && styles.matrixTabActive]}
-                    onPress={() => setMatrixTab("guidance")}
+                    style={[styles.matrixTab, matrixTab === "purpose" && styles.matrixTabActive]}
+                    onPress={() => setMatrixTab("purpose")}
                   >
-                    <Text style={[styles.matrixTabText, matrixTab === "guidance" && styles.matrixTabTextActive]}>
-                      Руководство
+                    <Text style={[styles.matrixTabText, matrixTab === "purpose" && styles.matrixTabTextActive]}>
+                      Предназначение {!isPremium && <Crown size={12} color="#ffd700" />}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.matrixTab, matrixTab === "challenges" && styles.matrixTabActive]}
+                    onPress={() => setMatrixTab("challenges")}
+                  >
+                    <Text style={[styles.matrixTabText, matrixTab === "challenges" && styles.matrixTabTextActive]}>
+                      Испытания {!isPremium && <Crown size={12} color="#ffd700" />}
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -548,7 +520,7 @@ export default function HoroscopeScreen() {
                     onPress={() => setMatrixTab("relationships")}
                   >
                     <Text style={[styles.matrixTabText, matrixTab === "relationships" && styles.matrixTabTextActive]}>
-                      Отношения
+                      Отношения {!isPremium && <Crown size={12} color="#ffd700" />}
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -560,11 +532,35 @@ export default function HoroscopeScreen() {
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
+                    style={[styles.matrixTab, matrixTab === "money" && styles.matrixTabActive]}
+                    onPress={() => setMatrixTab("money")}
+                  >
+                    <Text style={[styles.matrixTabText, matrixTab === "money" && styles.matrixTabTextActive]}>
+                      Деньги {!isPremium && <Crown size={12} color="#ffd700" />}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
                     style={[styles.matrixTab, matrixTab === "parents" && styles.matrixTabActive]}
                     onPress={() => setMatrixTab("parents")}
                   >
                     <Text style={[styles.matrixTabText, matrixTab === "parents" && styles.matrixTabTextActive]}>
-                      Родители
+                      Родители {!isPremium && <Crown size={12} color="#ffd700" />}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.matrixTab, matrixTab === "children" && styles.matrixTabActive]}
+                    onPress={() => setMatrixTab("children")}
+                  >
+                    <Text style={[styles.matrixTabText, matrixTab === "children" && styles.matrixTabTextActive]}>
+                      Дети {!isPremium && <Crown size={12} color="#ffd700" />}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.matrixTab, matrixTab === "guidance" && styles.matrixTabActive]}
+                    onPress={() => setMatrixTab("guidance")}
+                  >
+                    <Text style={[styles.matrixTabText, matrixTab === "guidance" && styles.matrixTabTextActive]}>
+                      Руководство {!isPremium && <Crown size={12} color="#ffd700" />}
                     </Text>
                   </TouchableOpacity>
                 </ScrollView>
@@ -715,6 +711,7 @@ export default function HoroscopeScreen() {
 
               {/* Таланты */}
               {matrixTab === "talents" && (
+                isPremium ? (
                 <View style={styles.contentCard}>
                   <Text style={styles.contentTitle}>Ваши таланты</Text>
                   
@@ -864,10 +861,22 @@ export default function HoroscopeScreen() {
                     );
                   })()}
                 </View>
+                ) : (
+                  <View style={styles.lockedBlock}>
+                    <Crown size={28} color="#ffd700" />
+                    <Text style={styles.lockedText}>Доступно только для премиум</Text>
+                    <TouchableOpacity style={styles.unlockButton} onPress={() => router.push("/subscription")}>
+                      <LinearGradient colors={["#ffd700", "#ffed4e"]} style={styles.unlockGradient}>
+                        <Text style={styles.unlockText}>Открыть доступ</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </View>
+                )
               )}
 
               {/* Деньги */}
               {matrixTab === "money" && (
+                isPremium ? (
                 <View style={styles.contentCard}>
                   <Text style={styles.contentTitle}>Финансы и карьера</Text>
                   
@@ -940,10 +949,22 @@ export default function HoroscopeScreen() {
                     });
                   })()}
                 </View>
+                ) : (
+                  <View style={styles.lockedBlock}>
+                    <Crown size={28} color="#ffd700" />
+                    <Text style={styles.lockedText}>Доступно только для премиум</Text>
+                    <TouchableOpacity style={styles.unlockButton} onPress={() => router.push("/subscription")}>
+                      <LinearGradient colors={["#ffd700", "#ffed4e"]} style={styles.unlockGradient}>
+                        <Text style={styles.unlockText}>Открыть доступ</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </View>
+                )
               )}
 
               {/* Испытания */}
               {matrixTab === "challenges" && (
+                isPremium ? (
                 <View style={styles.contentCard}>
                   <Text style={styles.contentTitle}>Жизненные испытания</Text>
                   
@@ -963,10 +984,22 @@ export default function HoroscopeScreen() {
                     </>
                   )}
                 </View>
+                ) : (
+                  <View style={styles.lockedBlock}>
+                    <Crown size={28} color="#ffd700" />
+                    <Text style={styles.lockedText}>Доступно только для премиум</Text>
+                    <TouchableOpacity style={styles.unlockButton} onPress={() => router.push("/subscription")}>
+                      <LinearGradient colors={["#ffd700", "#ffed4e"]} style={styles.unlockGradient}>
+                        <Text style={styles.unlockText}>Открыть доступ</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </View>
+                )
               )}
 
               {/* Здоровье */}
               {matrixTab === "health" && (
+                isPremium ? (
                 <View style={styles.contentCard}>
                   <Text style={styles.contentTitle}>Здоровье по чакрам</Text>
                   
@@ -988,7 +1021,6 @@ export default function HoroscopeScreen() {
                   )}
 
                   {/* Чакры */}
-<<<<<<< HEAD
                   {matrixData.chartHeart && (() => {
                     // Глобальный набор использованных чисел для всех чакр
                     const usedNumbers = new Set<number>();
@@ -1120,187 +1152,17 @@ export default function HoroscopeScreen() {
                       })}
                     )()}
                   </View>
-=======
-                  {matrixData.chartHeart && (
-                    <>
-                      {/* Сахасрара */}
-                      <TouchableOpacity 
-                        style={styles.chakraCard}
-                        onPress={() => setExpandedChakras(prev => ({ ...prev, sah: !prev.sah }))}
-                        activeOpacity={0.7}
-                      >
-                        <View style={styles.chakraHeader}>
-                          <Text style={styles.chakraTitle}>
-                            {CHAKRA_HEALTH.sah.name} ({matrixData.chartHeart.sahphysics})
-                          </Text>
-                          <Text style={styles.chakraArrow}>{expandedChakras.sah ? '▼' : '▶'}</Text>
-                        </View>
-                        <Text style={styles.chakraOrgans}>{CHAKRA_HEALTH.sah.organs}</Text>
-                        {expandedChakras.sah && (
-                          <>
-                            <Text style={styles.chakraLabel}>Проблемы:</Text>
-                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.sah.problems}</Text>
-                            <Text style={styles.chakraLabel}>Причины:</Text>
-                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.sah.causes}</Text>
-                            <Text style={styles.chakraLabel}>Решение:</Text>
-                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.sah.solution}</Text>
-                          </>
-                        )}
-                      </TouchableOpacity>
-
-                      {/* Аджна */}
-                      <TouchableOpacity 
-                        style={styles.chakraCard}
-                        onPress={() => setExpandedChakras(prev => ({ ...prev, aj: !prev.aj }))}
-                        activeOpacity={0.7}
-                      >
-                        <View style={styles.chakraHeader}>
-                          <Text style={styles.chakraTitle}>
-                            {CHAKRA_HEALTH.aj.name} ({matrixData.chartHeart.ajphysics})
-                          </Text>
-                          <Text style={styles.chakraArrow}>{expandedChakras.aj ? '▼' : '▶'}</Text>
-                        </View>
-                        <Text style={styles.chakraOrgans}>{CHAKRA_HEALTH.aj.organs}</Text>
-                        {expandedChakras.aj && (
-                          <>
-                            <Text style={styles.chakraLabel}>Проблемы:</Text>
-                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.aj.problems}</Text>
-                            <Text style={styles.chakraLabel}>Причины:</Text>
-                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.aj.causes}</Text>
-                            <Text style={styles.chakraLabel}>Решение:</Text>
-                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.aj.solution}</Text>
-                          </>
-                        )}
-                      </TouchableOpacity>
-
-                      {/* Вишудха */}
-                      <TouchableOpacity 
-                        style={styles.chakraCard}
-                        onPress={() => setExpandedChakras(prev => ({ ...prev, vish: !prev.vish }))}
-                        activeOpacity={0.7}
-                      >
-                        <View style={styles.chakraHeader}>
-                          <Text style={styles.chakraTitle}>
-                            {CHAKRA_HEALTH.vish.name} ({matrixData.chartHeart.vishphysics})
-                          </Text>
-                          <Text style={styles.chakraArrow}>{expandedChakras.vish ? '▼' : '▶'}</Text>
-                        </View>
-                        <Text style={styles.chakraOrgans}>{CHAKRA_HEALTH.vish.organs}</Text>
-                        {expandedChakras.vish && (
-                          <>
-                            <Text style={styles.chakraLabel}>Проблемы:</Text>
-                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.vish.problems}</Text>
-                            <Text style={styles.chakraLabel}>Причины:</Text>
-                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.vish.causes}</Text>
-                            <Text style={styles.chakraLabel}>Решение:</Text>
-                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.vish.solution}</Text>
-                          </>
-                        )}
-                      </TouchableOpacity>
-
-                      {/* Анахата */}
-                      <TouchableOpacity 
-                        style={styles.chakraCard}
-                        onPress={() => setExpandedChakras(prev => ({ ...prev, anah: !prev.anah }))}
-                        activeOpacity={0.7}
-                      >
-                        <View style={styles.chakraHeader}>
-                          <Text style={styles.chakraTitle}>
-                            {CHAKRA_HEALTH.anah.name} ({matrixData.chartHeart.anahphysics})
-                          </Text>
-                          <Text style={styles.chakraArrow}>{expandedChakras.anah ? '▼' : '▶'}</Text>
-                        </View>
-                        <Text style={styles.chakraOrgans}>{CHAKRA_HEALTH.anah.organs}</Text>
-                        {expandedChakras.anah && (
-                          <>
-                            <Text style={styles.chakraLabel}>Проблемы:</Text>
-                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.anah.problems}</Text>
-                            <Text style={styles.chakraLabel}>Причины:</Text>
-                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.anah.causes}</Text>
-                            <Text style={styles.chakraLabel}>Решение:</Text>
-                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.anah.solution}</Text>
-                          </>
-                        )}
-                      </TouchableOpacity>
-
-                      {/* Манипура */}
-                      <TouchableOpacity 
-                        style={styles.chakraCard}
-                        onPress={() => setExpandedChakras(prev => ({ ...prev, man: !prev.man }))}
-                        activeOpacity={0.7}
-                      >
-                        <View style={styles.chakraHeader}>
-                          <Text style={styles.chakraTitle}>
-                            {CHAKRA_HEALTH.man.name} ({matrixData.chartHeart.manphysics})
-                          </Text>
-                          <Text style={styles.chakraArrow}>{expandedChakras.man ? '▼' : '▶'}</Text>
-                        </View>
-                        <Text style={styles.chakraOrgans}>{CHAKRA_HEALTH.man.organs}</Text>
-                        {expandedChakras.man && (
-                          <>
-                            <Text style={styles.chakraLabel}>Проблемы:</Text>
-                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.man.problems}</Text>
-                            <Text style={styles.chakraLabel}>Причины:</Text>
-                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.man.causes}</Text>
-                            <Text style={styles.chakraLabel}>Решение:</Text>
-                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.man.solution}</Text>
-                          </>
-                        )}
-                      </TouchableOpacity>
-
-                      {/* Свадхистана */}
-                      <TouchableOpacity 
-                        style={styles.chakraCard}
-                        onPress={() => setExpandedChakras(prev => ({ ...prev, svad: !prev.svad }))}
-                        activeOpacity={0.7}
-                      >
-                        <View style={styles.chakraHeader}>
-                          <Text style={styles.chakraTitle}>
-                            {CHAKRA_HEALTH.svad.name} ({matrixData.chartHeart.svadphysics})
-                          </Text>
-                          <Text style={styles.chakraArrow}>{expandedChakras.svad ? '▼' : '▶'}</Text>
-                        </View>
-                        <Text style={styles.chakraOrgans}>{CHAKRA_HEALTH.svad.organs}</Text>
-                        {expandedChakras.svad && (
-                          <>
-                            <Text style={styles.chakraLabel}>Проблемы:</Text>
-                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.svad.problems}</Text>
-                            <Text style={styles.chakraLabel}>Причины:</Text>
-                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.svad.causes}</Text>
-                            <Text style={styles.chakraLabel}>Решение:</Text>
-                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.svad.solution}</Text>
-                          </>
-                        )}
-                      </TouchableOpacity>
-
-                      {/* Муладхара */}
-                      <TouchableOpacity 
-                        style={styles.chakraCard}
-                        onPress={() => setExpandedChakras(prev => ({ ...prev, mul: !prev.mul }))}
-                        activeOpacity={0.7}
-                      >
-                        <View style={styles.chakraHeader}>
-                          <Text style={styles.chakraTitle}>
-                            {CHAKRA_HEALTH.mul.name} ({matrixData.chartHeart.mulphysics})
-                          </Text>
-                          <Text style={styles.chakraArrow}>{expandedChakras.mul ? '▼' : '▶'}</Text>
-                        </View>
-                        <Text style={styles.chakraOrgans}>{CHAKRA_HEALTH.mul.organs}</Text>
-                        {expandedChakras.mul && (
-                          <>
-                            <Text style={styles.chakraLabel}>Проблемы:</Text>
-                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.mul.problems}</Text>
-                            <Text style={styles.chakraLabel}>Причины:</Text>
-                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.mul.causes}</Text>
-                            <Text style={styles.chakraLabel}>Решение:</Text>
-                            <Text style={styles.chakraText}>{CHAKRA_HEALTH.mul.solution}</Text>
-                          </>
-                        )}
-                      </TouchableOpacity>
-                    </>
-                  )}
-                </View>
->>>>>>> ca2c80f520936ac8d40cb49908d2ba21e1c1a353
+                ) : (
+                  <View style={styles.lockedBlock}>
+                    <Crown size={28} color="#ffd700" />
+                    <Text style={styles.lockedText}>Доступно только для премиум</Text>
+                    <TouchableOpacity style={styles.unlockButton} onPress={() => router.push("/subscription")}>
+                      <LinearGradient colors={["#ffd700", "#ffed4e"]} style={styles.unlockGradient}>
+                        <Text style={styles.unlockText}>Открыть доступ</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </View>
+                )
               )}
 
               {/* Прошлые жизни */}
@@ -1351,6 +1213,7 @@ export default function HoroscopeScreen() {
 
               {/* Дети */}
               {matrixTab === "children" && (
+                isPremium ? (
                 <View style={styles.contentCard}>
                   <Text style={styles.contentTitle}>Ошибки по отношению к детям</Text>
                   
@@ -1410,10 +1273,22 @@ export default function HoroscopeScreen() {
                     );
                   })()}
                 </View>
+                ) : (
+                  <View style={styles.lockedBlock}>
+                    <Crown size={28} color="#ffd700" />
+                    <Text style={styles.lockedText}>Доступно только для премиум</Text>
+                    <TouchableOpacity style={styles.unlockButton} onPress={() => router.push("/subscription")}>
+                      <LinearGradient colors={["#ffd700", "#ffed4e"]} style={styles.unlockGradient}>
+                        <Text style={styles.unlockText}>Открыть доступ</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </View>
+                )
               )}
 
               {/* Предназначение */}
               {matrixTab === "purpose" && (
+                isPremium ? (
                 <View style={styles.contentCard}>
                   <Text style={styles.contentTitle}>Предназначение</Text>
                   
@@ -1485,10 +1360,22 @@ export default function HoroscopeScreen() {
                     );
                   })()}
                 </View>
+                ) : (
+                  <View style={styles.lockedBlock}>
+                    <Crown size={28} color="#ffd700" />
+                    <Text style={styles.lockedText}>Доступно только для премиум</Text>
+                    <TouchableOpacity style={styles.unlockButton} onPress={() => router.push("/subscription")}>
+                      <LinearGradient colors={["#ffd700", "#ffed4e"]} style={styles.unlockGradient}>
+                        <Text style={styles.unlockText}>Открыть доступ</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </View>
+                )
               )}
 
               {/* Руководство */}
               {matrixTab === "guidance" && (
+                isPremium ? (
                 <View style={styles.contentCard}>
                   <Text style={styles.contentTitle}>Рекомендации по управлению</Text>
                   
@@ -1548,10 +1435,22 @@ export default function HoroscopeScreen() {
                     );
                   })()}
                 </View>
+                ) : (
+                  <View style={styles.lockedBlock}>
+                    <Crown size={28} color="#ffd700" />
+                    <Text style={styles.lockedText}>Доступно только для премиум</Text>
+                    <TouchableOpacity style={styles.unlockButton} onPress={() => router.push("/subscription")}>
+                      <LinearGradient colors={["#ffd700", "#ffed4e"]} style={styles.unlockGradient}>
+                        <Text style={styles.unlockText}>Открыть доступ</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </View>
+                )
               )}
 
               {/* Отношения */}
               {matrixTab === "relationships" && (
+                isPremium ? (
                 <View style={styles.contentCard}>
                   <Text style={styles.contentTitle}>Отношения</Text>
                   
@@ -1702,6 +1601,17 @@ export default function HoroscopeScreen() {
                     );
                   })()}
                 </View>
+                ) : (
+                  <View style={styles.lockedBlock}>
+                    <Crown size={28} color="#ffd700" />
+                    <Text style={styles.lockedText}>Доступно только для премиум</Text>
+                    <TouchableOpacity style={styles.unlockButton} onPress={() => router.push("/subscription")}>
+                      <LinearGradient colors={["#ffd700", "#ffed4e"]} style={styles.unlockGradient}>
+                        <Text style={styles.unlockText}>Открыть доступ</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </View>
+                )
               )}
 
               {/* Прогноз на год */}
@@ -1835,6 +1745,7 @@ export default function HoroscopeScreen() {
 
               {/* Родители */}
               {matrixTab === "parents" && (
+                isPremium ? (
                 <View style={styles.contentCard}>
                   <Text style={styles.contentTitle}>Родители</Text>
                   
@@ -2043,18 +1954,17 @@ export default function HoroscopeScreen() {
                     );
                   })()}
                 </View>
-              )}
-
-              {!isPremium && (
-                <TouchableOpacity
-                  style={[styles.unlockButton, { marginVertical: 20 }]}
-                  onPress={() => router.push("/subscription")}
-                >
-                  <LinearGradient colors={["#ffd700", "#ffed4e"]} style={styles.unlockGradient}>
-                    <Sparkles size={20} color="#1a1a2e" />
-                    <Text style={styles.unlockText}>Разблокировать полную матрицу</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
+                ) : (
+                  <View style={styles.lockedBlock}>
+                    <Crown size={28} color="#ffd700" />
+                    <Text style={styles.lockedText}>Доступно только для премиум</Text>
+                    <TouchableOpacity style={styles.unlockButton} onPress={() => router.push("/subscription")}>
+                      <LinearGradient colors={["#ffd700", "#ffed4e"]} style={styles.unlockGradient}>
+                        <Text style={styles.unlockText}>Открыть доступ</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </View>
+                )
               )}
 
               {matrixTab === "visual" && (
@@ -2839,7 +2749,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#1a1a2e",
   },
-<<<<<<< HEAD
   talentSection: {
     backgroundColor: "rgba(255,255,255,0.05)",
     borderRadius: 12,
@@ -2905,13 +2814,10 @@ const styles = StyleSheet.create({
     borderBottomColor: "rgba(255,255,255,0.1)",
     paddingBottom: 16,
   },
-=======
->>>>>>> ca2c80f520936ac8d40cb49908d2ba21e1c1a353
   chakraHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-<<<<<<< HEAD
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 8,
@@ -2961,7 +2867,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginLeft: 12,
-=======
     marginBottom: 8,
   },
   chakraArrow: {
@@ -3008,6 +2913,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#b8b8d0",
     lineHeight: 24,
->>>>>>> ca2c80f520936ac8d40cb49908d2ba21e1c1a353
   },
 });
