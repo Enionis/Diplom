@@ -4,6 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { BookOpen, Lock, CheckCircle2 } from "lucide-react-native";
 import { useSubscription } from "@/providers/SubscriptionProvider";
 import { router } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import { QUIZZES } from "@/constants/quiz";
 import { useDatabase } from "@/hooks/useDatabase"; // Новый импорт
 import { useAuth } from "@/providers/AuthProvider";
@@ -85,6 +86,44 @@ export default function TestsScreen() {
 
     loadPassed();
   }, [user?.id, quizIds]);
+
+  // Обновляем статус “пройден” при возвращении на экран (после прохождения теста)
+  useFocusEffect(
+    React.useCallback(() => {
+      const loadPassedOnFocus = async () => {
+        if (!user?.id) return;
+
+        try {
+          const apiBase = getApiBase();
+          const uniqIds = Array.from(new Set(quizIds));
+
+          const checks = await Promise.all(
+            uniqIds.map(async (quizId) => {
+              try {
+                const res = await fetch(
+                  `${apiBase}/api/user/${encodeURIComponent(user.id)}/quiz/${encodeURIComponent(
+                    quizId
+                  )}/result`
+                );
+                if (res.ok) return quizId;
+                if (res.status === 404) return null;
+                return null;
+              } catch {
+                return null;
+              }
+            })
+          );
+
+          const passed = new Set(checks.filter(Boolean) as string[]);
+          setPassedQuizIds(passed);
+        } catch (e) {
+          console.warn("Failed to load passed quizzes on focus:", e);
+        }
+      };
+
+      loadPassedOnFocus();
+    }, [user?.id, quizIds])
+  );
 
   return (
     <View style={styles.container}>

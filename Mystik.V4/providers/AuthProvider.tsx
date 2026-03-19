@@ -3,6 +3,15 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 import { authDatabase } from "@/utils/authDatabase";
 
+function getApiBaseOrEmpty(): string {
+  const raw =
+    process.env.EXPO_PUBLIC_API_URL ||
+    process.env.EXPO_PUBLIC_API_BASE ||
+    process.env.EXPO_PUBLIC_BACKEND_URL ||
+    "";
+  return raw.trim().replace(/\/$/, "");
+}
+
 interface User {
   id: string;
   email: string;
@@ -18,7 +27,7 @@ interface AuthContextType {
   register: (email: string, username: string, password: string, name: string, birthDate?: string) => Promise<{ ok: boolean; error?: string }>;
   logout: () => Promise<void>;
   updateProfile: (name: string, birthDate?: string) => Promise<boolean>;
-  changePassword: (oldPassword: string, newPassword: string) => Promise<boolean>;
+  changePassword: (oldPassword: string, newPassword: string, confirmPassword: string) => Promise<boolean>;
   isLoading: boolean;
 }
 
@@ -121,7 +130,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loadUser = async () => {
     try {
       const savedUser = await readSession();
-      setUser(savedUser);
+      if (!savedUser) {
+        setUser(null);
+        return;
+      }
+
+      const apiBase = getApiBaseOrEmpty();
+      if (!apiBase) {
+        setUser(savedUser);
+        return;
+      }
+
+      // Если API включен, валидируем, что пользователь реально существует на сервере.
+      const savedUserId = savedUser.id;
+      const res = await fetch(`${apiBase}/api/user/${encodeURIComponent(savedUser.id)}`);
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data?.ok && data?.user) {
+        setUser({
+          ...savedUser,
+          email: data.user.email ?? savedUser.email,
+          username: data.user.username ?? savedUser.username,
+          name: data.user.name ?? savedUser.name,
+          birthDate: data.user.birthDate ?? savedUser.birthDate,
+          createdAt: savedUser.createdAt ?? new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Старые локальные аккаунты могут иметь id, которых нет на сервере.
+      // Важно: если параллельно уже произошел login/register, не очищаем сессию.
+      // Проверяем актуальный userId в AsyncStorage.
+      const latestUser = await readSession();
+      if (latestUser?.id && latestUser.id !== savedUserId) {
+        setUser(latestUser);
+        return;
+      }
+
+      await clearSession();
+      setUser(null);
     } catch (error) {
       console.error("Error loading user:", error);
       setUser(null);
@@ -132,24 +179,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (login: string, password: string): Promise<boolean> => {
     try {
-      const userData = await authDatabase.loginUser(login, password);
-      
-      if (userData) {
-        const loggedInUser: User = {
-          id: userData.id,
-          email: userData.email,
-          username: userData.username,
-          name: userData.name,
-          createdAt: new Date().toISOString(),
-          birthDate: userData.birthDate,
-        };
-        
-        setUser(loggedInUser);
-        await writeSession(loggedInUser);
-        return true;
+      const apiBase = getApiBaseOrEmpty();
+
+      if (apiBase) {
+        console.log("[AUTH API DEBUG] login request:", { login });
+        const res = await fetch(`${apiBase}/api/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ login, password }),
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data?.ok && data?.user) {
+          const loggedInUser: User = {
+            id: data.user.id,
+            email: data.user.email,
+            username: data.user.username,
+            name: data.user.name,
+            createdAt: new Date().toISOString(),
+            birthDate: data.user.birthDate ?? undefined,
+          };
+          setUser(loggedInUser);
+          await writeSession(loggedInUser);
+          console.log("[AUTH API DEBUG] login ok:", { userId: loggedInUser.id });
+          return true;
+        }
+
+        console.warn("[AUTH API DEBUG] login failed:", { status: res.status, data });
+        return false;
       }
-      
-      return false;
+
+      // Fallback: локальная БД
+      const userData = await authDatabase.loginUser(login, password);
+      if (!userData) return false;
+
+      const loggedInUser: User = {
+        id: userData.id,
+        email: userData.email,
+        username: userData.username,
+        name: userData.name,
+        createdAt: new Date().toISOString(),
+        birthDate: userData.birthDate,
+      };
+
+      setUser(loggedInUser);
+      await writeSession(loggedInUser);
+      return true;
     } catch (error) {
       console.error("Login error:", error);
       return false;
@@ -158,24 +233,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const register = async (email: string, username: string, password: string, name: string, birthDate?: string): Promise<{ ok: boolean; error?: string }> => {
     try {
-      const result = await authDatabase.registerUser(email, username, password, name, birthDate);
-      if (result.ok) {
-        const userData = result.user;
-        const registeredUser: User = {
-          id: userData.id,
-          email: userData.email,
-          username: userData.username,
-          name: userData.name,
-          createdAt: new Date().toISOString(),
-          birthDate: userData.birthDate,
-        };
-        
-        setUser(registeredUser);
-        await writeSession(registeredUser);
-        return { ok: true };
+      const apiBase = getApiBaseOrEmpty();
+
+      if (apiBase) {
+        console.log("[AUTH API DEBUG] register request:", { email, username });
+
+        const res = await fetch(`${apiBase}/api/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, username, password, name, birthDate }),
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data?.ok && data?.user) {
+          const registeredUser: User = {
+            id: data.user.id,
+            email: data.user.email,
+            username: data.user.username,
+            name: data.user.name,
+            createdAt: new Date().toISOString(),
+            birthDate: data.user.birthDate ?? undefined,
+          };
+
+          setUser(registeredUser);
+          await writeSession(registeredUser);
+          console.log("[AUTH API DEBUG] register ok:", { userId: registeredUser.id });
+          return { ok: true };
+        }
+
+        console.warn("[AUTH API DEBUG] register failed:", { status: res.status, data });
+        return { ok: false, error: data?.error || "Ошибка регистрации" };
       }
-      
-      return { ok: false, error: result.error };
+
+      // Fallback: локальная БД
+      const result = await authDatabase.registerUser(email, username, password, name, birthDate);
+      if (!result.ok) return { ok: false, error: result.error };
+
+      const userData = result.user;
+      const registeredUser: User = {
+        id: userData.id,
+        email: userData.email,
+        username: userData.username,
+        name: userData.name,
+        createdAt: new Date().toISOString(),
+        birthDate: userData.birthDate,
+      };
+
+      setUser(registeredUser);
+      await writeSession(registeredUser);
+      return { ok: true };
     } catch (error) {
       console.error("Registration error:", error);
       return { ok: false, error: "Ошибка регистрации" };
@@ -203,10 +309,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return false;
       }
 
-      const success = await authDatabase.updateUserProfile(user.id, trimmedName, birthDate);
-      if (!success) {
-        return false;
+      const apiBase = getApiBaseOrEmpty();
+      if (apiBase) {
+        const res = await fetch(`${apiBase}/api/user/${encodeURIComponent(user.id)}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: trimmedName, birthDate }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!(res.ok && data?.ok && data?.user)) {
+          console.warn("[AUTH API DEBUG] updateProfile failed:", { status: res.status, data });
+          return false;
+        }
+
+        const updatedFromApi = data.user;
+        const updatedUser: User = {
+          ...user,
+          name: updatedFromApi.name ?? trimmedName,
+          birthDate: updatedFromApi.birthDate ?? undefined,
+        };
+
+        setUser(updatedUser);
+        await writeSession(updatedUser);
+        return true;
       }
+
+      const success = await authDatabase.updateUserProfile(user.id, trimmedName, birthDate);
+      if (!success) return false;
 
       const updatedUser: User = {
         ...user,
@@ -223,15 +352,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const changePassword = async (oldPassword: string, newPassword: string): Promise<boolean> => {
+  const changePassword = async (oldPassword: string, newPassword: string, confirmPassword: string): Promise<boolean> => {
     try {
       if (!user) {
         console.error("AuthProvider: changePassword called for null user");
         return false;
       }
 
-      const success = await authDatabase.changeUserPassword(user.id, oldPassword, newPassword);
-      return success;
+      const apiBase = getApiBaseOrEmpty();
+      if (apiBase) {
+        const res = await fetch(
+          `${apiBase}/api/user/${encodeURIComponent(user.id)}/change-password`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ oldPassword, newPassword, confirmPassword }),
+          }
+        );
+        const data = await res.json().catch(() => ({}));
+        return Boolean(res.ok && data?.ok);
+      }
+
+      return await authDatabase.changeUserPassword(user.id, oldPassword, newPassword);
     } catch (error) {
       console.error("Change password error:", error);
       return false;

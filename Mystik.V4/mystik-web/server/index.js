@@ -125,14 +125,17 @@ app.post('/api/login', (req, res) => {
     }
 
     const db = getDatabase();
-    const trimmedLogin = login.trim().toLowerCase();
-    
-    // Поиск по email или username
+    const trimmedLogin = login.trim();
+    const emailNorm = trimmedLogin.toLowerCase();
+
+    // Поиск по email или username.
+    // Важно: SQLite сравнение может быть case-sensitive, поэтому username ищем через lower().
     const row = db.prepare(
-      'SELECT id, email, username, name, birth_date, password_hash FROM users WHERE (email = ? OR username = ?) AND is_guest = 0'
-    ).get(trimmedLogin, trimmedLogin);
+      'SELECT id, email, username, name, birth_date, password_hash FROM users WHERE (email = ? OR lower(username) = lower(?)) AND is_guest = 0'
+    ).get(emailNorm, trimmedLogin);
 
     if (!row) {
+      console.log('[AUTH DEBUG] login row not found:', { login: trimmedLogin, emailNorm });
       return res.status(401).json({ ok: false, error: 'Неверный логин или пароль' });
     }
 
@@ -141,6 +144,7 @@ app.post('/api/login', (req, res) => {
       return res.status(401).json({ ok: false, error: 'Неверный логин или пароль' });
     }
 
+    console.log('[AUTH DEBUG] login ok for userId:', row.id);
     const now = new Date().toISOString();
     db.prepare('UPDATE users SET last_login = ? WHERE id = ?').run(now, row.id);
 
@@ -167,7 +171,7 @@ app.get('/api/user/:id', (req, res) => {
     if (!id) return res.status(400).json({ ok: false, error: 'Нет id' });
 
     const db = getDatabase();
-    const row = db.prepare('SELECT id, email, username, name, birth_date FROM users WHERE id = ? AND is_guest = 0').get(id);
+    const row = db.prepare('SELECT id, email, username, name, birth_date, is_premium FROM users WHERE id = ? AND is_guest = 0').get(id);
     if (!row) {
       return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
     }
@@ -178,11 +182,65 @@ app.get('/api/user/:id', (req, res) => {
         email: row.email, 
         username: row.username,
         name: row.name,
-        birthDate: row.birth_date
+        birthDate: row.birth_date,
+        isPremium: row.is_premium === 1
       } 
     });
   } catch (err) {
     console.error('Get user error:', err);
+    res.status(500).json({ ok: false, error: 'Ошибка сервера' });
+  }
+});
+
+/** GET /api/user/:id/premium — статус премиума */
+app.get('/api/user/:id/premium', (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ ok: false, error: 'Нет id' });
+
+    const db = getDatabase();
+    const row = db.prepare('SELECT is_premium FROM users WHERE id = ? AND is_guest = 0').get(id);
+    if (!row) return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
+
+    res.json({ ok: true, isPremium: row.is_premium === 1 });
+  } catch (err) {
+    console.error('Get premium error:', err);
+    res.status(500).json({ ok: false, error: 'Ошибка сервера' });
+  }
+});
+
+/** POST /api/user/:id/premium/activate — активировать премиум */
+app.post('/api/user/:id/premium/activate', (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ ok: false, error: 'Нет id' });
+
+    const db = getDatabase();
+    const user = db.prepare('SELECT id FROM users WHERE id = ? AND is_guest = 0').get(id);
+    if (!user) return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
+
+    db.prepare('UPDATE users SET is_premium = 1 WHERE id = ?').run(id);
+    res.json({ ok: true, isPremium: true });
+  } catch (err) {
+    console.error('Activate premium error:', err);
+    res.status(500).json({ ok: false, error: 'Ошибка сервера' });
+  }
+});
+
+/** POST /api/user/:id/premium/cancel — отменить премиум */
+app.post('/api/user/:id/premium/cancel', (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ ok: false, error: 'Нет id' });
+
+    const db = getDatabase();
+    const user = db.prepare('SELECT id FROM users WHERE id = ? AND is_guest = 0').get(id);
+    if (!user) return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
+
+    db.prepare('UPDATE users SET is_premium = 0 WHERE id = ?').run(id);
+    res.json({ ok: true, isPremium: false });
+  } catch (err) {
+    console.error('Cancel premium error:', err);
     res.status(500).json({ ok: false, error: 'Ошибка сервера' });
   }
 });

@@ -18,6 +18,7 @@ function initSchema(database) {
       birth_date TEXT,
       password_hash TEXT NOT NULL,
       is_guest INTEGER NOT NULL DEFAULT 0,
+      is_premium INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL,
       last_login TEXT NOT NULL
     );
@@ -93,6 +94,13 @@ function initSchema(database) {
     CREATE INDEX IF NOT EXISTS idx_tarot_readings_user ON tarot_readings(user_id);
     CREATE INDEX IF NOT EXISTS idx_tarot_readings_spread ON tarot_readings(spread_id);
   `);
+
+  // Миграция для существующих баз: добавляем is_premium, если его еще нет
+  try {
+    database.exec('ALTER TABLE users ADD COLUMN is_premium INTEGER NOT NULL DEFAULT 0');
+  } catch {
+    // столбец уже существует или ALTER не поддерживается - игнорируем
+  }
 }
 
 function getDb() {

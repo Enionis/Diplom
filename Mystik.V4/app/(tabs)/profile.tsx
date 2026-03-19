@@ -220,7 +220,7 @@ export default function ProfileScreen() {
       return;
     }
 
-    const success = await changePassword(oldPassword, newPassword);
+    const success = await changePassword(oldPassword, newPassword, confirmPassword);
     if (success) {
       logAction("change_password");
       Alert.alert("Успешно", "Пароль успешно изменён");
