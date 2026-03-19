@@ -333,12 +333,6 @@ app.post('/api/user/:userId/quiz/:quizId/result', (req, res) => {
 
     const db = getDatabase();
     
-    // Проверяем существование пользователя
-    const user = db.prepare('SELECT id FROM users WHERE id = ?').get(userId);
-    if (!user) {
-      return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
-    }
-
     // Проверяем существование теста
     const quiz = db.prepare('SELECT id FROM quizzes WHERE id = ?').get(quizId);
     if (!quiz) {

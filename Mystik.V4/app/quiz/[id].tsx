@@ -15,9 +15,10 @@ import { useQuizResults } from "@/hooks/useQuizResults";
 
 export default function QuizScreen() {
   const { id } = useLocalSearchParams();
-  const quiz = QUIZZES[id as keyof typeof QUIZZES] || QUIZZES.strengths;
+  const quizId = (id as string) || "strengths";
+  const quiz = QUIZZES[quizId as keyof typeof QUIZZES] || QUIZZES.strengths;
   const { isPremium } = useSubscription();
-  const { result, saveResult, clearResult } = useQuizResults(id as string);
+  const { result, saveResult, clearResult, loading, error } = useQuizResults(quizId);
 
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
@@ -49,6 +50,22 @@ export default function QuizScreen() {
     );
   }
 
+  if (loading && !result) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.loadingText}>Загрузка результата теста...</Text>
+      </View>
+    );
+  }
+
+  if (error && !result) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
+
   // Показ результата, если он сохранён
   if (result) {
     return (
@@ -62,7 +79,7 @@ export default function QuizScreen() {
               {result.topTalents.map((talent: any, index: number) => (
                 <View key={index} style={styles.talentContainer}>
                   <Text style={styles.talentTitle}>
-                    {talent.theme} — {talent.score}/5
+                    <Text style={styles.highlightValueInline}>{talent.theme}</Text> — {talent.score}/5
                   </Text>
                   <Text style={styles.talentText}>
                     <Text style={styles.bold}>Описание: </Text>
@@ -84,7 +101,9 @@ export default function QuizScreen() {
               <Text style={styles.sectionTitle}>2) Профессиональные сферы</Text>
               {Object.entries(result.careers).map(([category, roles]: [string, string[]], index: number) => (
                 <View key={index} style={styles.talentContainer}>
-                  <Text style={styles.talentTitle}>{category}</Text>
+                  <Text style={styles.talentTitle}>
+                    <Text style={styles.highlightValueInline}>{category}</Text>
+                  </Text>
                   {roles.map((role: string, idx: number) => (
                     <Text key={idx} style={styles.talentText}>- {role}</Text>
                   ))}
@@ -120,7 +139,7 @@ export default function QuizScreen() {
           {quiz.id === "paei" && (
             <>
               <Text style={styles.sectionTitle}>Ваш тип личности</Text>
-              <Text style={styles.talentTitle}>{result.code}</Text>
+              <Text style={[styles.talentTitle, styles.highlightValue]}>{result.code}</Text>
               <Text style={styles.talentText}>
                 <Text style={styles.bold}>Описание: </Text>
                 {result.interpretation.map((i: any) => `${i.letter} - ${i.description}`).join("\n")}
@@ -135,7 +154,7 @@ export default function QuizScreen() {
           {quiz.id === "attachment" && (
             <>
               <Text style={styles.sectionTitle}>Ваш тип привязанности</Text>
-              <Text style={styles.talentTitle}>{result.type}</Text>
+              <Text style={[styles.talentTitle, styles.highlightValue]}>{result.type}</Text>
               <Text style={styles.talentText}>
                 <Text style={styles.bold}>Описание: </Text>
                 {result.description}
@@ -152,7 +171,7 @@ export default function QuizScreen() {
           {quiz.id === "archetype" && (
             <>
               <Text style={styles.sectionTitle}>Ваш архетип личности</Text>
-              <Text style={styles.talentTitle}>{result.archetype}</Text>
+              <Text style={[styles.talentTitle, styles.highlightValue]}>{result.archetype}</Text>
               <Text style={styles.talentText}>
                 <Text style={styles.bold}>Описание: </Text>
                 {result.description}
@@ -201,8 +220,8 @@ export default function QuizScreen() {
     if (currentQuestion < quiz.questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
-      const result = quiz.calculateResult(newAnswers);
-      saveResult(result);
+      const calculatedResult = quiz.calculateResult(newAnswers);
+      saveResult({ answers: newAnswers, result: calculatedResult });
     }
   };
 
@@ -262,6 +281,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 24,
     backgroundColor: "#0f0f1e",
+  },
+  loadingText: {
+    color: "#b8b8d0",
+    fontSize: 16,
+    textAlign: "center",
+  },
+  errorText: {
+    color: "#ff6b6b",
+    fontSize: 16,
+    textAlign: "center",
+    paddingHorizontal: 20,
   },
   lockedTitle: {
     fontSize: 24,
@@ -365,6 +395,36 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#fff",
     marginBottom: 10,
+  },
+  highlightValue: {
+    backgroundColor: "rgba(255,215,0,0.24)",
+    borderColor: "rgba(255,215,0,0.9)",
+    borderWidth: 1,
+    color: "#ffffff",
+    paddingHorizontal: 26,
+    paddingVertical: 10,
+    borderRadius: 18,
+    // Лёгкое "свечение" (в основном для iOS)
+    shadowColor: "rgba(255,215,0,0.45)",
+    shadowOpacity: 0.7,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  highlightValueInline: {
+    backgroundColor: "rgba(255,215,0,0.22)",
+    borderColor: "rgba(255,215,0,0.9)",
+    borderWidth: 1,
+    color: "#ffffff",
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 14,
+    marginHorizontal: 4,
+    shadowColor: "rgba(255,215,0,0.35)",
+    shadowOpacity: 0.65,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
   },
   talentText: {
     fontSize: 16,
