@@ -9,6 +9,7 @@ import {
   Switch,
   Linking,
   TextInput,
+  Modal,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -406,7 +407,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       )}
 
-      {isEditingProfile && (
+      <Modal visible={isEditingProfile} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Редактировать профиль</Text>
@@ -448,9 +449,9 @@ export default function ProfileScreen() {
             </View>
           </View>
         </View>
-      )}
+      </Modal>
 
-      {isChangingPassword && (
+      <Modal visible={isChangingPassword} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Сменить пароль</Text>
@@ -508,7 +509,7 @@ export default function ProfileScreen() {
             </View>
           </View>
         </View>
-      )}
+      </Modal>
     </ScrollView>
   );
 }
@@ -746,11 +747,7 @@ const styles = StyleSheet.create({
     color: "#4caf50",
   },
   modalOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    flex: 1,
     backgroundColor: "rgba(0,0,0,0.7)",
     alignItems: "center",
     justifyContent: "center",

@@ -23,12 +23,19 @@ export function useDailyCard() {
       if (stored) {
         const data: DailyCardData = JSON.parse(stored);
         if (data.date === today) {
+          console.log("[DAILY CARD DEBUG] loaded cached card:", {
+            date: data.date,
+            cardName: data.card?.name,
+            cardNumber: data.card?.number,
+          });
           setCard(data.card);
           setIsNewDay(false);
         } else {
+          console.log("[DAILY CARD DEBUG] daily card expired. storedDate:", data.date, "today:", today);
           setIsNewDay(true);
         }
       } else {
+        console.log("[DAILY CARD DEBUG] no cached daily card. today:", today);
         setIsNewDay(true);
       }
     } catch (error) {
@@ -47,6 +54,11 @@ export function useDailyCard() {
     };
     
     AsyncStorage.setItem("dailyCard", JSON.stringify(data));
+    console.log("[DAILY CARD DEBUG] drew new daily card:", {
+      date: today,
+      cardName: randomCard?.name,
+      cardNumber: randomCard?.number,
+    });
     setCard(randomCard);
     setIsNewDay(false);
     

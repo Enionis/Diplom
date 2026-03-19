@@ -457,12 +457,6 @@ app.post('/api/tarot/reading', (req, res) => {
     
     const db = getDatabase();
     
-    // Проверяем существование пользователя
-    const user = db.prepare('SELECT id FROM users WHERE id = ?').get(userId);
-    if (!user) {
-      return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
-    }
-    
     // Проверяем существование расклада
     const spread = db.prepare('SELECT * FROM tarot_spreads WHERE id = ?').get(spreadId);
     if (!spread) {

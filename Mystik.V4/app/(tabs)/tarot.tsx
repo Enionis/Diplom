@@ -17,12 +17,18 @@ import { useSubscription } from "@/providers/SubscriptionProvider";
 import { useDailyCard } from "@/hooks/useDailyCard";
 import { useTarotReadings } from "@/hooks/useTarotReading";
 import { router } from "expo-router";
-import { TAROT_CARDS, TAROT_SPREADS, TarotCard, TarotSpread } from "@/constants/tarot";
+import { TarotCard, TarotSpread } from "@/constants/tarot";
 import { useDatabase } from "@/hooks/useDatabase"; 
+import { useTarotSpreads, useTarotCards, useTarotReadingAPI } from "@/hooks/useTarotAPI";
 
 interface ReadingResult {
   spread: TarotSpread;
-  cards: TarotCard[];
+  cards: Array<TarotCard & { id?: string }>;
+  interpretations?: Array<{
+    position: string;
+    card: TarotCard & { id?: string };
+    interpretation: string;
+  }>;
 }
 
 export default function TarotScreen() {
@@ -30,6 +36,10 @@ export default function TarotScreen() {
   const { card: dailyCard, isNewDay, drawDailyCard } = useDailyCard();
   const { readingsToday, canRead, performReading } = useTarotReadings();
   const { logTarotClick } = useDatabase(); 
+  const { spreads, loading: spreadsLoading, error: spreadsError } = useTarotSpreads();
+  const { cards, loading: cardsLoading, error: cardsError } = useTarotCards();
+  const { createReading, loading: createReadingLoading, error: createReadingError } =
+    useTarotReadingAPI();
   const [currentView, setCurrentView] = useState<'spreads' | 'reading'>('spreads');
   const [currentReading, setCurrentReading] = useState<ReadingResult | null>(null);
   const [flippedCards, setFlippedCards] = useState<boolean[]>([]);
@@ -58,8 +68,22 @@ export default function TarotScreen() {
   const backIconColor = cardBackIconColor[cardBack] ?? "#ffd700";
   const backTextColor = cardBackTextColor[cardBack] ?? "#fff";
 
-  const startReading = (spread: TarotSpread) => {
-    logTarotClick(spread.id); 
+  const getThreePositionLabel = (index: number, fallback: string) => {
+    if (index === 0) return "Прошлое, влияющее на вопрос или ситуацию";
+    if (index === 1) return "Настоящее, влияющее на вопрос или ситуацию";
+    if (index === 2)
+      return "Будущее, вероятный итог развития\nсобытий исходя из поставленного вопроса";
+    return fallback;
+  };
+
+  const getPositionLabel = (spreadId: string, index: number, fallback: string) => {
+    if (spreadId === "three") return getThreePositionLabel(index, fallback);
+    return fallback;
+  };
+
+  const startReading = async (spread: TarotSpread) => {
+    logTarotClick(spread.id);
+
     if (spread.isPremium && !isPremium) {
       Alert.alert(
         "Премиум функция",
@@ -72,49 +96,94 @@ export default function TarotScreen() {
       return;
     }
 
+    // Локальная логика "карты дня" (оставляем как на вебе)
     if (spread.id === "daily") {
-      if (dailyCard && !isNewDay) {
-        setCurrentReading({
-          spread,
-          cards: [dailyCard]
+      try {
+        console.log("[TAROT DAILY DEBUG] startReading daily:", {
+          isNewDay,
+          hasDailyCard: Boolean(dailyCard),
         });
-        setFlippedCards([true]);
-        flipAnimations[0] = new Animated.Value(1);
-      } else if (isNewDay) {
-        const newCard = drawDailyCard();
-        if (newCard) {
+
+        const cardToUse = dailyCard && !isNewDay ? dailyCard : drawDailyCard();
+
+        if (cardToUse) {
+          console.log("[TAROT DAILY DEBUG] daily card chosen:", {
+            name: cardToUse.name,
+            number: cardToUse.number,
+          });
+
           setCurrentReading({
             spread,
-            cards: [newCard]
+            cards: [cardToUse],
+            interpretations: [
+              {
+                position: spread.positions?.[0] || "Энергия дня",
+                card: cardToUse,
+                interpretation: cardToUse.interpretation,
+              },
+            ],
           });
-          setFlippedCards([false]);
-          flipAnimations[0] = new Animated.Value(0);
+          setFlippedCards([true]);
+          flipAnimations[0] = new Animated.Value(1);
         }
+      } catch (e) {
+        console.error("[TAROT DAILY DEBUG] daily error:", e);
+      } finally {
+        setCurrentView("reading");
       }
-    } else {
-      if (!canRead && !isPremium) {
-        Alert.alert(
-          "Лимит исчерпан",
-          `Вы использовали ${readingsToday} из 3 бесплатных гаданий сегодня. Оформите подписку для безлимитного доступа.`,
-          [
-            { text: "Отмена", style: "cancel" },
-            { text: "Подписка", onPress: () => router.push("/subscription") },
-          ]
-        );
-        return;
-      }
-      
-      performReading();
-      const cards = getRandomCards(spread.cardCount);
-      setCurrentReading({ spread, cards });
-      setFlippedCards(new Array(spread.cardCount).fill(false));
-      flipAnimations.length = 0;
-      for (let i = 0; i < spread.cardCount; i++) {
-        flipAnimations[i] = new Animated.Value(0);
-      }
+      return;
     }
-    
-    setCurrentView('reading');
+
+    // Остальные гадания через API
+    if (!canRead && !isPremium) {
+      Alert.alert(
+        "Лимит исчерпан",
+        `Вы использовали ${readingsToday} из 3 бесплатных гаданий сегодня. Оформите подписку для безлимитного доступа.`,
+        [
+          { text: "Отмена", style: "cancel" },
+          { text: "Подписка", onPress: () => router.push("/subscription") },
+        ]
+      );
+      return;
+    }
+
+    if (cardsLoading || !cards.length) {
+      Alert.alert("Загрузка", "Сначала дождитесь загрузки карт таро.");
+      return;
+    }
+
+    performReading();
+
+    const shuffled = [...cards].sort(() => Math.random() - 0.5);
+    const chosen = shuffled.slice(0, spread.cardCount);
+    const cardIds = chosen.map((c) => c.id);
+
+    console.log("[TAROT API DEBUG] startReading non-daily:", {
+      spreadId: spread.id,
+      spreadCardCount: spread.cardCount,
+      chosenCardIds: cardIds,
+    });
+
+    const reading = await createReading(spread.id, cardIds);
+
+    if (!reading) {
+      Alert.alert("Ошибка", "Не удалось создать гадание. Попробуйте еще раз.");
+      return;
+    }
+
+    setCurrentReading({
+      spread: reading.spread,
+      cards: reading.cards as any,
+      interpretations: reading.interpretations as any,
+    });
+
+    setFlippedCards(new Array(spread.cardCount).fill(false));
+    flipAnimations.length = 0;
+    for (let i = 0; i < spread.cardCount; i++) {
+      flipAnimations[i] = new Animated.Value(0);
+    }
+
+    setCurrentView("reading");
   };
 
   const flipCard = (index: number) => {
@@ -127,11 +196,6 @@ export default function TarotScreen() {
       duration: 600,
       useNativeDriver: true,
     }).start();
-  };
-
-  const getRandomCards = (count: number): TarotCard[] => {
-    const shuffled = [...TAROT_CARDS].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, count);
   };
 
   const getCardAnimationStyles = (index: number) => {
@@ -178,7 +242,11 @@ export default function TarotScreen() {
               return (
                 <View key={index} style={styles.cardWrapper}>
                   <Text style={styles.positionLabel}>
-                    {currentReading.spread.positions[index]}
+                    {getPositionLabel(
+                      currentReading.spread.id,
+                      index,
+                      currentReading.spread.positions[index]
+                    )}
                   </Text>
                   <TouchableOpacity onPress={() => flipCard(index)} activeOpacity={0.9}>
                     <Animated.View style={[styles.card, animationStyles.front]}>
@@ -210,16 +278,28 @@ export default function TarotScreen() {
 
           <View style={styles.interpretation}>
             <Text style={styles.interpretationTitle}>Толкование</Text>
-            {currentReading.cards.map((card, index) => (
-              flippedCards[index] && (
+            {currentReading.cards.map((card, index) => {
+              const interp = currentReading.interpretations?.[index];
+              if (!flippedCards[index]) return null;
+
+              const position = getPositionLabel(
+                currentReading.spread.id,
+                index,
+                interp?.position || currentReading.spread.positions[index]
+              );
+              const cardName = interp?.card?.name || card.name;
+              const interpretationText =
+                interp?.interpretation || (card as any).interpretation || card.meaning;
+
+              return (
                 <View key={index} style={styles.cardInterpretation}>
                   <Text style={styles.cardInterpretationTitle}>
-                    {currentReading.spread.positions[index]}: {card.name}
+                    {position}: {cardName}
                   </Text>
-                  <Text style={styles.interpretationText}>{card.interpretation}</Text>
+                  <Text style={styles.interpretationText}>{interpretationText}</Text>
                 </View>
-              )
-            ))}
+              );
+            })}
             {!flippedCards.some(Boolean) && (
               <Text style={styles.interpretationText}>
                 Откройте карты, чтобы увидеть толкование
@@ -255,39 +335,44 @@ export default function TarotScreen() {
 
         <Text style={styles.subtitle}>Выберите тип гадания</Text>
 
-        <FlatList
-          data={TAROT_SPREADS}
-          keyExtractor={(item) => item.id}
-          numColumns={2}
-          columnWrapperStyle={styles.spreadRow}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[
-                styles.spreadCard,
-                item.isPremium && !isPremium && styles.spreadCardLocked
-              ]}
-              onPress={() => startReading(item)}
-              activeOpacity={0.8}
-            >
-              <LinearGradient
-                colors={item.isPremium && !isPremium 
-                  ? ["#333", "#555"] 
-                  : ["#4a148c", "#7b1fa2"]
-                }
-                style={styles.spreadCardGradient}
+        {spreadsLoading || cardsLoading ? (
+          <View style={{ padding: 20 }}>
+            <Text style={{ color: "#b8b8d0", textAlign: "center" }}>Загрузка таро...</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={spreads}
+            keyExtractor={(item) => item.id}
+            numColumns={2}
+            columnWrapperStyle={styles.spreadRow}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={[
+                  styles.spreadCard,
+                  item.isPremium && !isPremium && styles.spreadCardLocked,
+                ]}
+                onPress={() => startReading(item)}
+                activeOpacity={0.8}
               >
-                {item.isPremium && !isPremium && (
-                  <Lock size={20} color="#ffd700" style={styles.spreadLockIcon} />
-                )}
-                <Text style={styles.spreadCardTitle}>{item.name}</Text>
-                <Text style={styles.spreadCardCount}>{item.cardCount} карт</Text>
-                <Text style={styles.spreadCardDescription}>{item.description}</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          )}
-          scrollEnabled={false}
-          contentContainerStyle={styles.spreadsGrid}
-        />
+                <LinearGradient
+                  colors={
+                    item.isPremium && !isPremium ? ["#333", "#555"] : ["#4a148c", "#7b1fa2"]
+                  }
+                  style={styles.spreadCardGradient}
+                >
+                  {item.isPremium && !isPremium && (
+                    <Lock size={20} color="#ffd700" style={styles.spreadLockIcon} />
+                  )}
+                  <Text style={styles.spreadCardTitle}>{item.name}</Text>
+                  <Text style={styles.spreadCardCount}>{item.cardCount} карт</Text>
+                  <Text style={styles.spreadCardDescription}>{item.description}</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
+            scrollEnabled={false}
+            contentContainerStyle={styles.spreadsGrid}
+          />
+        )}
       </ScrollView>
     </View>
   );
