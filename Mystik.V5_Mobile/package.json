@@ -9,7 +9,9 @@
     "start-web-local": "expo start --web",
     "start-web-lan": "expo start --web --lan",
     "start-web-dev": "DEBUG=expo* expo start --web --tunnel",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",

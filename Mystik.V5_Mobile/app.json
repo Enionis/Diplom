@@ -15,7 +15,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.mystic"
+      "bundleIdentifier": "app.mystic",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -35,6 +38,12 @@
       "expo-router",
       "expo-web-browser",
       "expo-sqlite"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e6e58c7f-db3b-4364-abdf-86e45466e5b3"
+      }
+    }
   }
 }
