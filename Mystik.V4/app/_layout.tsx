@@ -1,11 +1,13 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SubscriptionProvider } from "@/providers/SubscriptionProvider";
 import { UserProvider } from "@/providers/UserProvider";
 import { AuthProvider } from "@/providers/AuthProvider";
+import NoInternetScreen from "@/components/NoInternetScreen";
+import { checkApiReachable, getApiBaseFromEnv } from "@/utils/apiReachability";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -41,9 +43,70 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
+  const [gate, setGate] = useState<{ mode: "checking" | "offline" | "online"; checkedUrl?: string; error?: string | null }>({
+    mode: "checking",
+    checkedUrl: undefined,
+    error: null,
+  });
+
   useEffect(() => {
-    SplashScreen.hideAsync();
+    let cancelled = false;
+
+    async function runCheck() {
+      setGate({ mode: "checking" });
+
+      const apiBase = getApiBaseFromEnv();
+      if (!apiBase) {
+        // Если переменная окружения не задана — не блокируем приложение.
+        if (!cancelled) setGate({ mode: "online" });
+        return;
+      }
+
+      const result = await checkApiReachable(apiBase, 5000);
+      if (cancelled) return;
+
+      if (result.reachable) {
+        setGate({ mode: "online" });
+      } else {
+        setGate({ mode: "offline", checkedUrl: result.checkedUrl, error: result.error ?? null });
+      }
+    }
+
+    runCheck();
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  useEffect(() => {
+    if (gate.mode !== "checking") {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [gate.mode]);
+
+  const onRetry = async () => {
+    let cancelled = false;
+    setGate({ mode: "checking" });
+
+    const apiBase = getApiBaseFromEnv();
+    if (!apiBase) {
+      if (!cancelled) setGate({ mode: "online" });
+      return;
+    }
+
+    const result = await checkApiReachable(apiBase, 5000);
+    if (cancelled) return;
+
+    if (result.reachable) {
+      setGate({ mode: "online" });
+    } else {
+      setGate({ mode: "offline", checkedUrl: result.checkedUrl, error: result.error ?? null });
+    }
+  };
+
+  if (gate.mode !== "online") {
+    return <NoInternetScreen mode={gate.mode} onRetry={onRetry} />;
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
